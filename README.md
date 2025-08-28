@@ -1,5 +1,10 @@
-# Firebase Studio
+# Eventide
 
-This is a NextJS starter in Firebase Studio.
+This is an event management application built with Next.js in Firebase Studio.
 
-To get started, take a look at src/app/page.tsx.
+## Features
+
+- Create, view, and delete events.
+- AI-powered summaries for event details.
+- Categorized views for upcoming and future events.
+- Modern and responsive design.
