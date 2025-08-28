@@ -4,7 +4,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { format } from 'date-fns';
-import { Calendar as CalendarIcon, Loader2 } from 'lucide-react';
+import { Calendar as CalendarIcon, Clock, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
@@ -116,11 +116,16 @@ export function EventForm({ onEventCreated }: EventFormProps) {
             control={form.control}
             name="time"
             render={({ field }) => (
-                <FormItem>
+                <FormItem className="flex flex-col">
                 <FormLabel>Time</FormLabel>
-                <FormControl>
-                    <Input type="time" {...field} />
-                </FormControl>
+                <div className="relative">
+                    <FormControl>
+                        <Input type="time" className="w-full" {...field} />
+                    </FormControl>
+                    <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3">
+                        <Clock className="h-4 w-4 text-muted-foreground opacity-50" />
+                    </div>
+                </div>
                 <FormMessage />
                 </FormItem>
             )}
