@@ -15,17 +15,22 @@ import { Loader2, Save } from 'lucide-react';
 
 
 export default function ProfilePage() {
-    const { user, updateUserProfile, isLoading: isAuthLoading } = useAuth();
+    const { user, updateUserProfile, updateUserUsername, isLoading: isAuthLoading } = useAuth();
     const router = useRouter();
     const { toast } = useToast();
+    const [newUsername, setNewUsername] = useState('');
     const [newPhoto, setNewPhoto] = useState<File | null>(null);
     const [previewPhoto, setPreviewPhoto] = useState<string | null>(null);
-    const [isSaving, setIsSaving] = useState(false);
+    const [isSavingPhoto, setIsSavingPhoto] = useState(false);
+    const [isSavingUsername, setIsSavingUsername] = useState(false);
     const fileInputRef = useRef<HTMLInputElement>(null);
 
     useEffect(() => {
         if (!isAuthLoading && !user) {
             router.push('/login');
+        }
+        if (user?.displayName) {
+            setNewUsername(user.displayName);
         }
     }, [user, isAuthLoading, router]);
 
@@ -103,17 +108,27 @@ export default function ProfilePage() {
         }
     };
 
-    const handleProfileUpdate = async () => {
+    const handlePhotoUpdate = async () => {
         if (!newPhoto) return;
-        setIsSaving(true);
+        setIsSavingPhoto(true);
         const success = await updateUserProfile(newPhoto);
         if (success) {
             toast({ title: "Profile Updated", description: "Your profile picture has been changed." });
             setNewPhoto(null);
             setPreviewPhoto(null);
         }
-        setIsSaving(false);
+        setIsSavingPhoto(false);
     };
+
+    const handleUsernameUpdate = async () => {
+        if (!newUsername || newUsername === user?.displayName) return;
+        setIsSavingUsername(true);
+        const success = await updateUserUsername(newUsername);
+        if (success) {
+            toast({ title: "Profile Updated", description: "Your username has been changed." });
+        }
+        setIsSavingUsername(false);
+    }
 
     const triggerFileSelect = () => fileInputRef.current?.click();
 
@@ -150,15 +165,21 @@ export default function ProfilePage() {
                             className="hidden"
                         />
                         <Button variant="outline" onClick={triggerFileSelect}>Choose File</Button>
-                        <Button onClick={handleProfileUpdate} disabled={!newPhoto || isSaving}>
-                           {isSaving ? <Loader2 className="animate-spin" /> : <Save />}
-                           Save
+                        <Button onClick={handlePhotoUpdate} disabled={!newPhoto || isSavingPhoto}>
+                           {isSavingPhoto ? <Loader2 className="animate-spin" /> : <Save />}
+                           Save Photo
                         </Button>
                     </div>
                 </div>
-                 <div>
-                    <Label>Username</Label>
-                    <p className="text-sm text-muted-foreground">{user.displayName}</p>
+                 <div className="space-y-2">
+                    <Label htmlFor="username">Username</Label>
+                    <div className="flex items-center gap-4">
+                      <Input id="username" value={newUsername} onChange={(e) => setNewUsername(e.target.value)} />
+                      <Button onClick={handleUsernameUpdate} disabled={newUsername === user.displayName || isSavingUsername}>
+                          {isSavingUsername ? <Loader2 className="animate-spin" /> : <Save />}
+                          Save Username
+                      </Button>
+                    </div>
                  </div>
                  <div>
                     <Label>Email</Label>

@@ -6,7 +6,7 @@ import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, on
 import { app } from '@/lib/firebase';
 import { useToast } from "@/hooks/use-toast";
 import { useRouter } from 'next/navigation';
-import { createUserInBaserow, getUserFromBaserow, updateUserPhotoInBaserow } from '@/services/baserow';
+import { createUserInBaserow, getUserFromBaserow, updateUserPhotoInBaserow, updateUserUsernameInBaserow } from '@/services/baserow';
 
 
 interface User {
@@ -23,6 +23,7 @@ interface AuthContextType {
   signup: (email: string, pass: string, username: string) => Promise<boolean>;
   logout: () => void;
   updateUserProfile: (photo: File) => Promise<boolean>;
+  updateUserUsername: (username: string) => Promise<boolean>;
   isLoading: boolean;
 }
 
@@ -166,12 +167,39 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         console.error("File reading error:", error);
         toast({ variant: 'destructive', title: "Update Failed", description: "Could not read the selected file." });
         setIsLoading(false);
-        reject(error);
+        reject(false);
       }
     });
   }
+  
+  const updateUserUsername = async (username: string): Promise<boolean> => {
+    if (!auth.currentUser || !user?.email) return false;
+    setIsLoading(true);
+    try {
+        await updateProfile(auth.currentUser, { displayName: username });
 
-  const contextValue = { user, login, signup, logout, updateUserProfile, isLoading };
+        const updateResult = await updateUserUsernameInBaserow({
+            email: user.email,
+            username: username
+        });
+
+        if (!updateResult.success) {
+            throw new Error(updateResult.error || 'Failed to update username in Baserow');
+        }
+        
+        setUser(prevUser => prevUser ? { ...prevUser, displayName: username } : null);
+        return true;
+
+    } catch (e: any) {
+        console.error("Username update error:", e);
+        toast({ variant: 'destructive', title: "Update Failed", description: e.message || "Could not update username." });
+        return false;
+    } finally {
+        setIsLoading(false);
+    }
+  }
+
+  const contextValue = { user, login, signup, logout, updateUserProfile, updateUserUsername, isLoading };
 
   return (
     <AuthContext.Provider value={contextValue}>

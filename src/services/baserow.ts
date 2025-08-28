@@ -25,6 +25,12 @@ const UpdateUserPhotoSchema = z.object({
 });
 type UpdateUserPhotoInput = z.infer<typeof UpdateUserPhotoSchema>;
 
+const UpdateUserUsernameSchema = z.object({
+    email: z.string().email(),
+    username: z.string(),
+});
+type UpdateUserUsernameInput = z.infer<typeof UpdateUserUsernameSchema>;
+
 
 const apiEndpoint = process.env.BASEROW_API_ENDPOINT || 'https://api.baserow.io';
 const dbToken = process.env.BASEROW_DB_TOKEN;
@@ -156,6 +162,46 @@ export async function updateUserPhotoInBaserow(userData: UpdateUserPhotoInput) {
         return { success: false, error: message };
     }
 }
+
+export async function updateUserUsernameInBaserow(userData: UpdateUserUsernameInput) {
+    if (!areBaserowCredsConfigured()) {
+        return { success: true, message: "Skipped Baserow username update (dev mode)." };
+    }
+
+    const { email, username } = userData;
+
+    try {
+        const rowId = await getRowIdByEmail(email);
+        if (!rowId) {
+             throw new Error(`User with email ${email} not found in Baserow.`);
+        }
+
+        const patchResponse = await fetch(`${apiEndpoint}/api/database/rows/table/${tableId}/${rowId}/?user_field_names=true`, {
+            method: 'PATCH',
+            headers: {
+                'Authorization': `Token ${dbToken}`,
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ "Username": username }),
+        });
+
+        if (!patchResponse.ok) {
+            const errorData = await patchResponse.json();
+            throw new Error(`Failed to update username in Baserow: ${JSON.stringify(errorData)}`);
+        }
+
+        const data = await patchResponse.json();
+        return { success: true, data };
+    } catch (error) {
+        console.error("Baserow API Error:", error);
+        let message = 'An unknown error occurred.';
+        if (error instanceof Error) {
+            message = error.message;
+        }
+        return { success: false, error: message };
+    }
+}
+
 
 
 async function getRowIdByEmail(email: string): Promise<number | null> {
