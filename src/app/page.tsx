@@ -14,7 +14,6 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-  DialogFooter,
 } from '@/components/ui/dialog';
 import { PlusCircle } from 'lucide-react';
 
@@ -42,7 +41,7 @@ export default function Home() {
             </Button>
           </DialogTrigger>
           <DialogContent className="sm:max-w-3xl">
-             <DialogHeader>
+            <DialogHeader>
               <DialogTitle>Create New Event</DialogTitle>
               <DialogDescription>
                 Fill in the details below to add a new event to your calendar.

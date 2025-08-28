@@ -1,9 +1,11 @@
+
 import type { Metadata } from 'next';
 import './globals.css';
 import { EventProvider } from '@/context/EventContext';
 import { Toaster } from '@/components/ui/toaster';
 import { Header } from '@/components/Header';
 import { ThemeProvider } from '@/context/ThemeProvider';
+import { AuthProvider } from '@/context/AuthContext';
 
 export const metadata: Metadata = {
   title: 'Eventide',
@@ -24,13 +26,15 @@ export default function RootLayout({
       </head>
       <body className="font-body antialiased min-h-screen bg-background text-foreground">
         <ThemeProvider>
-          <EventProvider>
-            <div className="relative flex min-h-screen flex-col">
-              <Header />
-              <main className="flex-1">{children}</main>
-            </div>
-            <Toaster />
-          </EventProvider>
+          <AuthProvider>
+            <EventProvider>
+              <div className="relative flex min-h-screen flex-col">
+                <Header />
+                <main className="flex-1">{children}</main>
+              </div>
+              <Toaster />
+            </EventProvider>
+          </AuthProvider>
         </ThemeProvider>
       </body>
     </html>
