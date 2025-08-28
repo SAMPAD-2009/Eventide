@@ -22,7 +22,7 @@ export default function HistoryPage() {
       setIsLoading(true);
       setError(null);
       
-      const apiKey = process.env.NEXT_PUBLIC_API_NINJAS_KEY;
+      const apiKey = "O3KECADaiPCcO1jx1V8VXQ==GfgqATLxbSQNGOtB";
       if (!apiKey || apiKey === "YOUR_API_KEY_HERE") {
         setError("API key for API-Ninjas is not configured. Please add it to your .env file.");
         setIsLoading(false);
@@ -34,7 +34,9 @@ export default function HistoryPage() {
       const day = today.getDate();
       
       try {
-        const response = await fetch(`https://api.api-ninjas.com/v1/historicalevents?month=${month}&day=${day}`, {
+        const url = `https://api.api-ninjas.com/v1/historicalevents?month=${month}&day=${day}`;
+        console.log("Requesting historical events from:", url); // Added for debugging
+        const response = await fetch(url, {
           headers: {
             'X-Api-Key': apiKey,
           },
