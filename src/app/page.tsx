@@ -39,7 +39,7 @@ export default function Home() {
               Create Event
             </Button>
           </DialogTrigger>
-          <DialogContent className="sm:max-w-[425px]">
+          <DialogContent className="sm:max-w-[425px] py-10">
             <DialogHeader>
               <DialogTitle>Create New Event</DialogTitle>
               <DialogDescription>
