@@ -38,7 +38,8 @@ export function EventForm({ onEventCreated }: EventFormProps) {
     defaultValues: {
       title: "",
       details: "",
-      time: "10:00",
+      date: new Date(),
+      time: format(new Date(), 'HH:mm'),
       category: "Personal",
     },
   });
@@ -165,4 +166,3 @@ export function EventForm({ onEventCreated }: EventFormProps) {
     </Form>
   );
 }
-
