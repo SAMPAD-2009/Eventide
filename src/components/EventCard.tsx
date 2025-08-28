@@ -53,7 +53,12 @@ export function EventCard({ event }: EventCardProps) {
                     </AlertDialogHeader>
                     <AlertDialogFooter>
                     <AlertDialogCancel>Cancel</AlertDialogCancel>
-                    <AlertDialogAction onClick={() => deleteEvent(event.id)}>Delete</AlertDialogAction>
+                    <AlertDialogAction 
+                      onClick={() => deleteEvent(event.id)} 
+                      className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                    >
+                      Delete
+                    </AlertDialogAction>
                     </AlertDialogFooter>
                 </AlertDialogContent>
             </AlertDialog>
