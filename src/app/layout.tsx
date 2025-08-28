@@ -3,9 +3,9 @@ import type { Metadata } from 'next';
 import './globals.css';
 import { EventProvider } from '@/context/EventContext';
 import { Toaster } from '@/components/ui/toaster';
-import { Header } from '@/components/Header';
 import { ThemeProvider } from '@/context/ThemeProvider';
 import { AuthProvider } from '@/context/AuthContext';
+import { ConditionalHeader } from '@/components/ConditionalHeader';
 
 export const metadata: Metadata = {
   title: 'Eventide',
@@ -29,7 +29,7 @@ export default function RootLayout({
           <ThemeProvider>
             <EventProvider>
               <div className="relative flex min-h-screen flex-col">
-                <Header />
+                <ConditionalHeader />
                 <main className="flex-1">{children}</main>
               </div>
               <Toaster />
