@@ -16,10 +16,22 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog';
 import { PlusCircle } from 'lucide-react';
+import { useAuth } from '@/context/AuthContext';
+import { useRouter } from 'next/navigation';
+import { useEffect } from 'react';
+import { Loader2 } from 'lucide-react';
 
 export default function Home() {
   const { events } = useEvents();
   const [isDialogOpen, setDialogOpen] = useState(false);
+  const { user, isLoading: isAuthLoading } = useAuth();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (!isAuthLoading && !user) {
+      router.push('/login');
+    }
+  }, [user, isAuthLoading, router]);
 
   const upcomingEvents = useMemo(() => {
     const today = startOfToday();
@@ -29,8 +41,16 @@ export default function Home() {
     );
   }, [events]);
 
+  if (isAuthLoading || !user) {
+    return (
+      <div className="flex items-center justify-center min-h-[calc(100vh-8rem)]">
+        <Loader2 className="h-16 w-16 animate-spin text-primary" />
+      </div>
+    );
+  }
+
   return (
-    <div className="container mx-auto p-4 md:p-8">
+    <div className="w-full mx-auto p-4 md:p-8">
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-3xl font-bold tracking-tight">Upcoming Events</h1>
         <Dialog open={isDialogOpen} onOpenChange={setDialogOpen}>

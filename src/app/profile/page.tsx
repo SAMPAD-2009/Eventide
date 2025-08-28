@@ -46,14 +46,14 @@ export default function ProfilePage() {
 
     if (isAuthLoading || !user) {
         return (
-             <div className="container mx-auto flex items-center justify-center min-h-[calc(100vh-8rem)]">
+             <div className="flex items-center justify-center min-h-[calc(100vh-8rem)]">
                 <Loader2 className="h-16 w-16 animate-spin text-primary" />
             </div>
         )
     }
 
   return (
-    <div className="container mx-auto p-4 md:p-8">
+    <div className="w-full mx-auto p-4 md:p-8">
       <div className="max-w-2xl mx-auto">
         <h1 className="text-3xl font-bold tracking-tight mb-6">Your Profile</h1>
         <Card>
