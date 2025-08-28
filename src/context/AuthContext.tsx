@@ -85,7 +85,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       });
 
       // Create user in Baserow
-      const baserowResult = await createUserInBaserow({ email });
+      const baserowResult = await createUserInBaserow({ email, theme: 'light', photoURL: defaultAvatar });
       if (!baserowResult.success) {
         // We can choose to either fail the whole signup or just log the error
         console.error("Failed to create user in Baserow:", baserowResult.error);
