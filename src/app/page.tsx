@@ -24,7 +24,7 @@ export default function Home() {
     const today = startOfToday();
     const sevenDaysFromNow = addDays(today, 7);
     return events.filter(event =>
-      isWithinInterval(new Date(event.datetime), { start: today, end: sevenDaysFromNow })
+      event.isIndefinite || isWithinInterval(new Date(event.datetime), { start: today, end: sevenDaysFromNow })
     );
   }, [events]);
 
