@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useForm } from 'react-hook-form';
@@ -11,8 +12,10 @@ import { Calendar } from '@/components/ui/calendar';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { useEvents } from '@/context/EventContext';
+import { CATEGORIES } from '@/lib/categories';
 
 const eventFormSchema = z.object({
   title: z.string().min(3, { message: "Title must be at least 3 characters long." }),
@@ -116,12 +119,12 @@ export function EventForm({ onEventCreated }: EventFormProps) {
             control={form.control}
             name="time"
             render={({ field }) => (
-                <FormItem className="flex flex-col justify-end">
-                <FormLabel className="sm:hidden">Time</FormLabel>
-                <FormControl>
-                    <Input type="time" className="w-full" {...field} />
-                </FormControl>
-                <FormMessage />
+                <FormItem className="flex flex-col">
+                    <FormLabel>Time</FormLabel>
+                    <FormControl>
+                        <Input type="time" className="w-full" {...field} />
+                    </FormControl>
+                    <FormMessage />
                 </FormItem>
             )}
             />
@@ -132,9 +135,18 @@ export function EventForm({ onEventCreated }: EventFormProps) {
             render={({ field }) => (
             <FormItem>
                 <FormLabel>Category</FormLabel>
+                <Select onValueChange={field.onChange} defaultValue={field.value}>
                 <FormControl>
-                <Input placeholder="Work" {...field} />
+                    <SelectTrigger>
+                    <SelectValue placeholder="Select a category" />
+                    </SelectTrigger>
                 </FormControl>
+                <SelectContent>
+                    {CATEGORIES.map(category => (
+                        <SelectItem key={category.name} value={category.name}>{category.name}</SelectItem>
+                    ))}
+                </SelectContent>
+                </Select>
                 <FormMessage />
             </FormItem>
             )}
@@ -153,3 +165,4 @@ export function EventForm({ onEventCreated }: EventFormProps) {
     </Form>
   );
 }
+

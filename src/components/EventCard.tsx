@@ -1,3 +1,4 @@
+
 "use client";
 
 import { format } from 'date-fns';
@@ -18,6 +19,8 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { useEvents } from '@/context/EventContext';
 import type { Event } from '@/lib/types';
+import { getCategoryByName } from '@/lib/categories';
+import { cn } from '@/lib/utils';
 
 interface EventCardProps {
   event: Event;
@@ -25,6 +28,7 @@ interface EventCardProps {
 
 export function EventCard({ event }: EventCardProps) {
   const { deleteEvent } = useEvents();
+  const categoryInfo = getCategoryByName(event.category);
 
   return (
     <Card>
@@ -69,7 +73,12 @@ export function EventCard({ event }: EventCardProps) {
         </div>
         <div className="flex items-center gap-2">
             <Tag className="h-4 w-4" />
-            <Badge variant="secondary">{event.category}</Badge>
+            <Badge 
+              variant="outline" 
+              className={cn('border-transparent', categoryInfo?.colorClass)}
+            >
+                {event.category}
+            </Badge>
         </div>
       </CardFooter>
     </Card>
