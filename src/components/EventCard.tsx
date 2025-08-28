@@ -31,7 +31,7 @@ export function EventCard({ event }: EventCardProps) {
   const categoryInfo = getCategoryByName(event.category);
 
   return (
-    <Card className={cn("border-2", categoryInfo?.borderColorClass)}>
+    <Card className="border-2" style={{ borderColor: categoryInfo ? `hsl(var(${categoryInfo?.cssVars.fg}))` : undefined }}>
       <CardHeader className="p-4">
         <div className="flex justify-between items-start">
             <div>
@@ -76,7 +76,6 @@ export function EventCard({ event }: EventCardProps) {
         <div className="flex items-center gap-2">
             <Tag className="h-4 w-4" />
             <Badge 
-              className={cn(categoryInfo?.colorClass)}
               style={{
                 backgroundColor: `hsl(var(${categoryInfo?.cssVars.bg}))`,
                 color: `hsl(var(${categoryInfo?.cssVars.fg}))`,
