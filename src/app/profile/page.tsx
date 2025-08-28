@@ -3,7 +3,7 @@
 
 import { useAuth } from '@/context/AuthContext';
 import { useRouter } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -11,7 +11,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { generateAvatar } from '@/lib/utils';
-import { Loader2, Upload } from 'lucide-react';
+import { Loader2, Save } from 'lucide-react';
 
 
 export default function ProfilePage() {
@@ -19,7 +19,9 @@ export default function ProfilePage() {
     const router = useRouter();
     const { toast } = useToast();
     const [newPhoto, setNewPhoto] = useState<File | null>(null);
-    const [isUploading, setIsUploading] = useState(false);
+    const [previewPhoto, setPreviewPhoto] = useState<string | null>(null);
+    const [isSaving, setIsSaving] = useState(false);
+    const fileInputRef = useRef<HTMLInputElement>(null);
 
     useEffect(() => {
         if (!isAuthLoading && !user) {
@@ -29,20 +31,29 @@ export default function ProfilePage() {
 
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         if (e.target.files && e.target.files[0]) {
-            setNewPhoto(e.target.files[0]);
+            const file = e.target.files[0];
+            setNewPhoto(file);
+            const reader = new FileReader();
+            reader.onloadend = () => {
+                setPreviewPhoto(reader.result as string);
+            };
+            reader.readAsDataURL(file);
         }
     };
 
     const handleProfileUpdate = async () => {
         if (!newPhoto) return;
-        setIsUploading(true);
+        setIsSaving(true);
         const success = await updateUserProfile(newPhoto);
         if (success) {
             toast({ title: "Profile Updated", description: "Your profile picture has been changed." });
+            setNewPhoto(null);
+            setPreviewPhoto(null);
         }
-        setNewPhoto(null);
-        setIsUploading(false);
+        setIsSaving(false);
     };
+
+    const triggerFileSelect = () => fileInputRef.current?.click();
 
     if (isAuthLoading || !user) {
         return (
@@ -62,19 +73,25 @@ export default function ProfilePage() {
                 <CardDescription>View and update your profile information.</CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
-                <div className="flex items-center gap-6">
-                    <Avatar className="h-24 w-24">
-                        <AvatarImage src={user.photoURL ?? undefined} alt={user.email ?? ''}/>
+                <div className="flex flex-col items-center gap-6">
+                    <Avatar className="h-32 w-32">
+                        <AvatarImage src={previewPhoto ?? user.photoURL ?? undefined} alt={user.email ?? ''}/>
                         <AvatarFallback className="text-4xl">{generateAvatar(user.email ?? '')}</AvatarFallback>
                     </Avatar>
-                     <div className="grid w-full max-w-sm items-center gap-1.5">
-                        <Label htmlFor="picture">Update Profile Picture</Label>
-                        <div className="flex gap-2">
-                             <Input id="picture" type="file" onChange={handleFileChange} accept="image/*" className="cursor-pointer"/>
-                             <Button onClick={handleProfileUpdate} disabled={!newPhoto || isUploading}>
-                                {isUploading ? <Loader2 className="animate-spin" /> : <Upload />}
-                            </Button>
-                        </div>
+                     <div className="flex items-center gap-4">
+                        <Input 
+                            id="picture" 
+                            type="file" 
+                            ref={fileInputRef}
+                            onChange={handleFileChange} 
+                            accept="image/*" 
+                            className="hidden"
+                        />
+                        <Button variant="outline" onClick={triggerFileSelect}>Choose File</Button>
+                        <Button onClick={handleProfileUpdate} disabled={!newPhoto || isSaving}>
+                           {isSaving ? <Loader2 className="animate-spin" /> : <Save />}
+                           Save
+                        </Button>
                     </div>
                 </div>
                  <div>
