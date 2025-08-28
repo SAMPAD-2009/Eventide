@@ -64,8 +64,8 @@ export default function ProfilePage() {
             <CardContent className="space-y-6">
                 <div className="flex items-center gap-6">
                     <Avatar className="h-24 w-24">
-                        <AvatarImage src={user.photoURL} alt={user.email}/>
-                        <AvatarFallback className="text-4xl">{generateAvatar(user.email)}</AvatarFallback>
+                        <AvatarImage src={user.photoURL ?? undefined} alt={user.email ?? ''}/>
+                        <AvatarFallback className="text-4xl">{generateAvatar(user.email ?? '')}</AvatarFallback>
                     </Avatar>
                      <div className="grid w-full max-w-sm items-center gap-1.5">
                         <Label htmlFor="picture">Update Profile Picture</Label>

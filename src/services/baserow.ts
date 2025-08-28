@@ -5,15 +5,13 @@ import { z } from 'zod';
 
 const CreateUserSchema = z.object({
     email: z.string().email(),
-    photoURL: z.string().url(),
-    theme: z.string(),
 });
 
 type CreateUserInput = z.infer<typeof CreateUserSchema>;
 
 
 export async function createUserInBaserow(userData: CreateUserInput) {
-    const { email, photoURL, theme } = userData;
+    const { email } = userData;
 
     const apiEndpoint = process.env.BASEROW_API_ENDPOINT;
     const dbToken = process.env.BASEROW_DB_TOKEN;
@@ -33,8 +31,6 @@ export async function createUserInBaserow(userData: CreateUserInput) {
             },
             body: JSON.stringify({
                 "Email": email,
-                "Photo URL": photoURL,
-                "Theme": theme,
             }),
         });
 
