@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useEvents } from '@/context/EventContext';
@@ -13,6 +14,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
+  DialogFooter,
 } from '@/components/ui/dialog';
 import { PlusCircle } from 'lucide-react';
 
@@ -39,14 +41,14 @@ export default function Home() {
               Create Event
             </Button>
           </DialogTrigger>
-          <DialogContent className="sm:max-w-[425px] p-0">
-            <DialogHeader className="p-6 pb-0">
+          <DialogContent className="sm:max-w-3xl">
+             <DialogHeader>
               <DialogTitle>Create New Event</DialogTitle>
               <DialogDescription>
                 Fill in the details below to add a new event to your calendar.
               </DialogDescription>
             </DialogHeader>
-            <div className="p-6 pt-4 overflow-y-auto">
+            <div className="flex-grow overflow-y-auto px-1 py-2">
                 <EventForm onEventCreated={() => setDialogOpen(false)} />
             </div>
           </DialogContent>

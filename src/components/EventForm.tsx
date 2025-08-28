@@ -86,124 +86,131 @@ export function EventForm({ onEventCreated }: EventFormProps) {
   return (
     <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-        <FormField
-            control={form.control}
-            name="title"
-            render={({ field }) => (
-            <FormItem>
-                <FormLabel>Event Title</FormLabel>
-                <FormControl>
-                <Input placeholder="Team Meeting" {...field} />
-                </FormControl>
-                <FormMessage />
-            </FormItem>
-            )}
-        />
-        <FormField
-            control={form.control}
-            name="details"
-            render={({ field }) => (
-            <FormItem>
-                <FormLabel>Event Details (Optional)</FormLabel>
-                <FormControl>
-                <Textarea placeholder="Discuss quarterly goals and project updates..." className="resize-none" {...field} />
-                </FormControl>
-                <FormMessage />
-            </FormItem>
-            )}
-        />
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <FormField
-            control={form.control}
-            name="date"
-            render={({ field }) => (
-                <FormItem className="flex flex-col">
-                <FormLabel>Date</FormLabel>
-                <Popover>
-                    <PopoverTrigger asChild>
-                    <FormControl>
-                        <Button
-                        variant="outline"
-                        className={cn('w-full justify-start text-left font-normal', !field.value && 'text-muted-foreground')}
-                        disabled={isIndefinite}
-                        >
-                        <CalendarIcon className="mr-2 h-4 w-4" />
-                        {field.value ? format(field.value, 'PPP') : <span>Pick a date</span>}
-                        </Button>
-                    </FormControl>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0" align="start">
-                    <Calendar
-                        mode="single"
-                        selected={field.value}
-                        onSelect={field.onChange}
-                        disabled={(date) => date < new Date(new Date().setHours(0,0,0,0)) || !!isIndefinite}
-                        initialFocus
+            <div className="grid grid-cols-1 md:grid-cols-2 md:gap-8 space-y-6 md:space-y-0">
+                <div className="space-y-6">
+                    <FormField
+                        control={form.control}
+                        name="title"
+                        render={({ field }) => (
+                        <FormItem>
+                            <FormLabel>Event Title</FormLabel>
+                            <FormControl>
+                            <Input placeholder="Team Meeting" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                        </FormItem>
+                        )}
                     />
-                    </PopoverContent>
-                </Popover>
-                <FormMessage />
-                </FormItem>
-            )}
-            />
-            <FormField
-            control={form.control}
-            name="time"
-            render={({ field }) => (
-                <FormItem className="flex flex-col">
-                    <FormLabel>Time</FormLabel>
-                    <FormControl>
-                        <Input type="time" className="w-full" {...field} disabled={isIndefinite} />
-                    </FormControl>
-                    <FormMessage />
-                </FormItem>
-            )}
-            />
-        </div>
-        <FormField
-          control={form.control}
-          name="isIndefinite"
-          render={({ field }) => (
-            <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
-              <FormControl>
-                <Checkbox
-                  checked={field.value}
-                  onCheckedChange={field.onChange}
-                />
-              </FormControl>
-              <div className="space-y-1 leading-none">
-                <FormLabel>
-                  Keep event forever
-                </FormLabel>
-                <FormDescription>
-                  If checked, this event will not be automatically deleted after its time has passed.
-                </FormDescription>
-              </div>
-            </FormItem>
-          )}
-        />
-        <FormField
-            control={form.control}
-            name="category"
-            render={({ field }) => (
-            <FormItem>
-                <FormLabel>Category</FormLabel>
-                <Select onValueChange={field.onChange} defaultValue={field.value}>
-                <FormControl>
-                    <SelectTrigger>
-                    <SelectValue placeholder="Select a category" />
-                    </SelectTrigger>
-                </FormControl>
-                <SelectContent>
-                    {CATEGORIES.map(category => (
-                        <SelectItem key={category.name} value={category.name}>{category.name}</SelectItem>
-                    ))}
-                </SelectContent>
-                </Select>
-                <FormMessage />
-            </FormItem>
-            )}
-        />
+                    <FormField
+                        control={form.control}
+                        name="details"
+                        render={({ field }) => (
+                        <FormItem>
+                            <FormLabel>Event Details (Optional)</FormLabel>
+                            <FormControl>
+                            <Textarea placeholder="Discuss quarterly goals and project updates..." className="resize-none h-32" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                        </FormItem>
+                        )}
+                    />
+                </div>
+                <div className="space-y-6">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <FormField
+                        control={form.control}
+                        name="date"
+                        render={({ field }) => (
+                            <FormItem className="flex flex-col">
+                            <FormLabel>Date</FormLabel>
+                            <Popover>
+                                <PopoverTrigger asChild>
+                                <FormControl>
+                                    <Button
+                                    variant="outline"
+                                    className={cn('w-full justify-start text-left font-normal', !field.value && 'text-muted-foreground')}
+                                    disabled={isIndefinite}
+                                    >
+                                    <CalendarIcon className="mr-2 h-4 w-4" />
+                                    {field.value ? format(field.value, 'PPP') : <span>Pick a date</span>}
+                                    </Button>
+                                </FormControl>
+                                </PopoverTrigger>
+                                <PopoverContent className="w-auto p-0" align="start">
+                                <Calendar
+                                    mode="single"
+                                    selected={field.value}
+                                    onSelect={field.onChange}
+                                    disabled={(date) => date < new Date(new Date().setHours(0,0,0,0)) || !!isIndefinite}
+                                    initialFocus
+                                />
+                                </PopoverContent>
+                            </Popover>
+                            <FormMessage />
+                            </FormItem>
+                        )}
+                        />
+                        <FormField
+                        control={form.control}
+                        name="time"
+                        render={({ field }) => (
+                            <FormItem className="flex flex-col">
+                                <FormLabel>Time</FormLabel>
+                                <FormControl>
+                                    <Input type="time" className="w-full" {...field} disabled={isIndefinite} />
+                                </FormControl>
+                                <FormMessage />
+                            </FormItem>
+                        )}
+                        />
+                    </div>
+                    <FormField
+                      control={form.control}
+                      name="isIndefinite"
+                      render={({ field }) => (
+                        <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
+                          <FormControl>
+                            <Checkbox
+                              checked={field.value}
+                              onCheckedChange={field.onChange}
+                            />
+                          </FormControl>
+                          <div className="space-y-1 leading-none">
+                            <FormLabel>
+                              Keep event forever
+                            </FormLabel>
+                            <FormDescription>
+                              This event won't be auto-deleted.
+                            </FormDescription>
+                          </div>
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                        control={form.control}
+                        name="category"
+                        render={({ field }) => (
+                        <FormItem>
+                            <FormLabel>Category</FormLabel>
+                            <Select onValueChange={field.onChange} defaultValue={field.value}>
+                            <FormControl>
+                                <SelectTrigger>
+                                <SelectValue placeholder="Select a category" />
+                                </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                                {CATEGORIES.map(category => (
+                                    <SelectItem key={category.name} value={category.name}>{category.name}</SelectItem>
+                                ))}
+                            </SelectContent>
+                            </Select>
+                            <FormMessage />
+                        </FormItem>
+                        )}
+                    />
+                </div>
+            </div>
+        
         <Button type="submit" disabled={isLoading} className="w-full">
             {isLoading ? (
             <>
