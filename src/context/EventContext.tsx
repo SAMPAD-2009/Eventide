@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
@@ -45,12 +46,18 @@ export const EventProvider = ({ children }: { children: ReactNode }) => {
   const addEvent = async (eventData: Omit<Event, 'id' | 'summary' | 'datetime'>) => {
     setIsLoading(true);
     try {
-      const { summary } = await summarizeEvent({ details: eventData.details });
+      let summary = '';
+      if (eventData.details && eventData.details.trim().length > 0) {
+        const result = await summarizeEvent({ details: eventData.details });
+        summary = result.summary;
+      }
+
       const newEvent: Event = {
         ...eventData,
         id: new Date().toISOString(),
         summary,
         datetime: new Date(`${eventData.date}T${eventData.time}`).toISOString(),
+        details: eventData.details || '',
       };
       const updatedEvents = [...events, newEvent].sort((a, b) => new Date(a.datetime).getTime() - new Date(b.datetime).getTime());
       setEvents(updatedEvents);

@@ -18,8 +18,8 @@ import { useEvents } from '@/context/EventContext';
 import { CATEGORIES } from '@/lib/categories';
 
 const eventFormSchema = z.object({
-  title: z.string().min(3, { message: "Title must be at least 3 characters long." }),
-  details: z.string().min(10, { message: "Details must be at least 10 characters long." }),
+  title: z.string().min(2, { message: "Title must be at least 2 characters long." }),
+  details: z.string().optional(),
   date: z.date({ required_error: "A date is required." }),
   time: z.string().regex(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/, { message: "Invalid time format (HH:MM)." }),
   category: z.string().min(2, { message: "Category must be at least 2 characters long." }),
@@ -75,7 +75,7 @@ export function EventForm({ onEventCreated }: EventFormProps) {
             name="details"
             render={({ field }) => (
             <FormItem>
-                <FormLabel>Event Details</FormLabel>
+                <FormLabel>Event Details (Optional)</FormLabel>
                 <FormControl>
                 <Textarea placeholder="Discuss quarterly goals and project updates..." className="resize-none" {...field} />
                 </FormControl>
