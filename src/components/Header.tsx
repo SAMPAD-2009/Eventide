@@ -32,7 +32,7 @@ export function Header() {
 
   return (
     <header className="sticky top-0 z-40 w-full border-b bg-card">
-      <div className="container flex h-16 items-center space-x-4 sm:justify-between sm:space-x-0 px-4 md:px-6">
+      <div className="container flex h-16 items-center px-4 md:px-6">
         <div className="flex gap-6 md:gap-10 items-center">
           <Link href="/" className="flex items-center space-x-2">
             <Calendar className="h-6 w-6 text-primary" />
@@ -47,7 +47,7 @@ export function Header() {
             </Link>
           </nav>
         </div>
-        <div className="flex items-center gap-4">
+        <div className="flex flex-1 items-center justify-end gap-4">
             <ThemeToggle />
             {user ? (
                <DropdownMenu>
