@@ -73,12 +73,14 @@ export function EventCard({ event }: EventCardProps) {
         </div>
         <div className="flex items-center gap-2">
             <Tag className="h-4 w-4" />
-            <Badge 
-              variant="default"
-              className={cn(categoryInfo?.colorClass)}
+            <div 
+              className={cn(
+                "inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors",
+                categoryInfo?.colorClass
+              )}
             >
                 {event.category}
-            </Badge>
+            </div>
         </div>
       </CardFooter>
     </Card>
