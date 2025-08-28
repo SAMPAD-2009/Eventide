@@ -32,11 +32,11 @@ export function EventCard({ event }: EventCardProps) {
 
   return (
     <Card>
-      <CardHeader>
+      <CardHeader className="p-4">
         <div className="flex justify-between items-start">
             <div>
-                <CardTitle>{event.title}</CardTitle>
-                <CardDescription className="pt-2">{event.summary}</CardDescription>
+                <CardTitle className="text-xl">{event.title}</CardTitle>
+                <CardDescription className="pt-1">{event.summary}</CardDescription>
             </div>
             <AlertDialog>
                 <AlertDialogTrigger asChild>
@@ -59,10 +59,10 @@ export function EventCard({ event }: EventCardProps) {
             </AlertDialog>
         </div>
       </CardHeader>
-      <CardContent>
+      <CardContent className="p-4 pt-0">
         <p className="text-sm text-muted-foreground">{event.details}</p>
       </CardContent>
-      <CardFooter className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
+      <CardFooter className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground p-4 pt-0">
         <div className="flex items-center gap-2">
             <Calendar className="h-4 w-4" />
             <span>{format(new Date(event.datetime), 'E, d MMM yyyy')}</span>
@@ -74,7 +74,7 @@ export function EventCard({ event }: EventCardProps) {
         <div className="flex items-center gap-2">
             <Tag className="h-4 w-4" />
             <Badge 
-              variant="default" 
+              variant="outline"
               className={cn('border-transparent', categoryInfo?.colorClass)}
             >
                 {event.category}
