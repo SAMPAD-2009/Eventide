@@ -74,7 +74,7 @@ export function EventCard({ event }: EventCardProps) {
         <div className="flex items-center gap-2">
             <Tag className="h-4 w-4" />
             <Badge 
-              variant="outline" 
+              variant="default" 
               className={cn('border-transparent', categoryInfo?.colorClass)}
             >
                 {event.category}
