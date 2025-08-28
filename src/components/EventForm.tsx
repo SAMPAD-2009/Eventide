@@ -9,7 +9,7 @@ import { Calendar as CalendarIcon, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -17,6 +17,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { useEvents } from '@/context/EventContext';
 import { CATEGORIES } from '@/lib/categories';
 import { useEffect, useState } from 'react';
+import { Checkbox } from './ui/checkbox';
 
 const eventFormSchema = z.object({
   title: z.string().min(2, { message: "Title must be at least 2 characters long." }),
@@ -24,6 +25,7 @@ const eventFormSchema = z.object({
   date: z.date({ required_error: "A date is required." }),
   time: z.string().regex(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/, { message: "Invalid time format (HH:MM)." }),
   category: z.string().min(2, { message: "Category must be at least 2 characters long." }),
+  isIndefinite: z.boolean().default(false).optional(),
 });
 
 type EventFormValues = z.infer<typeof eventFormSchema>;
@@ -37,7 +39,8 @@ export function EventForm({ onEventCreated }: EventFormProps) {
   const [defaultTime, setDefaultTime] = useState('');
 
   useEffect(() => {
-    setDefaultTime(format(new Date(), 'HH:mm'));
+    const now = new Date();
+    setDefaultTime(format(now, 'HH:mm'));
   }, []);
 
   const form = useForm<EventFormValues>({
@@ -48,8 +51,11 @@ export function EventForm({ onEventCreated }: EventFormProps) {
       date: new Date(),
       time: defaultTime,
       category: "Personal",
+      isIndefinite: false,
     },
   });
+
+  const isIndefinite = form.watch('isIndefinite');
 
   useEffect(() => {
     if (defaultTime) {
@@ -72,6 +78,7 @@ export function EventForm({ onEventCreated }: EventFormProps) {
         date: new Date(),
         time: format(new Date(), 'HH:mm'),
         category: "Personal",
+        isIndefinite: false,
     });
     onEventCreated?.();
   };
@@ -118,6 +125,7 @@ export function EventForm({ onEventCreated }: EventFormProps) {
                         <Button
                         variant="outline"
                         className={cn('w-full justify-start text-left font-normal', !field.value && 'text-muted-foreground')}
+                        disabled={isIndefinite}
                         >
                         <CalendarIcon className="mr-2 h-4 w-4" />
                         {field.value ? format(field.value, 'PPP') : <span>Pick a date</span>}
@@ -129,7 +137,7 @@ export function EventForm({ onEventCreated }: EventFormProps) {
                         mode="single"
                         selected={field.value}
                         onSelect={field.onChange}
-                        disabled={(date) => date < new Date(new Date().setHours(0,0,0,0))}
+                        disabled={(date) => date < new Date(new Date().setHours(0,0,0,0)) || !!isIndefinite}
                         initialFocus
                     />
                     </PopoverContent>
@@ -145,13 +153,35 @@ export function EventForm({ onEventCreated }: EventFormProps) {
                 <FormItem className="flex flex-col">
                     <FormLabel>Time</FormLabel>
                     <FormControl>
-                        <Input type="time" className="w-full" {...field} />
+                        <Input type="time" className="w-full" {...field} disabled={isIndefinite} />
                     </FormControl>
                     <FormMessage />
                 </FormItem>
             )}
             />
         </div>
+        <FormField
+          control={form.control}
+          name="isIndefinite"
+          render={({ field }) => (
+            <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
+              <FormControl>
+                <Checkbox
+                  checked={field.value}
+                  onCheckedChange={field.onChange}
+                />
+              </FormControl>
+              <div className="space-y-1 leading-none">
+                <FormLabel>
+                  Keep event forever
+                </FormLabel>
+                <FormDescription>
+                  If checked, this event will not be automatically deleted after its time has passed.
+                </FormDescription>
+              </div>
+            </FormItem>
+          )}
+        />
         <FormField
             control={form.control}
             name="category"

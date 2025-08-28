@@ -27,7 +27,7 @@ export const EventProvider = ({ children }: { children: ReactNode }) => {
       const parsedEvents = item ? JSON.parse(item) : [];
       const now = new Date();
       const upcomingEvents = parsedEvents
-        .filter((event: Event) => new Date(event.datetime) > now)
+        .filter((event: Event) => event.isIndefinite || new Date(event.datetime) > now)
         .map((event: Event) => ({
           ...event,
           datetime: event.datetime,
@@ -57,7 +57,7 @@ export const EventProvider = ({ children }: { children: ReactNode }) => {
     const interval = setInterval(() => {
       const now = new Date();
       setEvents(prevEvents =>
-        prevEvents.filter(event => new Date(event.datetime) > now)
+        prevEvents.filter(event => event.isIndefinite || new Date(event.datetime) > now)
       );
     }, 60000); // Check every minute
 
@@ -77,7 +77,7 @@ export const EventProvider = ({ children }: { children: ReactNode }) => {
         ...eventData,
         id: new Date().toISOString(),
         summary,
-        datetime: new Date(`${eventData.date}T${eventData.time}`).toISOString(),
+        datetime: eventData.isIndefinite ? new Date(8640000000000000).toISOString() : new Date(`${eventData.date}T${eventData.time}`).toISOString(),
         details: eventData.details || '',
       };
       const updatedEvents = [...events, newEvent].sort((a, b) => new Date(a.datetime).getTime() - new Date(b.datetime).getTime());

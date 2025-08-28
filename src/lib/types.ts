@@ -7,4 +7,5 @@ export interface Event {
   time: string;
   category: string;
   datetime: string;
+  isIndefinite?: boolean;
 }

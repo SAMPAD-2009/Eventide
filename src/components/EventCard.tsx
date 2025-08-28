@@ -2,7 +2,7 @@
 "use client";
 
 import { format } from 'date-fns';
-import { Calendar, Clock, Tag, Trash2 } from 'lucide-react';
+import { Calendar, Clock, Tag, Trash2, Infinity } from 'lucide-react';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -54,8 +54,8 @@ export function EventCard({ event }: EventCardProps) {
                     <AlertDialogFooter>
                     <AlertDialogCancel>Cancel</AlertDialogCancel>
                     <AlertDialogAction 
-                      onClick={() => deleteEvent(event.id)} 
-                      className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                      onClick={() => deleteEvent(event.id)}
+                      className="bg-red-600 text-destructive-foreground hover:bg-red-700"
                     >
                       Delete
                     </AlertDialogAction>
@@ -70,20 +70,31 @@ export function EventCard({ event }: EventCardProps) {
         </CardContent>
       )}
       <CardFooter className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground p-4 pt-0">
-        <div className="flex items-center gap-2">
-            <Calendar className="h-4 w-4" />
-            <span>{format(new Date(event.datetime), 'E, d MMM yyyy')}</span>
-        </div>
-        <div className="flex items-center gap-2">
-            <Clock className="h-4 w-4" />
-            <span>{format(new Date(event.datetime), 'p')}</span>
-        </div>
+        {event.isIndefinite ? (
+            <div className="flex items-center gap-2">
+                <Infinity className="h-4 w-4" />
+                <span>Lasts forever</span>
+            </div>
+        ) : (
+            <>
+                <div className="flex items-center gap-2">
+                    <Calendar className="h-4 w-4" />
+                    <span>{format(new Date(event.datetime), 'E, d MMM yyyy')}</span>
+                </div>
+                <div className="flex items-center gap-2">
+                    <Clock className="h-4 w-4" />
+                    <span>{format(new Date(event.datetime), 'p')}</span>
+                </div>
+            </>
+        )}
         <div className="flex items-center gap-2">
             <Tag className="h-4 w-4" />
             <Badge 
+              variant="default"
               style={{
                 backgroundColor: `hsl(var(${categoryInfo?.cssVars.bg}))`,
                 color: `hsl(var(${categoryInfo?.cssVars.fg}))`,
+                border: `1px solid hsl(var(${categoryInfo?.cssVars.fg}))`,
               }}
             >
                 {event.category}
