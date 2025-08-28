@@ -44,12 +44,12 @@ export async function uploadFileToBaserow(file: File) {
     }
 
     try {
-        // Step 1: Get an upload URL from Baserow
+        // Step 1: Get an upload URL from Baserow.
+        // We only send the file name in the query param and the auth token.
         const getUrlResponse = await fetch(`${apiEndpoint}/api/user-files/upload-file/?name=${encodeURIComponent(file.name)}`, {
             method: 'POST',
             headers: {
                 'Authorization': `Token ${dbToken}`,
-                'Content-Type': file.type,
             },
         });
 
