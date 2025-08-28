@@ -14,13 +14,13 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { useEvents } from '@/context/EventContext';
 import type { Event } from '@/lib/types';
 import { getCategoryByName } from '@/lib/categories';
 import { cn } from '@/lib/utils';
+import { Badge } from '@/components/ui/badge';
 
 interface EventCardProps {
   event: Event;
@@ -36,7 +36,7 @@ export function EventCard({ event }: EventCardProps) {
         <div className="flex justify-between items-start">
             <div>
                 <CardTitle className="text-xl">{event.title}</CardTitle>
-                <CardDescription className="pt-1">{event.summary}</CardDescription>
+                {event.summary && <CardDescription className="pt-1">{event.summary}</CardDescription>}
             </div>
             <AlertDialog>
                 <AlertDialogTrigger asChild>
@@ -59,9 +59,11 @@ export function EventCard({ event }: EventCardProps) {
             </AlertDialog>
         </div>
       </CardHeader>
-      <CardContent className="p-4 pt-0">
-        <p className="text-sm text-muted-foreground">{event.details}</p>
-      </CardContent>
+      {event.details && (
+        <CardContent className="p-4 pt-0">
+          <p className="text-sm text-muted-foreground">{event.details}</p>
+        </CardContent>
+      )}
       <CardFooter className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground p-4 pt-0">
         <div className="flex items-center gap-2">
             <Calendar className="h-4 w-4" />
@@ -73,14 +75,9 @@ export function EventCard({ event }: EventCardProps) {
         </div>
         <div className="flex items-center gap-2">
             <Tag className="h-4 w-4" />
-            <div 
-              className={cn(
-                "inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors",
-                categoryInfo?.colorClass
-              )}
-            >
+            <Badge variant="outline" className={cn('border-none', categoryInfo?.colorClass)}>
                 {event.category}
-            </div>
+            </Badge>
         </div>
       </CardFooter>
     </Card>

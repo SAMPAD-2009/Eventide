@@ -33,6 +33,17 @@ body {
     --chart-4: 43 74% 66%;
     --chart-5: 27 87% 67%;
     --radius: 0.5rem;
+
+    --personal-tag: 210 100% 95%;
+    --personal-tag-foreground: 210 40% 40%;
+    --work-tag: 145 100% 95%;
+    --work-tag-foreground: 145 40% 30%;
+    --social-tag: 270 100% 95%;
+    --social-tag-foreground: 270 40% 40%;
+    --health-tag: 0 100% 95%;
+    --health-tag-foreground: 0 40% 40%;
+    --other-tag: 240 5% 95%;
+    --other-tag-foreground: 240 5% 40%;
   }
   .dark {
     --background: 240 6% 10%;
@@ -59,6 +70,17 @@ body {
     --chart-3: 30 80% 55%;
     --chart-4: 280 65% 60%;
     --chart-5: 340 75% 55%;
+
+    --personal-tag: 210 30% 20%;
+    --personal-tag-foreground: 210 80% 85%;
+    --work-tag: 145 30% 20%;
+    --work-tag-foreground: 145 80% 85%;
+    --social-tag: 270 30% 25%;
+    --social-tag-foreground: 270 80% 85%;
+    --health-tag: 0 30% 20%;
+    --health-tag-foreground: 0 80% 85%;
+    --other-tag: 240 5% 20%;
+    --other-tag-foreground: 240 5% 85%;
   }
 
   .dark input[type="time"]::-webkit-calendar-picker-indicator {
