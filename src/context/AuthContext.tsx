@@ -5,9 +5,8 @@ import React, { createContext, useContext, useState, useEffect, ReactNode } from
 import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signOut, updateProfile, User as FirebaseUser } from "firebase/auth";
 import { app } from '@/lib/firebase';
 import { useToast } from "@/hooks/use-toast";
-import { generateAvatar } from '@/lib/utils';
 import { useRouter } from 'next/navigation';
-import { createUserInBaserow, getUserFromBaserow, uploadFileToBaserow, updateUserPhotoInBaserow } from '@/services/baserow';
+import { createUserInBaserow, getUserFromBaserow, updateUserPhotoInBaserow } from '@/services/baserow';
 
 
 interface User {
@@ -44,7 +43,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         setUser({
           uid: firebaseUser.uid,
           email: firebaseUser.email,
-          photoURL: baserowUser?.['Photo URL']?.[0]?.url || firebaseUser.photoURL,
+          photoURL: baserowUser?.['Photo URL'] || firebaseUser.photoURL,
           displayName: firebaseUser.displayName,
           baserowUserId: baserowUser?.id
         });
@@ -134,42 +133,44 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const updateUserProfile = async (photo: File): Promise<boolean> => {
     if (!auth.currentUser || !user?.email) return false;
     setIsLoading(true);
-    try {
-      // Step 1: Upload the file to Baserow
-      const uploadResult = await uploadFileToBaserow(photo);
-      if (!uploadResult.success || !uploadResult.data) {
-        throw new Error(uploadResult.error || 'Failed to upload file to Baserow');
+
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.readAsDataURL(photo);
+      reader.onload = async () => {
+        try {
+          const base64Photo = reader.result as string;
+
+          const updateResult = await updateUserPhotoInBaserow({
+            email: user.email!,
+            photoURL: base64Photo,
+          });
+
+          if (!updateResult.success || !updateResult.data) {
+            throw new Error(updateResult.error || 'Failed to update user photo in Baserow');
+          }
+
+          await updateProfile(auth.currentUser!, { photoURL: base64Photo });
+
+          setUser(prevUser => prevUser ? { ...prevUser, photoURL: base64Photo } : null);
+
+          toast({ title: "Profile Updated", description: "Your profile picture has been changed." });
+          setIsLoading(false);
+          resolve(true);
+        } catch (e: any) {
+          console.error("Profile update error:", e);
+          toast({ variant: 'destructive', title: "Update Failed", description: e.message || "Could not update profile picture." });
+          setIsLoading(false);
+          resolve(false);
+        }
+      };
+      reader.onerror = (error) => {
+        console.error("File reading error:", error);
+        toast({ variant: 'destructive', title: "Update Failed", description: "Could not read the selected file." });
+        setIsLoading(false);
+        reject(error);
       }
-      
-      const newPhotoData = uploadResult.data;
-
-      // Step 2: Update the user's row in Baserow with the new photo info
-      const updateResult = await updateUserPhotoInBaserow({
-        email: user.email,
-        photoData: newPhotoData,
-      });
-
-      if (!updateResult.success || !updateResult.data) {
-        throw new Error(updateResult.error || 'Failed to update user photo record in Baserow');
-      }
-
-      const photoURL = newPhotoData.url;
-
-      // Step 3: Update Firebase profile (optional, but good for consistency)
-      await updateProfile(auth.currentUser, { photoURL });
-
-      // Step 4: Update local state
-      setUser(prevUser => prevUser ? { ...prevUser, photoURL } : null);
-
-      toast({ title: "Profile Updated", description: "Your profile picture has been changed." });
-      return true;
-    } catch (e: any) {
-      console.error("Profile update error:", e);
-      toast({ variant: 'destructive', title: "Update Failed", description: e.message || "Could not update profile picture." });
-      return false;
-    } finally {
-      setIsLoading(false);
-    }
+    });
   }
 
   const contextValue = { user, login, signup, logout, updateUserProfile, isLoading };

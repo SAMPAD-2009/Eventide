@@ -7,7 +7,7 @@ const CreateUserSchema = z.object({
     email: z.string().email(),
     username: z.string(),
     theme: z.string(),
-    photoURL: z.string().url(),
+    photoURL: z.string(),
 });
 
 type CreateUserInput = z.infer<typeof CreateUserSchema>;
@@ -21,7 +21,7 @@ type UpdateUserThemeInput = z.infer<typeof UpdateUserThemeSchema>;
 
 const UpdateUserPhotoSchema = z.object({
     email: z.string().email(),
-    photoData: z.any(),
+    photoURL: z.string(),
 });
 type UpdateUserPhotoInput = z.infer<typeof UpdateUserPhotoSchema>;
 
@@ -37,56 +37,6 @@ function areBaserowCredsConfigured() {
     }
     return true;
 }
-
-export async function uploadFileToBaserow(file: File) {
-    if (!areBaserowCredsConfigured()) {
-        return { success: false, error: "Baserow is not configured." };
-    }
-
-    try {
-        // Step 1: Get an upload URL from Baserow.
-        // We only send the file name in the query param and the auth token.
-        const getUrlResponse = await fetch(`${apiEndpoint}/api/user-files/upload-file/?name=${encodeURIComponent(file.name)}`, {
-            method: 'POST',
-            headers: {
-                'Authorization': `Token ${dbToken}`,
-            },
-        });
-
-        if (!getUrlResponse.ok) {
-            const errorData = await getUrlResponse.json();
-            console.error("Baserow get URL error data:", errorData);
-            throw new Error(`Failed to get Baserow upload URL. Status: ${getUrlResponse.status}`);
-        }
-        
-        const { url, ...uploadData } = await getUrlResponse.json();
-
-        // Step 2: Upload the actual file to the URL provided
-        const uploadResponse = await fetch(url, {
-            method: 'PUT',
-            headers: {
-                'Content-Type': file.type,
-            },
-            body: file,
-        });
-
-        if (!uploadResponse.ok) {
-            const errorData = await uploadResponse.text();
-            console.error("Baserow upload error data:", errorData);
-            throw new Error(`Failed to upload file to Baserow. Status: ${uploadResponse.status}`);
-        }
-
-        return { success: true, data: uploadData };
-    } catch (error) {
-        console.error("Baserow API Error in uploadFileToBaserow:", error);
-        let message = 'An unknown error occurred during file upload.';
-        if (error instanceof Error) {
-            message = error.message;
-        }
-        return { success: false, error: message };
-    }
-}
-
 
 export async function createUserInBaserow(userData: CreateUserInput) {
     if (!areBaserowCredsConfigured()) {
@@ -106,7 +56,7 @@ export async function createUserInBaserow(userData: CreateUserInput) {
                 "Email": email,
                 "Username": username,
                 "Theme": theme,
-                "Photo URL": [{ url: photoURL }],
+                "Photo URL": photoURL,
             }),
         });
 
@@ -172,7 +122,7 @@ export async function updateUserPhotoInBaserow(userData: UpdateUserPhotoInput) {
         return { success: false, error: "Baserow is not configured." };
     }
 
-    const { email, photoData } = userData;
+    const { email, photoURL } = userData;
     
     try {
         const rowId = await getRowIdByEmail(email);
@@ -186,7 +136,7 @@ export async function updateUserPhotoInBaserow(userData: UpdateUserPhotoInput) {
                 'Authorization': `Token ${dbToken}`,
                 'Content-Type': 'application/json',
             },
-            body: JSON.stringify({ "Photo URL": [photoData] }),
+            body: JSON.stringify({ "Photo URL": photoURL }),
         });
 
         if (!patchResponse.ok) {
