@@ -8,6 +8,7 @@ import { useToast } from "@/hooks/use-toast";
 import { generateAvatar } from '@/lib/utils';
 import { useRouter } from 'next/navigation';
 import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
+import { createUserInBaserow } from '@/services/baserow';
 
 
 interface User {
@@ -82,6 +83,19 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       await updateProfile(firebaseUser, {
         photoURL: defaultAvatar,
       });
+
+      // Create user in Baserow
+      const baserowResult = await createUserInBaserow({ email });
+      if (!baserowResult.success) {
+        // We can choose to either fail the whole signup or just log the error
+        console.error("Failed to create user in Baserow:", baserowResult.error);
+        // Optionally, show a toast to the user
+        toast({
+          variant: 'destructive',
+          title: "Signup Warning",
+          description: "Your account was created, but we failed to sync with our database. Please contact support.",
+        });
+      }
 
       setUser({
           uid: firebaseUser.uid,
