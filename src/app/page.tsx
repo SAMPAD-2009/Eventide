@@ -39,14 +39,16 @@ export default function Home() {
               Create Event
             </Button>
           </DialogTrigger>
-          <DialogContent className="sm:max-w-[425px] py-10">
-            <DialogHeader>
+          <DialogContent className="sm:max-w-[425px] p-0">
+            <DialogHeader className="p-6 pb-0">
               <DialogTitle>Create New Event</DialogTitle>
               <DialogDescription>
                 Fill in the details below to add a new event to your calendar.
               </DialogDescription>
             </DialogHeader>
-            <EventForm onEventCreated={() => setDialogOpen(false)} />
+            <div className="p-6 pt-4 overflow-y-auto">
+                <EventForm onEventCreated={() => setDialogOpen(false)} />
+            </div>
           </DialogContent>
         </Dialog>
       </div>

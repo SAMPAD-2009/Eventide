@@ -85,7 +85,7 @@ export function EventForm({ onEventCreated }: EventFormProps) {
 
   return (
     <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 pt-4">
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
         <FormField
             control={form.control}
             name="title"
