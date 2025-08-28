@@ -25,10 +25,17 @@ export const EventProvider = ({ children }: { children: ReactNode }) => {
     try {
       const item = window.localStorage.getItem('eventide_events');
       const parsedEvents = item ? JSON.parse(item) : [];
-      setEvents(parsedEvents.map((event: Event) => ({
-        ...event,
-        datetime: event.datetime,
-      })).sort((a: Event, b: Event) => new Date(a.datetime).getTime() - new Date(b.datetime).getTime()));
+      const now = new Date();
+      const upcomingEvents = parsedEvents
+        .filter((event: Event) => new Date(event.datetime) > now)
+        .map((event: Event) => ({
+          ...event,
+          datetime: event.datetime,
+        }))
+        .sort((a: Event, b: Event) => new Date(a.datetime).getTime() - new Date(b.datetime).getTime());
+      
+      setEvents(upcomingEvents);
+
     } catch (error) {
       console.error("Failed to load events from localStorage", error);
       setEvents([]);
@@ -38,13 +45,24 @@ export const EventProvider = ({ children }: { children: ReactNode }) => {
 
   useEffect(() => {
     if (hydrated) {
-        try {
-            window.localStorage.setItem('eventide_events', JSON.stringify(events));
-        } catch (error) {
-            console.error("Failed to save events to localStorage", error);
-        }
+      try {
+        window.localStorage.setItem('eventide_events', JSON.stringify(events));
+      } catch (error) {
+        console.error("Failed to save events to localStorage", error);
+      }
     }
   }, [events, hydrated]);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      const now = new Date();
+      setEvents(prevEvents =>
+        prevEvents.filter(event => new Date(event.datetime) > now)
+      );
+    }, 60000); // Check every minute
+
+    return () => clearInterval(interval);
+  }, []);
 
   const addEvent = async (eventData: Omit<Event, 'id' | 'summary' | 'datetime'>) => {
     setIsLoading(true);
