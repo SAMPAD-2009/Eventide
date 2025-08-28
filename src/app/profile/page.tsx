@@ -184,11 +184,11 @@ export default function ProfilePage() {
             </CardHeader>
             <CardContent className="space-y-6">
                 <div className="flex flex-col items-center gap-6">
-                    <Avatar className="h-32 w-32">
+                    <Avatar className="h-24 w-24 md:h-32 md:w-32">
                         <AvatarImage src={previewPhoto ?? user.photoURL ?? undefined} alt={user.email ?? ''}/>
                         <AvatarFallback className="text-4xl">{generateAvatar(user.email ?? '')}</AvatarFallback>
                     </Avatar>
-                     <div className="flex items-center gap-4">
+                     <div className="flex flex-col sm:flex-row items-center gap-4 w-full sm:w-auto">
                         <Input 
                             id="picture" 
                             type="file" 
@@ -197,8 +197,8 @@ export default function ProfilePage() {
                             accept="image/*" 
                             className="hidden"
                         />
-                        <Button variant="outline" onClick={triggerFileSelect}>Choose File</Button>
-                        <Button onClick={handlePhotoUpdate} disabled={!newPhoto || isSavingPhoto}>
+                        <Button variant="outline" onClick={triggerFileSelect} className="w-full sm:w-auto">Choose File</Button>
+                        <Button onClick={handlePhotoUpdate} disabled={!newPhoto || isSavingPhoto} className="w-full sm:w-auto">
                            {isSavingPhoto ? <Loader2 className="animate-spin" /> : <Save />}
                            Save Photo
                         </Button>
@@ -206,9 +206,9 @@ export default function ProfilePage() {
                 </div>
                  <div className="space-y-2">
                     <Label htmlFor="username">Username</Label>
-                    <div className="flex items-center gap-4">
+                    <div className="flex flex-col sm:flex-row items-center gap-4">
                       <Input id="username" value={newUsername} onChange={(e) => setNewUsername(e.target.value)} />
-                      <Button onClick={handleUsernameUpdate} disabled={newUsername === user.displayName || isSavingUsername}>
+                      <Button onClick={handleUsernameUpdate} disabled={newUsername === user.displayName || isSavingUsername} className="w-full sm:w-auto">
                           {isSavingUsername ? <Loader2 className="animate-spin" /> : <Save />}
                           Save Username
                       </Button>

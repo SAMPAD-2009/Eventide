@@ -3,7 +3,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Calendar, LogOut } from 'lucide-react';
+import { Calendar, LogOut, Menu } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { ThemeToggle } from './ThemeToggle';
 import { useAuth } from '@/context/AuthContext';
@@ -18,17 +18,31 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
 import { Button } from './ui/button';
 import { generateAvatar } from '@/lib/utils';
+import { Sheet, SheetContent, SheetTrigger, SheetClose } from './ui/sheet';
+import React from 'react';
 
 
 export function Header() {
   const pathname = usePathname();
   const { user, logout } = useAuth();
+  const [isSheetOpen, setSheetOpen] = React.useState(false);
+
+
+  const navLinks = [
+    { href: "/", label: "Upcoming" },
+    { href: "/future", label: "Future" },
+    { href: "/history", label: "History" },
+  ];
 
   const navLinkClasses = (path: string) =>
     cn(
       "transition-colors hover:text-primary",
       pathname === path ? "text-primary font-semibold" : "text-muted-foreground"
     );
+
+  const handleLinkClick = () => {
+    setSheetOpen(false);
+  };
 
   return (
     <header className="sticky top-0 z-40 w-full border-b bg-card">
@@ -39,18 +53,14 @@ export function Header() {
             <span className="inline-block font-bold text-lg">Eventide</span>
           </Link>
           <nav className="hidden md:flex gap-6">
-            <Link href="/" className={navLinkClasses("/")}>
-              Upcoming
-            </Link>
-            <Link href="/future" className={navLinkClasses("/future")}>
-              Future
-            </Link>
-            <Link href="/history" className={navLinkClasses("/history")}>
-              History
-            </Link>
+            {navLinks.map(link => (
+              <Link key={link.href} href={link.href} className={navLinkClasses(link.href)}>
+                {link.label}
+              </Link>
+            ))}
           </nav>
         </div>
-        <div className="flex flex-1 items-center justify-end gap-4">
+        <div className="flex flex-1 items-center justify-end gap-2">
             <ThemeToggle />
             {user ? (
                <DropdownMenu>
@@ -83,7 +93,7 @@ export function Header() {
                   </DropdownMenuContent>
                 </DropdownMenu>
             ) : (
-                <div className="flex items-center gap-2">
+                <div className="hidden md:flex items-center gap-2">
                     <Button asChild variant="ghost">
                         <Link href="/login">Login</Link>
                     </Button>
@@ -92,6 +102,35 @@ export function Header() {
                     </Button>
                 </div>
             )}
+             <Sheet open={isSheetOpen} onOpenChange={setSheetOpen}>
+              <SheetTrigger asChild>
+                <Button variant="ghost" size="icon" className="md:hidden">
+                  <Menu className="h-5 w-5" />
+                  <span className="sr-only">Toggle Menu</span>
+                </Button>
+              </SheetTrigger>
+              <SheetContent side="left">
+                <nav className="grid gap-6 text-lg font-medium mt-8">
+                  {navLinks.map(link => (
+                    <Link 
+                      key={link.href} 
+                      href={link.href} 
+                      className={navLinkClasses(link.href)}
+                      onClick={handleLinkClick}
+                    >
+                      {link.label}
+                    </Link>
+                  ))}
+                  <DropdownMenuSeparator />
+                  {!user && (
+                    <>
+                      <Link href="/login" className={navLinkClasses("/login")} onClick={handleLinkClick}>Login</Link>
+                      <Link href="/signup" className={navLinkClasses("/signup")} onClick={handleLinkClick}>Sign Up</Link>
+                    </>
+                  )}
+                </nav>
+              </SheetContent>
+            </Sheet>
         </div>
       </div>
     </header>

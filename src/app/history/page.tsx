@@ -22,18 +22,14 @@ export default function HistoryPage() {
       setIsLoading(true);
       setError(null);
       
-      const apiKey = "O3KECADaiPCcO1jx1V8VXQ==GfgqATLxbSQNGOtB";
-      if (!apiKey || apiKey === "YOUR_API_KEY_HERE") {
-        setError("API key for API-Ninjas is not configured. Please add it to your .env file.");
-        setIsLoading(false);
-        return;
-      }
-
-      const today = new Date();
-      const month = today.getMonth() + 1;
-      const day = today.getDate();
-      
       try {
+        // Hardcoded API key as per user request
+        const apiKey = "O3KECADaiPCcO1jx1V8VXQ==GfgqATLxbSQNGOtB";
+        
+        const today = new Date();
+        const month = today.getMonth() + 1;
+        const day = today.getDate();
+        
         const url = `https://api.api-ninjas.com/v1/historicalevents?month=${month}&day=${day}`;
         console.log("Requesting historical events from:", url); // Added for debugging
         const response = await fetch(url, {
@@ -43,8 +39,9 @@ export default function HistoryPage() {
         });
 
         if (!response.ok) {
-          const errorData = await response.json();
-          throw new Error(errorData.message || 'Failed to fetch historical events.');
+          const errorText = await response.text();
+          console.error("API Error Response:", errorText);
+          throw new Error('Failed to fetch historical events. Check API key and network.');
         }
 
         const data: HistoryEvent[] = await response.json();
