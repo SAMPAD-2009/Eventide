@@ -150,8 +150,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             throw new Error(updateResult.error || 'Failed to update user photo in Baserow');
           }
 
-          await updateProfile(auth.currentUser!, { photoURL: base64Photo });
-
           setUser(prevUser => prevUser ? { ...prevUser, photoURL: base64Photo } : null);
 
           toast({ title: "Profile Updated", description: "Your profile picture has been changed." });
