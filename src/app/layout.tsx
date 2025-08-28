@@ -25,8 +25,8 @@ export default function RootLayout({
         <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet" />
       </head>
       <body className="font-body antialiased min-h-screen bg-background text-foreground">
-        <ThemeProvider>
-          <AuthProvider>
+        <AuthProvider>
+          <ThemeProvider>
             <EventProvider>
               <div className="relative flex min-h-screen flex-col">
                 <Header />
@@ -34,8 +34,8 @@ export default function RootLayout({
               </div>
               <Toaster />
             </EventProvider>
-          </AuthProvider>
-        </ThemeProvider>
+          </ThemeProvider>
+        </AuthProvider>
       </body>
     </html>
   );
