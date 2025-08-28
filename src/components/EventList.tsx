@@ -19,7 +19,7 @@ export function EventList({ events, emptyStateMessage = "No events to display." 
   }
 
   return (
-    <div className="space-y-4">
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
       {events.map(event => (
         <EventCard key={event.id} event={event} />
       ))}
