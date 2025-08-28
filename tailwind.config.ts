@@ -65,16 +65,33 @@ export default {
           border: 'hsl(var(--sidebar-border))',
           ring: 'hsl(var(--sidebar-ring))',
         },
-        'personal-tag': 'hsl(var(--personal-tag))',
-        'personal-tag-foreground': 'hsl(var(--personal-tag-foreground))',
-        'work-tag': 'hsl(var(--work-tag))',
-        'work-tag-foreground': 'hsl(var(--work-tag-foreground))',
-        'social-tag': 'hsl(var(--social-tag))',
-        'social-tag-foreground': 'hsl(var(--social-tag-foreground))',
-        'health-tag': 'hsl(var(--health-tag))',
-        'health-tag-foreground': 'hsl(var(--health-tag-foreground))',
-        'other-tag': 'hsl(var(--other-tag))',
-        'other-tag-foreground': 'hsl(var(--other-tag-foreground))',
+        'personal-tag': {
+          bg: 'hsl(var(--personal-tag-bg))',
+          fg: 'hsl(var(--personal-tag-fg))',
+        },
+        'work-tag': {
+          bg: 'hsl(var(--work-tag-bg))',
+          fg: 'hsl(var(--work-tag-fg))',
+        },
+        'social-tag': {
+          bg: 'hsl(var(--social-tag-bg))',
+          fg: 'hsl(var(--social-tag-fg))',
+        },
+        'health-tag': {
+          bg: 'hsl(var(--health-tag-bg))',
+          fg: 'hsl(var(--health-tag-fg))',
+        },
+        'other-tag': {
+          bg: 'hsl(var(--other-tag-bg))',
+          fg: 'hsl(var(--other-tag-fg))',
+        },
+      },
+      borderColor: {
+        'personal-tag-foreground': 'hsl(var(--personal-tag-fg))',
+        'work-tag-foreground': 'hsl(var(--work-tag-fg))',
+        'social-tag-foreground': 'hsl(var(--social-tag-fg))',
+        'health-tag-foreground': 'hsl(var(--health-tag-fg))',
+        'other-tag-foreground': 'hsl(var(--other-tag-fg))',
       },
       borderRadius: {
         lg: 'var(--radius)',
