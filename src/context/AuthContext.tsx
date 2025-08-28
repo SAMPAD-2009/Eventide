@@ -7,8 +7,7 @@ import { app } from '@/lib/firebase';
 import { useToast } from "@/hooks/use-toast";
 import { generateAvatar } from '@/lib/utils';
 import { useRouter } from 'next/navigation';
-import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
-import { createUserInBaserow, getUserFromBaserow } from '@/services/baserow';
+import { createUserInBaserow, getUserFromBaserow, uploadFileToBaserow, updateUserPhotoInBaserow } from '@/services/baserow';
 
 
 interface User {
@@ -31,7 +30,6 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 const auth = getAuth(app);
-const storage = getStorage(app);
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const { toast } = useToast();
@@ -46,7 +44,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         setUser({
           uid: firebaseUser.uid,
           email: firebaseUser.email,
-          photoURL: firebaseUser.photoURL,
+          photoURL: baserowUser?.['Photo URL']?.[0]?.url || firebaseUser.photoURL,
           displayName: firebaseUser.displayName,
           baserowUserId: baserowUser?.id
         });
@@ -79,9 +77,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       const userCredential = await createUserWithEmailAndPassword(auth, email, pass);
       const firebaseUser = userCredential.user;
       
-      const defaultAvatar = `data:image/svg+xml;base64,${btoa(
-        `<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 100 100"><rect width="100" height="100" fill="#cccccc"></rect><text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" font-family="sans-serif" font-size="50" fill="#ffffff">${generateAvatar(email)}</text></svg>`
-      )}`;
+      const defaultAvatar = `https://ui-avatars.com/api/?name=${encodeURIComponent(username)}&background=random`;
 
       await updateProfile(firebaseUser, {
         displayName: username,
@@ -136,20 +132,40 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const updateUserProfile = async (photo: File): Promise<boolean> => {
-    if (!auth.currentUser) return false;
+    if (!auth.currentUser || !user?.email) return false;
     setIsLoading(true);
     try {
-      const storageRef = ref(storage, `avatars/${auth.currentUser.uid}/${photo.name}`);
-      await uploadBytes(storageRef, photo);
-      const photoURL = await getDownloadURL(storageRef);
+      // Step 1: Upload the file to Baserow
+      const uploadResult = await uploadFileToBaserow(photo);
+      if (!uploadResult.success || !uploadResult.data) {
+        throw new Error(uploadResult.error || 'Failed to upload file to Baserow');
+      }
       
+      const newPhotoData = uploadResult.data;
+
+      // Step 2: Update the user's row in Baserow with the new photo info
+      const updateResult = await updateUserPhotoInBaserow({
+        email: user.email,
+        photoData: newPhotoData,
+      });
+
+      if (!updateResult.success || !updateResult.data) {
+        throw new Error(updateResult.error || 'Failed to update user photo record in Baserow');
+      }
+
+      const photoURL = newPhotoData.url;
+
+      // Step 3: Update Firebase profile (optional, but good for consistency)
       await updateProfile(auth.currentUser, { photoURL });
 
+      // Step 4: Update local state
       setUser(prevUser => prevUser ? { ...prevUser, photoURL } : null);
 
+      toast({ title: "Profile Updated", description: "Your profile picture has been changed." });
       return true;
-    } catch (e) {
-      toast({ variant: 'destructive', title: "Update Failed", description: "Could not update profile picture." });
+    } catch (e: any) {
+      console.error("Profile update error:", e);
+      toast({ variant: 'destructive', title: "Update Failed", description: e.message || "Could not update profile picture." });
       return false;
     } finally {
       setIsLoading(false);
