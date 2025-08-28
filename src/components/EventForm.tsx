@@ -16,6 +16,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Textarea } from '@/components/ui/textarea';
 import { useEvents } from '@/context/EventContext';
 import { CATEGORIES } from '@/lib/categories';
+import { useEffect, useState } from 'react';
 
 const eventFormSchema = z.object({
   title: z.string().min(2, { message: "Title must be at least 2 characters long." }),
@@ -33,16 +34,31 @@ interface EventFormProps {
 
 export function EventForm({ onEventCreated }: EventFormProps) {
   const { addEvent, isLoading } = useEvents();
+  const [defaultTime, setDefaultTime] = useState('');
+
+  useEffect(() => {
+    setDefaultTime(format(new Date(), 'HH:mm'));
+  }, []);
+
   const form = useForm<EventFormValues>({
     resolver: zodResolver(eventFormSchema),
     defaultValues: {
       title: "",
       details: "",
       date: new Date(),
-      time: format(new Date(), 'HH:mm'),
+      time: defaultTime,
       category: "Personal",
     },
   });
+
+  useEffect(() => {
+    if (defaultTime) {
+      form.reset({
+        ...form.getValues(),
+        time: defaultTime
+      });
+    }
+  }, [defaultTime, form]);
 
   const onSubmit = async (data: EventFormValues) => {
     const eventData = {
@@ -50,7 +66,13 @@ export function EventForm({ onEventCreated }: EventFormProps) {
       date: format(data.date, 'yyyy-MM-dd'),
     };
     await addEvent(eventData);
-    form.reset();
+    form.reset({
+        title: "",
+        details: "",
+        date: new Date(),
+        time: format(new Date(), 'HH:mm'),
+        category: "Personal",
+    });
     onEventCreated?.();
   };
 

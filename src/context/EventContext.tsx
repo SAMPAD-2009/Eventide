@@ -18,30 +18,33 @@ const EventContext = createContext<EventContextType | undefined>(undefined);
 export const EventProvider = ({ children }: { children: ReactNode }) => {
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
-  const [events, setEvents] = useState<Event[]>(() => {
-    if (typeof window === 'undefined') {
-      return [];
-    }
-    try {
-      const item = window.localStorage.getItem('eventide_events');
-      const parsedEvents = item ? JSON.parse(item) : [];
-      return parsedEvents.map((event: Event) => ({
-        ...event,
-        datetime: event.datetime,
-      }));
-    } catch (error) {
-      console.error("Failed to load events from localStorage", error);
-      return [];
-    }
-  });
+  const [events, setEvents] = useState<Event[]>([]);
+  const [hydrated, setHydrated] = useState(false);
 
   useEffect(() => {
     try {
-      window.localStorage.setItem('eventide_events', JSON.stringify(events));
+      const item = window.localStorage.getItem('eventide_events');
+      const parsedEvents = item ? JSON.parse(item) : [];
+      setEvents(parsedEvents.map((event: Event) => ({
+        ...event,
+        datetime: event.datetime,
+      })).sort((a: Event, b: Event) => new Date(a.datetime).getTime() - new Date(b.datetime).getTime()));
     } catch (error) {
-      console.error("Failed to save events to localStorage", error);
+      console.error("Failed to load events from localStorage", error);
+      setEvents([]);
     }
-  }, [events]);
+    setHydrated(true);
+  }, []);
+
+  useEffect(() => {
+    if (hydrated) {
+        try {
+            window.localStorage.setItem('eventide_events', JSON.stringify(events));
+        } catch (error) {
+            console.error("Failed to save events to localStorage", error);
+        }
+    }
+  }, [events, hydrated]);
 
   const addEvent = async (eventData: Omit<Event, 'id' | 'summary' | 'datetime'>) => {
     setIsLoading(true);
@@ -84,9 +87,11 @@ export const EventProvider = ({ children }: { children: ReactNode }) => {
       description: "The event has been removed.",
     });
   };
+  
+  const contextValue = { events: hydrated ? events : [], addEvent, deleteEvent, isLoading };
 
   return (
-    <EventContext.Provider value={{ events, addEvent, deleteEvent, isLoading }}>
+    <EventContext.Provider value={contextValue}>
       {children}
     </EventContext.Provider>
   );
