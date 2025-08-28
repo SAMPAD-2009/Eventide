@@ -5,6 +5,7 @@ import { z } from 'zod';
 
 const CreateUserSchema = z.object({
     email: z.string().email(),
+    username: z.string(),
     theme: z.string(),
     photoURL: z.string().url(),
 });
@@ -35,7 +36,7 @@ export async function createUserInBaserow(userData: CreateUserInput) {
         return { success: true, message: "Skipped Baserow user creation (dev mode)." };
     }
 
-    const { email, theme, photoURL } = userData;
+    const { email, username, theme, photoURL } = userData;
 
     try {
         const response = await fetch(`${apiEndpoint}/api/database/rows/table/${tableId}/?user_field_names=true`, {
@@ -46,6 +47,7 @@ export async function createUserInBaserow(userData: CreateUserInput) {
             },
             body: JSON.stringify({
                 "Email": email,
+                "Username": username,
                 "Theme": theme,
                 "Photo URL": photoURL,
             }),

@@ -8,7 +8,7 @@ import { useToast } from "@/hooks/use-toast";
 import { generateAvatar } from '@/lib/utils';
 import { useRouter } from 'next/navigation';
 import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
-import { createUserInBaserow } from '@/services/baserow';
+import { createUserInBaserow, getUserFromBaserow } from '@/services/baserow';
 
 
 interface User {
@@ -22,7 +22,7 @@ interface User {
 interface AuthContextType {
   user: User | null;
   login: (email: string, pass: string) => Promise<boolean>;
-  signup: (email: string, pass: string) => Promise<boolean>;
+  signup: (email: string, pass: string, username: string) => Promise<boolean>;
   logout: () => void;
   updateUserProfile: (photo: File) => Promise<boolean>;
   isLoading: boolean;
@@ -40,13 +40,15 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (firebaseUser: FirebaseUser | null) => {
+    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser: FirebaseUser | null) => {
       if (firebaseUser) {
+        const baserowUser = await getUserFromBaserow(firebaseUser.email!);
         setUser({
           uid: firebaseUser.uid,
           email: firebaseUser.email,
           photoURL: firebaseUser.photoURL,
           displayName: firebaseUser.displayName,
+          baserowUserId: baserowUser?.id
         });
       } else {
         setUser(null);
@@ -71,7 +73,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
-  const signup = async (email: string, pass: string) => {
+  const signup = async (email: string, pass: string, username: string) => {
     setIsLoading(true);
     try {
       const userCredential = await createUserWithEmailAndPassword(auth, email, pass);
@@ -82,11 +84,17 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       )}`;
 
       await updateProfile(firebaseUser, {
+        displayName: username,
         photoURL: defaultAvatar,
       });
 
-      // Create user in Baserow
-      const baserowResult = await createUserInBaserow({ email, theme: 'light', photoURL: defaultAvatar });
+      const baserowResult = await createUserInBaserow({ 
+        email, 
+        username,
+        theme: 'light', 
+        photoURL: defaultAvatar 
+      });
+      
       if (!baserowResult.success || !baserowResult.data) {
         console.error("Failed to create user in Baserow:", baserowResult.error);
         toast({
@@ -100,7 +108,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           uid: firebaseUser.uid,
           email: firebaseUser.email,
           photoURL: defaultAvatar,
-          displayName: firebaseUser.displayName,
+          displayName: username,
           baserowUserId: baserowResult.data?.id
         });
 

@@ -15,8 +15,13 @@ import { Loader2 } from 'lucide-react';
 
 
 const signupFormSchema = z.object({
+  username: z.string().min(1, { message: "Username is required." }).max(10, { message: "Username must not be longer than 10 characters." }),
   email: z.string().email({ message: "Please enter a valid email." }),
   password: z.string().min(8, { message: "Password must be at least 8 characters long." }),
+  confirmPassword: z.string(),
+}).refine(data => data.password === data.confirmPassword, {
+    message: "Passwords don't match",
+    path: ["confirmPassword"],
 });
 
 type SignupFormValues = z.infer<typeof signupFormSchema>;
@@ -28,13 +33,15 @@ export default function SignupPage() {
   const form = useForm<SignupFormValues>({
     resolver: zodResolver(signupFormSchema),
     defaultValues: {
+      username: "",
       email: "",
       password: "",
+      confirmPassword: "",
     },
   });
 
   const onSubmit = async (data: SignupFormValues) => {
-    const success = await signup(data.email, data.password);
+    const success = await signup(data.email, data.password, data.username);
      if (success) {
       router.push('/');
     }
@@ -50,6 +57,19 @@ export default function SignupPage() {
             <CardContent>
                  <Form {...form}>
                     <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+                        <FormField
+                            control={form.control}
+                            name="username"
+                            render={({ field }) => (
+                            <FormItem>
+                                <FormLabel>Username</FormLabel>
+                                <FormControl>
+                                <Input placeholder="your_username" {...field} />
+                                </FormControl>
+                                <FormMessage />
+                            </FormItem>
+                            )}
+                        />
                         <FormField
                             control={form.control}
                             name="email"
@@ -69,6 +89,19 @@ export default function SignupPage() {
                             render={({ field }) => (
                             <FormItem>
                                 <FormLabel>Password</FormLabel>
+                                <FormControl>
+                                <Input type="password" placeholder="••••••••" {...field} />
+                                </FormControl>
+                                <FormMessage />
+                            </FormItem>
+                            )}
+                        />
+                        <FormField
+                            control={form.control}
+                            name="confirmPassword"
+                            render={({ field }) => (
+                            <FormItem>
+                                <FormLabel>Confirm Password</FormLabel>
                                 <FormControl>
                                 <Input type="password" placeholder="••••••••" {...field} />
                                 </FormControl>

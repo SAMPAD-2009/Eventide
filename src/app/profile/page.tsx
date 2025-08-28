@@ -58,7 +58,7 @@ export default function ProfilePage() {
         <h1 className="text-3xl font-bold tracking-tight mb-6">Your Profile</h1>
         <Card>
             <CardHeader>
-                <CardTitle>Profile Details</CardTitle>
+                <CardTitle>{user.displayName ?? 'Profile Details'}</CardTitle>
                 <CardDescription>View and update your profile information.</CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
@@ -77,6 +77,10 @@ export default function ProfilePage() {
                         </div>
                     </div>
                 </div>
+                 <div>
+                    <Label>Username</Label>
+                    <p className="text-sm text-muted-foreground">{user.displayName}</p>
+                 </div>
                  <div>
                     <Label>Email</Label>
                     <p className="text-sm text-muted-foreground">{user.email}</p>
