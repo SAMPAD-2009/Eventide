@@ -3,7 +3,7 @@
 
 import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import { useAuth } from './AuthContext';
-import { updateUserThemeInBaserow } from '@/services/baserow';
+import { updateUserThemeInBaserow, getUserFromBaserow } from '@/services/baserow';
 
 interface ThemeProviderState {
   theme: string;
@@ -17,32 +17,37 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   const { user } = useAuth();
 
   useEffect(() => {
-    const storedTheme = localStorage.getItem('eventide_theme');
-    if (storedTheme && (storedTheme === 'light' || storedTheme === 'dark')) {
-      setThemeState(storedTheme);
-    } else {
-        const systemTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
-        setThemeState(systemTheme);
+    const applyTheme = async () => {
+        if (user?.email) {
+            const userData = await getUserFromBaserow(user.email);
+            if (userData?.Theme) {
+                setAndApplyTheme(userData.Theme);
+            } else {
+                 setAndApplyTheme(window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+            }
+        } else {
+            // Fallback for logged-out users
+            const systemTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+            setAndApplyTheme(systemTheme);
+        }
     }
-  }, []);
+    applyTheme();
+  }, [user]);
 
-  const setTheme = async (newTheme: string) => {
+  const setAndApplyTheme = (newTheme: string) => {
     const root = window.document.documentElement;
     root.classList.remove('light', 'dark');
     root.classList.add(newTheme);
-    localStorage.setItem('eventide_theme', newTheme);
+    localStorage.setItem('eventide_theme', newTheme); // Keep for initial flicker prevention
     setThemeState(newTheme);
+  }
 
+  const setTheme = async (newTheme: string) => {
+    setAndApplyTheme(newTheme);
     if (user?.email) {
       await updateUserThemeInBaserow({ email: user.email, theme: newTheme });
     }
   }
-
-  useEffect(() => {
-    const root = window.document.documentElement;
-    root.classList.remove('light', 'dark');
-    root.classList.add(theme);
-  }, [theme]);
 
   const value = {
     theme,

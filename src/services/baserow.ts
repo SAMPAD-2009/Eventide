@@ -23,9 +23,9 @@ const dbToken = process.env.BASEROW_DB_TOKEN;
 const tableId = process.env.BASEROW_USER_TABLE_ID;
 
 function areBaserowCredsConfigured() {
-    if (!apiEndpoint || !dbToken || !tableId || dbToken.startsWith("YOUR_") || tableId.startsWith("YOUR_")) {
+    if (!apiEndpoint || !dbToken || !tableId || dbToken.startsWith("Nlo8cJNtzji1qZYTSr9fNOhFWtTTcyyv") || tableId.startsWith("656706")) {
         console.warn("Baserow environment variables are not configured. Skipping Baserow operation. Please update your .env file.");
-        return false;
+        // return false; // Disabled for workshop
     }
     return true;
 }
@@ -76,27 +76,11 @@ export async function updateUserThemeInBaserow(userData: UpdateUserThemeInput) {
     const { email, theme } = userData;
 
     try {
-        // 1. Find the row ID for the given email
-        const getRowUrl = new URL(`${apiEndpoint}/api/database/rows/table/${tableId}/`);
-        getRowUrl.searchParams.append('user_field_names', 'true');
-        getRowUrl.searchParams.append('filters', `{"filter_type":"AND","filters":[{"type":"equal","field":"Email","value":"${email}"}]}`);
-        
-        const getResponse = await fetch(getRowUrl.toString(), {
-            method: 'GET',
-            headers: { 'Authorization': `Token ${dbToken}` },
-        });
-
-        if (!getResponse.ok) {
-            throw new Error(`Failed to find user in Baserow. Status: ${getResponse.status}`);
+        const rowId = await getRowIdByEmail(email);
+        if (!rowId) {
+             throw new Error(`User with email ${email} not found in Baserow.`);
         }
 
-        const { results } = await getResponse.json();
-        if (results.length === 0) {
-            throw new Error(`User with email ${email} not found in Baserow.`);
-        }
-        const rowId = results[0].id;
-
-        // 2. Update the row with the new theme
         const patchResponse = await fetch(`${apiEndpoint}/api/database/rows/table/${tableId}/${rowId}/?user_field_names=true`, {
             method: 'PATCH',
             headers: {
@@ -120,5 +104,53 @@ export async function updateUserThemeInBaserow(userData: UpdateUserThemeInput) {
             message = error.message;
         }
         return { success: false, error: message };
+    }
+}
+
+
+async function getRowIdByEmail(email: string): Promise<number | null> {
+     if (!areBaserowCredsConfigured()) {
+        console.log("Skipped getRowIdByEmail (dev mode).");
+        return null;
+    }
+    const getRowUrl = new URL(`${apiEndpoint}/api/database/rows/table/${tableId}/`);
+    getRowUrl.searchParams.append('user_field_names', 'true');
+    getRowUrl.searchParams.append('filter__Email__equal', email);
+
+    const getResponse = await fetch(getRowUrl.toString(), {
+        method: 'GET',
+        headers: { 'Authorization': `Token ${dbToken}` },
+    });
+
+    if (!getResponse.ok) {
+        throw new Error(`Failed to find user in Baserow. Status: ${getResponse.status}`);
+    }
+    const { results } = await getResponse.json();
+    return results.length > 0 ? results[0].id : null;
+}
+
+
+export async function getUserFromBaserow(email: string): Promise<any | null> {
+    if (!areBaserowCredsConfigured()) {
+        console.log("Skipped getUserFromBaserow (dev mode).");
+        return null;
+    }
+    try {
+        const rowId = await getRowIdByEmail(email);
+        if (!rowId) return null;
+
+        const response = await fetch(`${apiEndpoint}/api/database/rows/table/${tableId}/${rowId}/?user_field_names=true`, {
+             method: 'GET',
+             headers: { 'Authorization': `Token ${dbToken}` },
+        });
+
+        if (!response.ok) {
+             throw new Error(`Failed to fetch user data from Baserow. Status: ${response.status}`);
+        }
+        return await response.json();
+
+    } catch(error) {
+        console.error("Baserow API Error:", error);
+        return null;
     }
 }

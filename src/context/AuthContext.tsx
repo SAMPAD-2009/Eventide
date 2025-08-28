@@ -16,6 +16,7 @@ interface User {
   email: string | null;
   photoURL: string | null;
   displayName: string | null;
+  baserowUserId?: number;
 }
 
 interface AuthContextType {
@@ -86,10 +87,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
       // Create user in Baserow
       const baserowResult = await createUserInBaserow({ email, theme: 'light', photoURL: defaultAvatar });
-      if (!baserowResult.success) {
-        // We can choose to either fail the whole signup or just log the error
+      if (!baserowResult.success || !baserowResult.data) {
         console.error("Failed to create user in Baserow:", baserowResult.error);
-        // Optionally, show a toast to the user
         toast({
           variant: 'destructive',
           title: "Signup Warning",
@@ -102,6 +101,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           email: firebaseUser.email,
           photoURL: defaultAvatar,
           displayName: firebaseUser.displayName,
+          baserowUserId: baserowResult.data?.id
         });
 
       toast({ title: "Signup Successful", description: "Your account has been created." });
