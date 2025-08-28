@@ -4,18 +4,32 @@
 import { useAuth } from '@/context/AuthContext';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState, useRef } from 'react';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import * as z from 'zod';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { useToast } from '@/hooks/use-toast';
 import { generateAvatar } from '@/lib/utils';
 import { Loader2, Save } from 'lucide-react';
 
+const passwordFormSchema = z.object({
+  password: z.string().min(8, { message: "Password must be at least 8 characters long." }),
+  confirmPassword: z.string(),
+}).refine(data => data.password === data.confirmPassword, {
+    message: "Passwords don't match",
+    path: ["confirmPassword"],
+});
+
+type PasswordFormValues = z.infer<typeof passwordFormSchema>;
+
 
 export default function ProfilePage() {
-    const { user, updateUserProfile, updateUserUsername, isLoading: isAuthLoading } = useAuth();
+    const { user, updateUserProfile, updateUserUsername, updateUserPassword, isLoading: isAuthLoading } = useAuth();
     const router = useRouter();
     const { toast } = useToast();
     const [newUsername, setNewUsername] = useState('');
@@ -23,7 +37,16 @@ export default function ProfilePage() {
     const [previewPhoto, setPreviewPhoto] = useState<string | null>(null);
     const [isSavingPhoto, setIsSavingPhoto] = useState(false);
     const [isSavingUsername, setIsSavingUsername] = useState(false);
+    const [isSavingPassword, setIsSavingPassword] = useState(false);
     const fileInputRef = useRef<HTMLInputElement>(null);
+
+    const passwordForm = useForm<PasswordFormValues>({
+        resolver: zodResolver(passwordFormSchema),
+        defaultValues: {
+            password: "",
+            confirmPassword: "",
+        },
+    });
 
     useEffect(() => {
         if (!isAuthLoading && !user) {
@@ -130,6 +153,16 @@ export default function ProfilePage() {
         setIsSavingUsername(false);
     }
 
+    const handlePasswordUpdate = async (data: PasswordFormValues) => {
+        setIsSavingPassword(true);
+        const success = await updateUserPassword(data.password);
+        if (success) {
+            toast({ title: "Password Updated", description: "Your password has been changed successfully." });
+            passwordForm.reset();
+        }
+        setIsSavingPassword(false);
+    };
+
     const triggerFileSelect = () => fileInputRef.current?.click();
 
     if (isAuthLoading || !user) {
@@ -142,8 +175,8 @@ export default function ProfilePage() {
 
   return (
     <div className="w-full mx-auto p-4 md:p-8">
-      <div className="max-w-2xl mx-auto">
-        <h1 className="text-3xl font-bold tracking-tight mb-6">Your Profile</h1>
+      <div className="max-w-2xl mx-auto space-y-8">
+        <h1 className="text-3xl font-bold tracking-tight">Your Profile</h1>
         <Card>
             <CardHeader>
                 <CardTitle>{user.displayName ?? 'Profile Details'}</CardTitle>
@@ -185,6 +218,49 @@ export default function ProfilePage() {
                     <Label>Email</Label>
                     <p className="text-sm text-muted-foreground">{user.email}</p>
                  </div>
+            </CardContent>
+        </Card>
+
+        <Card>
+            <CardHeader>
+                <CardTitle>Change Password</CardTitle>
+                <CardDescription>Update your password here. It's recommended to use a strong, unique password.</CardDescription>
+            </CardHeader>
+            <CardContent>
+                <Form {...passwordForm}>
+                    <form onSubmit={passwordForm.handleSubmit(handlePasswordUpdate)} className="space-y-6">
+                        <FormField
+                            control={passwordForm.control}
+                            name="password"
+                            render={({ field }) => (
+                            <FormItem>
+                                <FormLabel>New Password</FormLabel>
+                                <FormControl>
+                                <Input type="password" placeholder="••••••••" {...field} />
+                                </FormControl>
+                                <FormMessage />
+                            </FormItem>
+                            )}
+                        />
+                        <FormField
+                            control={passwordForm.control}
+                            name="confirmPassword"
+                            render={({ field }) => (
+                            <FormItem>
+                                <FormLabel>Confirm New Password</FormLabel>
+                                <FormControl>
+                                <Input type="password" placeholder="••••••••" {...field} />
+                                </FormControl>
+                                <FormMessage />
+                            </FormItem>
+                            )}
+                        />
+                        <Button type="submit" disabled={isSavingPassword}>
+                            {isSavingPassword ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
+                            Change Password
+                        </Button>
+                    </form>
+                </Form>
             </CardContent>
         </Card>
       </div>

@@ -2,7 +2,7 @@
 "use client";
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signOut, updateProfile, User as FirebaseUser } from "firebase/auth";
+import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signOut, updateProfile, User as FirebaseUser, updatePassword } from "firebase/auth";
 import { app } from '@/lib/firebase';
 import { useToast } from "@/hooks/use-toast";
 import { useRouter } from 'next/navigation';
@@ -24,6 +24,7 @@ interface AuthContextType {
   logout: () => void;
   updateUserProfile: (photo: File) => Promise<boolean>;
   updateUserUsername: (username: string) => Promise<boolean>;
+  updateUserPassword: (password: string) => Promise<boolean>;
   isLoading: boolean;
 }
 
@@ -81,7 +82,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
       await updateProfile(firebaseUser, {
         displayName: username,
-        photoURL: defaultAvatar,
       });
 
       const baserowResult = await createUserInBaserow({ 
@@ -199,7 +199,27 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   }
 
-  const contextValue = { user, login, signup, logout, updateUserProfile, updateUserUsername, isLoading };
+  const updateUserPassword = async (password: string): Promise<boolean> => {
+      if (!auth.currentUser) return false;
+      setIsLoading(true);
+      try {
+          await updatePassword(auth.currentUser, password);
+          return true;
+      } catch (e: any) {
+          console.error("Password update error:", e);
+          toast({ 
+              variant: 'destructive', 
+              title: "Update Failed", 
+              description: e.message || "Could not update password. Please log out and log back in before trying again." 
+          });
+          return false;
+      } finally {
+          setIsLoading(false);
+      }
+  };
+
+
+  const contextValue = { user, login, signup, logout, updateUserProfile, updateUserUsername, updateUserPassword, isLoading };
 
   return (
     <AuthContext.Provider value={contextValue}>
