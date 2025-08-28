@@ -40,7 +40,7 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="container mx-auto flex items-center justify-center min-h-[calc(100vh-8rem)]">
+    <div className="container mx-auto flex items-center justify-center min-h-screen py-8">
         <Card className="w-full max-w-md">
             <CardHeader>
                 <CardTitle>Welcome Back!</CardTitle>
