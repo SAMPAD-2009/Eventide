@@ -45,6 +45,9 @@ export function Header() {
             <Link href="/future" className={navLinkClasses("/future")}>
               Future
             </Link>
+            <Link href="/history" className={navLinkClasses("/history")}>
+              History
+            </Link>
           </nav>
         </div>
         <div className="flex flex-1 items-center justify-end gap-4">
