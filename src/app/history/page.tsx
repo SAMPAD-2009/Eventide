@@ -1,9 +1,4 @@
-
-"use client";
-
-import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Loader2 } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { AlertCircle } from 'lucide-react';
 
@@ -12,63 +7,51 @@ interface HistoryEvent {
   event: string;
 }
 
-export default function HistoryPage() {
-  const [events, setEvents] = useState<HistoryEvent[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+async function fetchHistoryEvents() {
+  try {
+    const apiKey = process.env.API_NINJAS_KEY;
+    if (!apiKey) {
+      throw new Error('API key for API-Ninjas is not configured.');
+    }
+    
+    const today = new Date();
+    const month = today.getMonth() + 1;
+    const day = today.getDate();
+    
+    const url = `https://api.api-ninjas.com/v1/historicalevents?month=${month}&day=${day}`;
+    const response = await fetch(url, {
+      headers: {
+        'X-Api-Key': apiKey,
+      },
+      next: { revalidate: 3600 } // Revalidate once per hour
+    });
 
-  useEffect(() => {
-    const fetchHistoryEvents = async () => {
-      setIsLoading(true);
-      setError(null);
-      
-      try {
-        // Hardcoded API key as per user request
-        const apiKey = "O3KECADaiPCcO1jx1V8VXQ==GfgqATLxbSQNGOtB";
-        
-        const today = new Date();
-        const month = today.getMonth() + 1;
-        const day = today.getDate();
-        
-        const url = `https://api.api-ninjas.com/v1/historicalevents?month=${month}&day=${day}`;
-        console.log("Requesting historical events from:", url); // Added for debugging
-        const response = await fetch(url, {
-          headers: {
-            'X-Api-Key': apiKey,
-          },
-        });
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error("API Error Response:", errorText);
+      throw new Error('Failed to fetch historical events. Check API key and network.');
+    }
 
-        if (!response.ok) {
-          const errorText = await response.text();
-          console.error("API Error Response:", errorText);
-          throw new Error('Failed to fetch historical events. Check API key and network.');
-        }
+    const data: HistoryEvent[] = await response.json();
+    return { events: data, error: null };
+  } catch (err: any) {
+    return { events: [], error: err.message || 'An unexpected error occurred.' };
+  }
+}
 
-        const data: HistoryEvent[] = await response.json();
-        setEvents(data);
-      } catch (err: any) {
-        setError(err.message || 'An unexpected error occurred.');
-      } finally {
-        setIsLoading(false);
-      }
-    };
+export default async function HistoryPage() {
+  const { events, error } = await fetchHistoryEvents();
+  const today = new Date();
+  const formattedDate = today.toLocaleDateString('en-US', { month: 'long', day: 'numeric' });
 
-    fetchHistoryEvents();
-  }, []);
 
   return (
     <div className="w-full mx-auto p-4 md:p-8">
       <div className="max-w-7xl mx-auto">
-        <h1 className="text-3xl font-bold tracking-tight mb-2">On This Day in History</h1>
+        <h1 className="text-3xl font-bold tracking-tight mb-2">On This Day in History: {formattedDate}</h1>
         <p className="text-muted-foreground mb-6">
           Events that occurred on this day throughout history, powered by API-Ninjas.
         </p>
-
-        {isLoading && (
-          <div className="flex items-center justify-center min-h-[calc(100vh-16rem)]">
-            <Loader2 className="h-16 w-16 animate-spin text-primary" />
-          </div>
-        )}
 
         {error && (
             <Alert variant="destructive" className="max-w-2xl mx-auto">
@@ -78,7 +61,7 @@ export default function HistoryPage() {
             </Alert>
         )}
 
-        {!isLoading && !error && (
+        {!error && (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {events.map((event, index) => (
               <Card key={index} className="flex flex-col">
@@ -90,6 +73,11 @@ export default function HistoryPage() {
                 </CardContent>
               </Card>
             ))}
+             {events.length === 0 && (
+                <p className="text-muted-foreground col-span-full text-center">
+                    No historical events found for this day.
+                </p>
+            )}
           </div>
         )}
       </div>
