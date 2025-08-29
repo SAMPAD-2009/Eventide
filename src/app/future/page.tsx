@@ -7,7 +7,7 @@ import { addDays, isAfter, startOfToday } from 'date-fns';
 import { useMemo, useEffect } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { useRouter } from 'next/navigation';
-import { Loader2 } from 'lucide-react';
+import { EventListSkeleton } from '@/components/EventListSkeleton';
 
 export default function FutureEventsPage() {
   const { events } = useEvents();
@@ -27,8 +27,14 @@ export default function FutureEventsPage() {
 
   if (isAuthLoading || !user) {
     return (
-      <div className="flex items-center justify-center min-h-[calc(100vh-8rem)]">
-        <Loader2 className="h-16 w-16 animate-spin text-primary" />
+       <div className="w-full mx-auto p-4 md:p-8">
+        <div className="max-w-3xl mx-auto">
+          <h1 className="text-3xl font-bold tracking-tight mb-6">Future Events</h1>
+          <p className="text-muted-foreground mb-6">
+            This page lists all events scheduled more than 7 days from now.
+          </p>
+          <EventListSkeleton count={2} />
+        </div>
       </div>
     );
   }

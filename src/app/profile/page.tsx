@@ -16,6 +16,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { useToast } from '@/hooks/use-toast';
 import { generateAvatar } from '@/lib/utils';
 import { Loader2, Save } from 'lucide-react';
+import { ProfilePageSkeleton } from '@/components/ProfilePageSkeleton';
 
 const passwordFormSchema = z.object({
   password: z.string().min(8, { message: "Password must be at least 8 characters long." }),
@@ -166,11 +167,7 @@ export default function ProfilePage() {
     const triggerFileSelect = () => fileInputRef.current?.click();
 
     if (isAuthLoading || !user) {
-        return (
-             <div className="flex items-center justify-center min-h-[calc(100vh-8rem)]">
-                <Loader2 className="h-16 w-16 animate-spin text-primary" />
-            </div>
-        )
+        return <ProfilePageSkeleton />;
     }
 
   return (

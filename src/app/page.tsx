@@ -19,7 +19,7 @@ import { PlusCircle } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
-import { Loader2 } from 'lucide-react';
+import { EventListSkeleton } from '@/components/EventListSkeleton';
 
 export default function Home() {
   const { events } = useEvents();
@@ -43,8 +43,15 @@ export default function Home() {
 
   if (isAuthLoading || !user) {
     return (
-      <div className="flex items-center justify-center min-h-[calc(100vh-8rem)]">
-        <Loader2 className="h-16 w-16 animate-spin text-primary" />
+      <div className="w-full mx-auto p-4 md:p-8">
+        <div className="flex justify-between items-center mb-6">
+          <h1 className="text-3xl font-bold tracking-tight">Upcoming Events</h1>
+            <Button disabled>
+              <PlusCircle className="mr-2" />
+              Create Event
+            </Button>
+        </div>
+        <EventListSkeleton count={4} />
       </div>
     );
   }
