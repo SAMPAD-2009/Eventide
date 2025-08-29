@@ -18,7 +18,7 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
 import { Button } from './ui/button';
 import { generateAvatar } from '@/lib/utils';
-import { Sheet, SheetContent, SheetTrigger, SheetClose } from './ui/sheet';
+import { Sheet, SheetContent, SheetTrigger, SheetHeader, SheetTitle, SheetDescription } from './ui/sheet';
 import React from 'react';
 
 
@@ -110,6 +110,12 @@ export function Header() {
                 </Button>
               </SheetTrigger>
               <SheetContent side="left">
+                <SheetHeader className="sr-only">
+                  <SheetTitle>Menu</SheetTitle>
+                  <SheetDescription>
+                    Main navigation links for the Eventide application.
+                  </SheetDescription>
+                </SheetHeader>
                 <nav className="grid gap-6 text-lg font-medium mt-8">
                   {navLinks.map(link => (
                     <Link 
