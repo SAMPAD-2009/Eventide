@@ -1,5 +1,6 @@
 
 import { initializeApp, getApps } from 'firebase/app';
+import { getPerformance } from "firebase/performance";
 
 const firebaseConfig = {
   "projectId": "eventide-x19jx",
@@ -17,5 +18,11 @@ if (!getApps().length) {
 } else {
   app = getApps()[0];
 }
+
+// Initialize Performance Monitoring and get a reference to the service
+if (typeof window !== 'undefined') {
+  getPerformance(app);
+}
+
 
 export { app };
