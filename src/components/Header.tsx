@@ -54,7 +54,7 @@ export function Header() {
           </Link>
           <nav className="hidden md:flex gap-6">
             {navLinks.map(link => (
-              <Link key={link.href} href={link.href} className={navLinkClasses(link.href)}>
+              <Link key={link.href} href={link.href} className={navLinkClasses(link.href)} prefetch={true}>
                 {link.label}
               </Link>
             ))}
@@ -123,6 +123,7 @@ export function Header() {
                       href={link.href} 
                       className={navLinkClasses(link.href)}
                       onClick={handleLinkClick}
+                      prefetch={true}
                     >
                       {link.label}
                     </Link>
