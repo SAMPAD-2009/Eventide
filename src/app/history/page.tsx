@@ -10,8 +10,8 @@ interface HistoryEvent {
 async function fetchHistoryEvents() {
   try {
     const apiKey = process.env.API_NINJAS_KEY;
-    if (!apiKey) {
-      throw new Error('API key for API-Ninjas is not configured.');
+    if (!apiKey || apiKey === "YOUR_API_NINJAS_KEY") {
+      throw new Error('API key for API-Ninjas is not configured. Please add it to your .env file.');
     }
     
     const today = new Date();
