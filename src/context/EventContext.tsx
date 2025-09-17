@@ -10,6 +10,7 @@ import { useAuth } from './AuthContext';
 interface EventContextType {
   events: Event[];
   addEvent: (eventData: Omit<Event, 'id' | 'summary' | 'datetime'>) => Promise<void>;
+  updateEvent: (id: string, eventData: Omit<Event, 'id' | 'summary' | 'datetime'>) => Promise<void>;
   deleteEvent: (id: string) => void;
   isLoading: boolean;
 }
@@ -125,6 +126,74 @@ export const EventProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
+  const updateEvent = async (id: string, eventData: Omit<Event, 'id' | 'summary' | 'datetime'>) => {
+    setIsLoading(true);
+    try {
+      const existingEvent = events.find(event => event.id === id);
+      if (!existingEvent) {
+          throw new Error("Event not found");
+      }
+
+      let summary = existingEvent.summary;
+      // Regenerate summary only if details have changed
+      if (eventData.details && eventData.details.trim().length > 0 && eventData.details !== existingEvent.details) {
+        const result = await summarizeEvent({ details: eventData.details });
+        summary = result.summary;
+      } else if (!eventData.details || eventData.details.trim().length === 0) {
+        summary = ''; // Clear summary if details are removed
+      }
+
+      const updatedEvent: Event = {
+        ...eventData,
+        id: id,
+        summary,
+        datetime: eventData.isIndefinite ? new Date(8640000000000000).toISOString() : new Date(`${eventData.date}T${eventData.time}`).toISOString(),
+        details: eventData.details || '',
+      };
+
+      const updatedEvents = events.map(event => event.id === id ? updatedEvent : event)
+        .sort((a, b) => new Date(a.datetime).getTime() - new Date(b.datetime).getTime());
+      
+      setEvents(updatedEvents);
+
+      const n8nWebhookUrl = process.env.NEXT_PUBLIC_N8N_WEBHOOK_URL;
+       if (n8nWebhookUrl) {
+          try {
+              await fetch(n8nWebhookUrl, {
+                  method: 'POST',
+                  headers: {
+                      'Content-Type': 'application/json',
+                  },
+                  body: JSON.stringify({
+                      event: updatedEvent,
+                      user: {
+                        email: user?.email
+                      },
+                      action: 'update',
+                  }),
+              });
+          } catch (webhookError) {
+              console.error("Failed to send update to n8n webhook:", webhookError);
+          }
+      }
+
+      toast({
+        title: "Event Updated",
+        description: "Your event has been successfully updated.",
+      });
+
+    } catch (error) {
+       console.error("Failed to update event:", error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Could not update the event. Please try again.",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const deleteEvent = async (id: string) => {
     setEvents(events.filter(event => event.id !== id));
     
@@ -152,7 +221,7 @@ export const EventProvider = ({ children }: { children: ReactNode }) => {
     });
   };
   
-  const contextValue = { events: hydrated ? events : [], addEvent, deleteEvent, isLoading };
+  const contextValue = { events: hydrated ? events : [], addEvent, updateEvent, deleteEvent, isLoading };
 
   return (
     <EventContext.Provider value={contextValue}>
