@@ -125,8 +125,27 @@ export const EventProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
-  const deleteEvent = (id: string) => {
+  const deleteEvent = async (id: string) => {
     setEvents(events.filter(event => event.id !== id));
+    
+    const n8nWebhookUrl = process.env.NEXT_PUBLIC_N8N_WEBHOOK_URL;
+    if (n8nWebhookUrl) {
+        try {
+            await fetch(n8nWebhookUrl, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    event: { id },
+                    action: 'delete',
+                }),
+            });
+        } catch (webhookError) {
+            console.error("Failed to send delete notification to n8n webhook:", webhookError);
+        }
+    }
+
     toast({
       title: "Event Deleted",
       description: "The event has been removed.",
