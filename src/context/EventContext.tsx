@@ -5,6 +5,7 @@ import React, { createContext, useContext, useState, useEffect, ReactNode } from
 import type { Event } from '@/lib/types';
 import { summarizeEvent } from '@/ai/flows/summarize-event';
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from './AuthContext';
 
 interface EventContextType {
   events: Event[];
@@ -20,6 +21,7 @@ export const EventProvider = ({ children }: { children: ReactNode }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [events, setEvents] = useState<Event[]>([]);
   const [hydrated, setHydrated] = useState(false);
+  const { user } = useAuth();
 
   useEffect(() => {
     try {
@@ -93,6 +95,9 @@ export const EventProvider = ({ children }: { children: ReactNode }) => {
                   },
                   body: JSON.stringify({
                       event: newEvent,
+                      user: {
+                        email: user?.email
+                      },
                       action: 'create',
                   }),
               });
