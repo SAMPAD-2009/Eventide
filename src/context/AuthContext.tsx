@@ -54,6 +54,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           displayName: firebaseUser.displayName,
           baserowUserId: baserowUser?.id
         });
+        if (PUBLIC_PATHS.includes(pathname)) {
+            router.push('/');
+        }
       } else {
         setUser(null);
         // If the user is not logged in and is trying to access a protected page, redirect them.
@@ -71,6 +74,20 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     setIsLoading(true);
     try {
       await signInWithEmailAndPassword(auth, email, pass);
+      
+      const n8nLoginWebhookUrl = process.env.NEXT_PUBLIC_N8N_LOGIN_WEBHOOK_URL;
+      if (n8nLoginWebhookUrl) {
+        try {
+            const url = new URL(n8nLoginWebhookUrl);
+            url.searchParams.append('email', email);
+            await fetch(url.toString(), {
+                method: 'GET'
+            });
+        } catch(webhookError) {
+             console.error("Failed to send data to n8n login webhook:", webhookError);
+        }
+      }
+
       toast({ title: "Login Successful", description: "Welcome back!" });
       return true;
     } catch (error: any) {
