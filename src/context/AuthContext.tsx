@@ -6,7 +6,7 @@ import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, on
 import { app } from '@/lib/firebase';
 import { useToast } from "@/hooks/use-toast";
 import { usePathname, useRouter } from 'next/navigation';
-import { createUserInBaserow, getUserFromBaserow, updateUserPhotoInBaserow, updateUserUsernameInBaserow } from '@/services/baserow';
+import { createUserInBaserow, getUserFromBaserow, notifyLogin, updateUserPhotoInBaserow, updateUserUsernameInBaserow } from '@/services/baserow';
 
 
 interface User {
@@ -41,10 +41,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const pathname = usePathname();
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [initialAuthCheck, setInitialAuthCheck] = useState(false);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser: FirebaseUser | null) => {
-      setIsLoading(true);
       if (firebaseUser) {
         const baserowUser = await getUserFromBaserow(firebaseUser.email!);
         setUser({
@@ -54,39 +54,39 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           displayName: firebaseUser.displayName,
           baserowUserId: baserowUser?.id
         });
-        if (PUBLIC_PATHS.includes(pathname)) {
-            router.push('/');
-        }
       } else {
         setUser(null);
-        // If the user is not logged in and is trying to access a protected page, redirect them.
-        if (!PUBLIC_PATHS.includes(pathname)) {
-          router.push('/login');
-        }
       }
-      setIsLoading(false);
+      setInitialAuthCheck(true);
     });
 
     return () => unsubscribe();
-  }, [pathname, router]);
+  }, []);
+
+  useEffect(() => {
+    if (!initialAuthCheck) {
+      return; // Wait for the initial auth check to complete
+    }
+
+    const isPublicPath = PUBLIC_PATHS.includes(pathname);
+
+    if (user && isPublicPath) {
+      router.push('/');
+    } else if (!user && !isPublicPath) {
+      router.push('/login');
+    }
+    setIsLoading(false);
+
+  }, [user, pathname, router, initialAuthCheck]);
+
 
   const login = async (email: string, pass: string) => {
     setIsLoading(true);
     try {
       await signInWithEmailAndPassword(auth, email, pass);
       
-      const n8nLoginWebhookUrl = process.env.NEXT_PUBLIC_N8N_LOGIN_WEBHOOK_URL;
-      if (n8nLoginWebhookUrl) {
-        try {
-            const url = new URL(n8nLoginWebhookUrl);
-            url.searchParams.append('email', email);
-            await fetch(url.toString(), {
-                method: 'GET'
-            });
-        } catch(webhookError) {
-             console.error("Failed to send data to n8n login webhook:", webhookError);
-        }
-      }
+      // Call the server action to notify n8n
+      await notifyLogin(email);
 
       toast({ title: "Login Successful", description: "Welcome back!" });
       return true;

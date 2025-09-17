@@ -44,6 +44,24 @@ function areBaserowCredsConfigured() {
     return true;
 }
 
+export async function notifyLogin(email: string) {
+    const n8nLoginWebhookUrl = process.env.N8N_LOGIN_WEBHOOK_URL;
+    if (!n8nLoginWebhookUrl || n8nLoginWebhookUrl.startsWith("YOUR")) {
+        console.log("n8n login webhook URL not configured. Skipping notification.");
+        return;
+    }
+
+    try {
+        const url = new URL(n8nLoginWebhookUrl);
+        url.searchParams.append('email', email);
+        // We don't need to await this, we can fire and forget.
+        fetch(url.toString(), { method: 'GET' });
+        console.log(`Sent login notification for ${email}`);
+    } catch (webhookError) {
+        console.error("Failed to send data to n8n login webhook:", webhookError);
+    }
+}
+
 export async function createUserInBaserow(userData: CreateUserInput) {
     if (!areBaserowCredsConfigured()) {
         return { success: true, message: "Skipped Baserow user creation (dev mode)." };
