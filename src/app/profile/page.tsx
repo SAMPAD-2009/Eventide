@@ -2,7 +2,6 @@
 "use client"
 
 import { useAuth } from '@/context/AuthContext';
-import { useRouter } from 'next/navigation';
 import { useEffect, useState, useRef } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -31,7 +30,6 @@ type PasswordFormValues = z.infer<typeof passwordFormSchema>;
 
 export default function ProfilePage() {
     const { user, updateUserProfile, updateUserUsername, updateUserPassword, isLoading: isAuthLoading } = useAuth();
-    const router = useRouter();
     const { toast } = useToast();
     const [newUsername, setNewUsername] = useState('');
     const [newPhoto, setNewPhoto] = useState<File | null>(null);
@@ -50,13 +48,10 @@ export default function ProfilePage() {
     });
 
     useEffect(() => {
-        if (!isAuthLoading && !user) {
-            router.push('/login');
-        }
         if (user?.displayName) {
             setNewUsername(user.displayName);
         }
-    }, [user, isAuthLoading, router]);
+    }, [user]);
 
     const resizeImage = (file: File): Promise<File> => {
         return new Promise((resolve, reject) => {

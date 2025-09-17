@@ -5,7 +5,7 @@ import React, { createContext, useContext, useState, useEffect, ReactNode } from
 import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signOut, updateProfile, User as FirebaseUser, updatePassword } from "firebase/auth";
 import { app } from '@/lib/firebase';
 import { useToast } from "@/hooks/use-toast";
-import { useRouter } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { createUserInBaserow, getUserFromBaserow, updateUserPhotoInBaserow, updateUserUsernameInBaserow } from '@/services/baserow';
 
 
@@ -32,14 +32,19 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 const auth = getAuth(app);
 
+// Define paths that don't require authentication
+const PUBLIC_PATHS = ['/login', '/signup'];
+
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const { toast } = useToast();
   const router = useRouter();
+  const pathname = usePathname();
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser: FirebaseUser | null) => {
+      setIsLoading(true);
       if (firebaseUser) {
         const baserowUser = await getUserFromBaserow(firebaseUser.email!);
         setUser({
@@ -51,12 +56,16 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         });
       } else {
         setUser(null);
+        // If the user is not logged in and is trying to access a protected page, redirect them.
+        if (!PUBLIC_PATHS.includes(pathname)) {
+          router.push('/login');
+        }
       }
       setIsLoading(false);
     });
 
     return () => unsubscribe();
-  }, []);
+  }, [pathname, router]);
 
   const login = async (email: string, pass: string) => {
     setIsLoading(true);
@@ -68,7 +77,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       toast({ variant: 'destructive', title: "Login Failed", description: error.message });
       return false;
     } finally {
-      setIsLoading(false);
+      // Don't set isLoading to false here. The onAuthStateChanged listener will handle it.
     }
   };
 
@@ -114,7 +123,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       toast({ variant: 'destructive', title: "Signup Failed", description: error.message });
       return false;
     } finally {
-      setIsLoading(false);
+        // Don't set isLoading to false here. The onAuthStateChanged listener will handle it.
     }
   };
 

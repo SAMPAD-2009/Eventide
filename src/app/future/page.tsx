@@ -4,21 +4,13 @@
 import { useEvents } from '@/context/EventContext';
 import { EventList } from '@/components/EventList';
 import { addDays, isAfter, startOfToday } from 'date-fns';
-import { useMemo, useEffect } from 'react';
+import { useMemo } from 'react';
 import { useAuth } from '@/context/AuthContext';
-import { useRouter } from 'next/navigation';
 import { EventListSkeleton } from '@/components/EventListSkeleton';
 
 export default function FutureEventsPage() {
   const { events } = useEvents();
   const { user, isLoading: isAuthLoading } = useAuth();
-  const router = useRouter();
-
-  useEffect(() => {
-    if (!isAuthLoading && !user) {
-      router.push('/login');
-    }
-  }, [user, isAuthLoading, router]);
 
   const futureEvents = useMemo(() => {
     const sevenDaysFromNow = addDays(startOfToday(), 7);

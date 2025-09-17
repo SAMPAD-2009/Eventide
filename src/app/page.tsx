@@ -27,12 +27,6 @@ export default function Home() {
   const { user, isLoading: isAuthLoading } = useAuth();
   const router = useRouter();
 
-  useEffect(() => {
-    if (!isAuthLoading && !user) {
-      router.push('/login');
-    }
-  }, [user, isAuthLoading, router]);
-
   const upcomingEvents = useMemo(() => {
     const today = startOfToday();
     const sevenDaysFromNow = addDays(today, 7);
