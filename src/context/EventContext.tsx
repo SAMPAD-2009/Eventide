@@ -6,6 +6,7 @@ import type { Event } from '@/lib/types';
 import { summarizeEvent } from '@/ai/flows/summarize-event';
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from './AuthContext';
+import { fetchEventsFromN8n } from '@/services/n8n';
 
 interface EventContextType {
   events: Event[];
@@ -21,40 +22,37 @@ export const EventProvider = ({ children }: { children: ReactNode }) => {
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
   const [events, setEvents] = useState<Event[]>([]);
-  const [hydrated, setHydrated] = useState(false);
   const { user } = useAuth();
 
   useEffect(() => {
-    try {
-      const item = window.localStorage.getItem('eventide_events');
-      const parsedEvents = item ? JSON.parse(item) : [];
-      const now = new Date();
-      const upcomingEvents = parsedEvents
-        .filter((event: Event) => event.isIndefinite || new Date(event.datetime) > now)
-        .map((event: Event) => ({
-          ...event,
-          datetime: event.datetime,
-        }))
-        .sort((a: Event, b: Event) => new Date(a.datetime).getTime() - new Date(b.datetime).getTime());
-      
-      setEvents(upcomingEvents);
-
-    } catch (error) {
-      console.error("Failed to load events from localStorage", error);
-      setEvents([]);
-    }
-    setHydrated(true);
-  }, []);
-
-  useEffect(() => {
-    if (hydrated) {
-      try {
-        window.localStorage.setItem('eventide_events', JSON.stringify(events));
-      } catch (error) {
-        console.error("Failed to save events to localStorage", error);
+    const loadEvents = async () => {
+      if (user?.email) {
+        setIsLoading(true);
+        try {
+          const fetchedEvents = await fetchEventsFromN8n(user.email);
+          const now = new Date();
+          const upcomingEvents = fetchedEvents
+            .filter((event: Event) => event.isIndefinite || new Date(event.datetime) > now)
+            .sort((a: Event, b: Event) => new Date(a.datetime).getTime() - new Date(b.datetime).getTime());
+          setEvents(upcomingEvents);
+        } catch (error) {
+           console.error("Failed to load events from n8n", error);
+           toast({
+             variant: "destructive",
+             title: "Error",
+             description: "Could not fetch your events. Please try again later.",
+           });
+           setEvents([]);
+        } finally {
+            setIsLoading(false);
+        }
+      } else {
+        // If user logs out, clear the events
+        setEvents([]);
       }
-    }
-  }, [events, hydrated]);
+    };
+    loadEvents();
+  }, [user, toast]);
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -104,8 +102,6 @@ export const EventProvider = ({ children }: { children: ReactNode }) => {
               });
           } catch (webhookError) {
               console.error("Failed to send data to n8n webhook:", webhookError);
-              // We can decide if we want to notify the user about this.
-              // For now, we'll just log it to the console.
           }
       }
 
@@ -135,12 +131,11 @@ export const EventProvider = ({ children }: { children: ReactNode }) => {
       }
 
       let summary = existingEvent.summary;
-      // Regenerate summary only if details have changed
       if (eventData.details && eventData.details.trim().length > 0 && eventData.details !== existingEvent.details) {
         const result = await summarizeEvent({ details: eventData.details });
         summary = result.summary;
       } else if (!eventData.details || eventData.details.trim().length === 0) {
-        summary = ''; // Clear summary if details are removed
+        summary = '';
       }
 
       const updatedEvent: Event = {
@@ -195,7 +190,8 @@ export const EventProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const deleteEvent = async (id: string) => {
-    setEvents(events.filter(event => event.id !== id));
+    const updatedEvents = events.filter(event => event.id !== id);
+    setEvents(updatedEvents);
     
     const n8nWebhookUrl = process.env.NEXT_PUBLIC_N8N_WEBHOOK_URL;
     if (n8nWebhookUrl) {
@@ -207,6 +203,9 @@ export const EventProvider = ({ children }: { children: ReactNode }) => {
                 },
                 body: JSON.stringify({
                     event: { id },
+                    user: {
+                      email: user?.email
+                    },
                     action: 'delete',
                 }),
             });
@@ -221,7 +220,7 @@ export const EventProvider = ({ children }: { children: ReactNode }) => {
     });
   };
   
-  const contextValue = { events: hydrated ? events : [], addEvent, updateEvent, deleteEvent, isLoading };
+  const contextValue = { events, addEvent, updateEvent, deleteEvent, isLoading };
 
   return (
     <EventContext.Provider value={contextValue}>

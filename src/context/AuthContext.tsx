@@ -6,7 +6,7 @@ import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, on
 import { app } from '@/lib/firebase';
 import { useToast } from "@/hooks/use-toast";
 import { usePathname, useRouter } from 'next/navigation';
-import { createUserInBaserow, getUserFromBaserow, notifyLogin, updateUserPhotoInBaserow, updateUserUsernameInBaserow } from '@/services/baserow';
+import { createUserInBaserow, getUserFromBaserow, updateUserPhotoInBaserow, updateUserUsernameInBaserow } from '@/services/baserow';
 
 
 interface User {
@@ -84,10 +84,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     setIsLoading(true);
     try {
       await signInWithEmailAndPassword(auth, email, pass);
-      
-      // Call the server action to notify n8n
-      await notifyLogin(email);
-
       toast({ title: "Login Successful", description: "Welcome back!" });
       return true;
     } catch (error: any) {
