@@ -1,3 +1,4 @@
+
 import type { Event } from '@/lib/types';
 import { EventCard } from '@/components/EventCard';
 import { Card, CardContent } from './ui/card';
@@ -5,9 +6,10 @@ import { Card, CardContent } from './ui/card';
 interface EventListProps {
   events: Event[];
   emptyStateMessage?: string;
+  onEditEvent: (event: Event) => void;
 }
 
-export function EventList({ events, emptyStateMessage = "No events to display." }: EventListProps) {
+export function EventList({ events, emptyStateMessage = "No events to display.", onEditEvent }: EventListProps) {
   if (events.length === 0) {
     return (
         <Card className="flex items-center justify-center h-48">
@@ -21,7 +23,7 @@ export function EventList({ events, emptyStateMessage = "No events to display." 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
       {events.map(event => (
-        <EventCard key={event.id} event={event} />
+        <EventCard key={event.id} event={event} onEdit={onEditEvent} />
       ))}
     </div>
   );

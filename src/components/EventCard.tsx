@@ -2,7 +2,7 @@
 "use client";
 
 import { format } from 'date-fns';
-import { Calendar, Clock, Tag, Trash2, Infinity } from 'lucide-react';
+import { Calendar, Clock, Tag, Trash2, Infinity, Pencil } from 'lucide-react';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -24,9 +24,10 @@ import { Badge } from '@/components/ui/badge';
 
 interface EventCardProps {
   event: Event;
+  onEdit: (event: Event) => void;
 }
 
-export function EventCard({ event }: EventCardProps) {
+export function EventCard({ event, onEdit }: EventCardProps) {
   const { deleteEvent } = useEvents();
   const categoryInfo = getCategoryByName(event.category);
 
@@ -34,34 +35,39 @@ export function EventCard({ event }: EventCardProps) {
     <Card className="border-2" style={{ borderColor: categoryInfo ? `hsl(var(${categoryInfo?.cssVars.fg}))` : undefined }}>
       <CardHeader className="p-4">
         <div className="flex justify-between items-start">
-            <div>
+            <div className="flex-1">
                 <CardTitle className="text-xl">{event.title}</CardTitle>
                 {event.summary && <CardDescription className="pt-1">{event.summary}</CardDescription>}
             </div>
-            <AlertDialog>
-                <AlertDialogTrigger asChild>
-                    <Button variant="ghost" size="icon" className="flex-shrink-0">
-                        <Trash2 className="h-4 w-4 text-muted-foreground" />
-                    </Button>
-                </AlertDialogTrigger>
-                <AlertDialogContent>
-                    <AlertDialogHeader>
-                    <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-                    <AlertDialogDescription>
-                        This action cannot be undone. This will permanently delete your event.
-                    </AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter>
-                    <AlertDialogCancel>Cancel</AlertDialogCancel>
-                    <AlertDialogAction 
-                      onClick={() => deleteEvent(event.id)}
-                      className="bg-red-600 text-destructive-foreground hover:bg-red-700"
-                    >
-                      Delete
-                    </AlertDialogAction>
-                    </AlertDialogFooter>
-                </AlertDialogContent>
-            </AlertDialog>
+            <div className="flex items-center">
+                 <Button variant="ghost" size="icon" className="flex-shrink-0" onClick={() => onEdit(event)}>
+                    <Pencil className="h-4 w-4 text-muted-foreground" />
+                </Button>
+                <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                        <Button variant="ghost" size="icon" className="flex-shrink-0">
+                            <Trash2 className="h-4 w-4 text-muted-foreground" />
+                        </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                        <AlertDialogHeader>
+                        <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                            This action cannot be undone. This will permanently delete your event.
+                        </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                        <AlertDialogAction 
+                          onClick={() => deleteEvent(event.id)}
+                          className="bg-red-600 text-destructive-foreground hover:bg-red-700"
+                        >
+                          Delete
+                        </AlertDialogAction>
+                        </AlertDialogFooter>
+                    </AlertDialogContent>
+                </AlertDialog>
+            </div>
         </div>
       </CardHeader>
       {event.details && (

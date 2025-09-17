@@ -20,10 +20,13 @@ import { useAuth } from '@/context/AuthContext';
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
 import { EventListSkeleton } from '@/components/EventListSkeleton';
+import type { Event } from '@/lib/types';
 
 export default function Home() {
   const { events } = useEvents();
   const [isDialogOpen, setDialogOpen] = useState(false);
+  const [editingEvent, setEditingEvent] = useState<Event | null>(null);
+
   const { user, isLoading: isAuthLoading } = useAuth();
   const router = useRouter();
 
@@ -34,6 +37,21 @@ export default function Home() {
       event.isIndefinite || isWithinInterval(new Date(event.datetime), { start: today, end: sevenDaysFromNow })
     );
   }, [events]);
+
+  const handleCreateClick = () => {
+    setEditingEvent(null);
+    setDialogOpen(true);
+  };
+
+  const handleEditClick = (event: Event) => {
+    setEditingEvent(event);
+    setDialogOpen(true);
+  }
+
+  const handleFormSubmit = () => {
+    setDialogOpen(false);
+    setEditingEvent(null);
+  }
 
   if (isAuthLoading || !user) {
     return (
@@ -56,25 +74,33 @@ export default function Home() {
         <h1 className="text-3xl font-bold tracking-tight">Upcoming Events</h1>
         <Dialog open={isDialogOpen} onOpenChange={setDialogOpen}>
           <DialogTrigger asChild>
-            <Button>
+            <Button onClick={handleCreateClick}>
               <PlusCircle className="mr-2" />
               Create Event
             </Button>
           </DialogTrigger>
           <DialogContent className="sm:max-w-3xl">
             <DialogHeader>
-              <DialogTitle>Create New Event</DialogTitle>
+              <DialogTitle>{editingEvent ? 'Edit Event' : 'Create New Event'}</DialogTitle>
               <DialogDescription>
-                Fill in the details below to add a new event to your calendar.
+                {editingEvent ? 'Update the details for your event below.' : 'Fill in the details below to add a new event to your calendar.'}
               </DialogDescription>
             </DialogHeader>
             <div className="flex-grow overflow-y-auto px-1 py-2">
-                <EventForm onEventCreated={() => setDialogOpen(false)} />
+                <EventForm 
+                  event={editingEvent} 
+                  onEventCreated={handleFormSubmit}
+                  onEventUpdated={handleFormSubmit}
+                />
             </div>
           </DialogContent>
         </Dialog>
       </div>
-      <EventList events={upcomingEvents} emptyStateMessage="No events in the next 7 days."/>
+      <EventList 
+        events={upcomingEvents} 
+        emptyStateMessage="No events in the next 7 days."
+        onEditEvent={handleEditClick}
+      />
     </div>
   );
 }
