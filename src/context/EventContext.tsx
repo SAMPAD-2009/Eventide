@@ -82,6 +82,28 @@ export const EventProvider = ({ children }: { children: ReactNode }) => {
       };
       const updatedEvents = [...events, newEvent].sort((a, b) => new Date(a.datetime).getTime() - new Date(b.datetime).getTime());
       setEvents(updatedEvents);
+
+      const n8nWebhookUrl = process.env.NEXT_PUBLIC_N8N_WEBHOOK_URL;
+      if (n8nWebhookUrl) {
+          try {
+              await fetch(n8nWebhookUrl, {
+                  method: 'POST',
+                  headers: {
+                      'Content-Type': 'application/json',
+                  },
+                  body: JSON.stringify({
+                      event: newEvent,
+                      action: 'create',
+                  }),
+              });
+          } catch (webhookError) {
+              console.error("Failed to send data to n8n webhook:", webhookError);
+              // We can decide if we want to notify the user about this.
+              // For now, we'll just log it to the console.
+          }
+      }
+
+
       toast({
         title: "Event Created",
         description: "Your new event has been added successfully.",
