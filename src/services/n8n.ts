@@ -19,8 +19,8 @@ export async function fetchEventsFromN8n(email: string): Promise<Event[]> {
             headers: {
                 'Content-Type': 'application/json',
             },
-            // Revalidate every hour
-            next: { revalidate: 3600 }
+            // Explicitly disable caching to ensure the webhook is always triggered.
+            cache: 'no-store',
         });
 
         if (!response.ok) {
