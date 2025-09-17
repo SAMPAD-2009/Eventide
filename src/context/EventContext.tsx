@@ -95,7 +95,8 @@ export const EventProvider = ({ children }: { children: ReactNode }) => {
                   body: JSON.stringify({
                       event: newEvent,
                       user: {
-                        email: user?.email
+                        email: user?.email,
+                        summary: summary
                       },
                       action: 'create',
                   }),
@@ -202,7 +203,7 @@ export const EventProvider = ({ children }: { children: ReactNode }) => {
                     'Content-Type': 'application/json',
                 },
                 body: JSON.stringify({
-                    event: { id },
+                    event: { id: id },
                     user: {
                       email: user?.email
                     },
