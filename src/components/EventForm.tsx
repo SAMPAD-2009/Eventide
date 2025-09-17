@@ -4,7 +4,7 @@
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { format } from 'date-fns';
+import { format, parseISO } from 'date-fns';
 import { Calendar as CalendarIcon, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -16,32 +16,33 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Textarea } from '@/components/ui/textarea';
 import { useEvents } from '@/context/EventContext';
 import { CATEGORIES } from '@/lib/categories';
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { Checkbox } from './ui/checkbox';
+import type { Event } from '@/lib/types';
 
 const eventFormSchema = z.object({
   title: z.string().min(2, { message: "Title must be at least 2 characters long." }),
   details: z.string().optional(),
-  date: z.date({ required_error: "A date is required." }),
-  time: z.string().regex(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/, { message: "Invalid time format (HH:MM)." }),
+  date: z.date().optional(),
+  time: z.string().optional(),
   category: z.string().min(2, { message: "Category must be at least 2 characters long." }),
   isIndefinite: z.boolean().default(false).optional(),
+}).refine(data => data.isIndefinite || (data.date && data.time), {
+    message: "Date and time are required unless the event is indefinite.",
+    path: ['date'],
 });
+
 
 type EventFormValues = z.infer<typeof eventFormSchema>;
 
 interface EventFormProps {
+    event?: Event | null;
     onEventCreated?: () => void;
+    onEventUpdated?: () => void;
 }
 
-export function EventForm({ onEventCreated }: EventFormProps) {
-  const { addEvent, isLoading } = useEvents();
-  const [defaultTime, setDefaultTime] = useState('');
-
-  useEffect(() => {
-    const now = new Date();
-    setDefaultTime(format(now, 'HH:mm'));
-  }, []);
+export function EventForm({ event, onEventCreated, onEventUpdated }: EventFormProps) {
+  const { addEvent, updateEvent, isLoading } = useEvents();
 
   const form = useForm<EventFormValues>({
     resolver: zodResolver(eventFormSchema),
@@ -49,7 +50,7 @@ export function EventForm({ onEventCreated }: EventFormProps) {
       title: "",
       details: "",
       date: new Date(),
-      time: defaultTime,
+      time: format(new Date(), 'HH:mm'),
       category: "Personal",
       isIndefinite: false,
     },
@@ -58,29 +59,42 @@ export function EventForm({ onEventCreated }: EventFormProps) {
   const isIndefinite = form.watch('isIndefinite');
 
   useEffect(() => {
-    if (defaultTime) {
-      form.reset({
-        ...form.getValues(),
-        time: defaultTime
-      });
+    if (event) {
+        form.reset({
+            title: event.title,
+            details: event.details,
+            date: event.isIndefinite ? undefined : parseISO(event.datetime),
+            time: event.isIndefinite ? undefined : format(parseISO(event.datetime), 'HH:mm'),
+            category: event.category,
+            isIndefinite: event.isIndefinite,
+        });
+    } else {
+        form.reset({
+            title: "",
+            details: "",
+            date: new Date(),
+            time: format(new Date(), 'HH:mm'),
+            category: "Personal",
+            isIndefinite: false,
+        });
     }
-  }, [defaultTime, form]);
+  }, [event, form]);
 
   const onSubmit = async (data: EventFormValues) => {
+    // We can be sure date and time are defined if not indefinite, due to the refine validation.
     const eventData = {
       ...data,
-      date: format(data.date, 'yyyy-MM-dd'),
+      date: data.isIndefinite ? '' : format(data.date!, 'yyyy-MM-dd'),
+      time: data.isIndefinite ? '' : data.time!,
     };
-    await addEvent(eventData);
-    form.reset({
-        title: "",
-        details: "",
-        date: new Date(),
-        time: format(new Date(), 'HH:mm'),
-        category: "Personal",
-        isIndefinite: false,
-    });
-    onEventCreated?.();
+
+    if (event) {
+        await updateEvent(event.id, eventData);
+        onEventUpdated?.();
+    } else {
+        await addEvent(eventData);
+        onEventCreated?.();
+    }
   };
 
   return (
@@ -192,7 +206,7 @@ export function EventForm({ onEventCreated }: EventFormProps) {
                         render={({ field }) => (
                         <FormItem>
                             <FormLabel>Category</FormLabel>
-                            <Select onValueChange={field.onChange} defaultValue={field.value}>
+                            <Select onValueChange={field.onChange} defaultValue={field.value} value={field.value}>
                             <FormControl>
                                 <SelectTrigger>
                                 <SelectValue placeholder="Select a category" />
@@ -215,13 +229,15 @@ export function EventForm({ onEventCreated }: EventFormProps) {
             {isLoading ? (
             <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Generating Summary...
+                {event ? 'Updating...' : 'Generating Summary...'}
             </>
             ) : (
-            'Add Event'
+             event ? 'Update Event' : 'Add Event'
             )}
         </Button>
         </form>
     </Form>
   );
 }
+
+    
