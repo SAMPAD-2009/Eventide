@@ -63,7 +63,14 @@ export const EventProvider = ({ children }: { children: ReactNode }) => {
   };
 
   useEffect(() => {
-    loadEvents();
+    // Only load events if a user is logged in.
+    // The loading state will be managed until the user object is available.
+    if (user) {
+      loadEvents();
+    } else {
+      // If there's no user, we're not loading events, so set loading to false.
+      setIsLoading(false);
+    }
   }, [user]);
 
   const addEvent = async (eventData: Omit<Event, 'id' | 'datetime' | 'event_id'>) => {
@@ -133,47 +140,47 @@ export const EventProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const updateEvent = async (id: string, eventData: Omit<Event, 'id' | 'datetime' | 'event_id'>) => {
-    setIsLoading(true);
+    const originalEvents = events;
+    
+    const updatedEvent: Event = {
+      ...eventData,
+      id: id,
+      event_id: id,
+      datetime: eventData.isIndefinite ? new Date(8640000000000000).toISOString() : new Date(`${eventData.date}T${eventData.time}`).toISOString(),
+      details: eventData.details || '',
+    };
+    updatedEvent.isIndefinite = !!updatedEvent.isIndefinite;
+
+    // Optimistic update
+    setEvents(events.map(event => event.id === id ? updatedEvent : event)
+      .sort((a, b) => new Date(a.datetime).getTime() - new Date(b.datetime).getTime()));
+
     try {
-      const existingEvent = events.find(event => event.id === id);
-      if (!existingEvent) {
-          throw new Error("Event not found");
-      }
-
-      const updatedEvent: Event = {
-        ...eventData,
-        id: id,
-        event_id: id,
-        datetime: eventData.isIndefinite ? new Date(8640000000000000).toISOString() : new Date(`${eventData.date}T${eventData.time}`).toISOString(),
-        details: eventData.details || '',
-      };
-      
-      updatedEvent.isIndefinite = !!updatedEvent.isIndefinite;
-
-
       const n8nWebhookUrl = process.env.NEXT_PUBLIC_N8N_WEBHOOK_URL;
-       if (n8nWebhookUrl) {
-          await fetch(n8nWebhookUrl, {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                  event: {
-                      event_id: updatedEvent.id,
-                      title: updatedEvent.title,
-                      details: updatedEvent.details,
-                      date: updatedEvent.date,
-                      time: updatedEvent.time,
-                      category: updatedEvent.category,
-                      is_indefinite: updatedEvent.isIndefinite,
-                  },
-                  user: { email: user?.email },
-                  action: 'update',
-              }),
-          });
-      }
+       if (!n8nWebhookUrl) {
+          throw new Error("n8n webhook URL not configured");
+       }
 
-      setEvents(events.map(event => event.id === id ? updatedEvent : event)
-        .sort((a, b) => new Date(a.datetime).getTime() - new Date(b.datetime).getTime()));
+       const response = await fetch(n8nWebhookUrl, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                event: {
+                    event_id: updatedEvent.id,
+                    title: updatedEvent.title,
+                    details: updatedEvent.details,
+                    date: updatedEvent.date,
+                    time: updatedEvent.time,
+                    category: updatedEvent.category,
+                    is_indefinite: updatedEvent.isIndefinite,
+                },
+                user: { email: user?.email },
+                action: 'update',
+            }),
+        });
+        if (!response.ok) {
+            throw new Error('Failed to update event via n8n webhook');
+        }
 
       toast({
         title: "Event Updated",
@@ -182,13 +189,13 @@ export const EventProvider = ({ children }: { children: ReactNode }) => {
 
     } catch (error) {
        console.error("Failed to update event:", error);
+       // Rollback on error
+       setEvents(originalEvents);
       toast({
         variant: "destructive",
         title: "Error",
         description: "Could not update the event. Please try again.",
       });
-    } finally {
-      setIsLoading(false);
     }
   };
 
