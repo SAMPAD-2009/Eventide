@@ -63,7 +63,7 @@ export const EventProvider = ({ children }: { children: ReactNode }) => {
 
   useEffect(() => {
     loadEvents();
-  }, [user, toast]);
+  }, [user]);
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -86,7 +86,6 @@ export const EventProvider = ({ children }: { children: ReactNode }) => {
         return;
     }
     setIsLoading(true);
-    const originalEvents = events;
     
     try {
       const eventId = generateUniqueEventId(
@@ -108,9 +107,6 @@ export const EventProvider = ({ children }: { children: ReactNode }) => {
       if (!n8nWebhookUrl) {
           throw new Error("n8n webhook URL not configured");
       }
-      
-      const optimisticEvents = [...events, newEventPayload].sort((a, b) => new Date(a.datetime).getTime() - new Date(b.datetime).getTime());
-      setEvents(optimisticEvents);
 
       const response = await fetch(n8nWebhookUrl, {
           method: 'POST',
@@ -140,8 +136,6 @@ export const EventProvider = ({ children }: { children: ReactNode }) => {
         title: "Error",
         description: "Could not create the event. Please try again.",
       });
-      // Revert optimistic update on failure
-      setEvents(originalEvents);
     } finally {
       setIsLoading(false);
     }
