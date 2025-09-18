@@ -46,10 +46,20 @@ export function EventForm({ event, onEventCreated, onEventUpdated }: EventFormPr
 
   const form = useForm<EventFormValues>({
     resolver: zodResolver(eventFormSchema),
+    defaultValues: {
+      title: event?.title || "",
+      details: event?.details || "",
+      date: event && !event.isIndefinite ? parseISO(event.datetime) : new Date(),
+      time: event && !event.isIndefinite ? format(parseISO(event.datetime), 'HH:mm') : format(new Date(), 'HH:mm'),
+      category: event?.category || "Personal",
+      isIndefinite: event?.isIndefinite || false,
+    },
   });
 
   const isIndefinite = form.watch('isIndefinite');
-
+  
+  // This useEffect is still useful to reset the form if the event prop changes
+  // while the dialog is already open (e.g., in a master-detail view).
   useEffect(() => {
     if (event) {
         form.reset({
@@ -61,7 +71,7 @@ export function EventForm({ event, onEventCreated, onEventUpdated }: EventFormPr
             isIndefinite: event.isIndefinite,
         });
     } else {
-        form.reset({
+         form.reset({
             title: "",
             details: "",
             date: new Date(),
@@ -71,6 +81,7 @@ export function EventForm({ event, onEventCreated, onEventUpdated }: EventFormPr
         });
     }
   }, [event, form]);
+
 
   const onSubmit = async (data: EventFormValues) => {
     // We can be sure date and time are defined if not indefinite, due to the refine validation.
