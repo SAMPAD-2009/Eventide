@@ -18,6 +18,13 @@ interface EventContextType {
 
 const EventContext = createContext<EventContextType | undefined>(undefined);
 
+const generateUniqueEventId = (email: string, title: string, date: string, time: string): string => {
+    const combinedString = `${email}-${title}-${date}-${time}`;
+    // Use btoa for a simple, client-side base64 encoding to create a unique-looking ID
+    return btoa(combinedString);
+}
+
+
 export const EventProvider = ({ children }: { children: ReactNode }) => {
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
@@ -65,8 +72,16 @@ export const EventProvider = ({ children }: { children: ReactNode }) => {
   }, []);
 
   const addEvent = async (eventData: Omit<Event, 'id' | 'summary' | 'datetime' | 'event_id'>) => {
+    if (!user?.email) {
+        toast({
+            variant: "destructive",
+            title: "Authentication Error",
+            description: "You must be logged in to create an event.",
+        });
+        return;
+    }
     setIsLoading(true);
-    const tempId = `temp-${new Date().toISOString()}`;
+    
     try {
       let summary = '';
       if (eventData.details && eventData.details.trim().length > 0) {
@@ -74,8 +89,17 @@ export const EventProvider = ({ children }: { children: ReactNode }) => {
         summary = result.summary;
       }
 
-      const newEventPayload: Omit<Event, 'id' | 'event_id'> = {
+      const eventId = generateUniqueEventId(
+          user.email, 
+          eventData.title, 
+          eventData.isIndefinite ? 'indefinite' : eventData.date!, 
+          eventData.isIndefinite ? '' : eventData.time!
+      );
+
+      const newEventPayload: Event = {
         ...eventData,
+        id: eventId,
+        event_id: eventId,
         summary,
         datetime: eventData.isIndefinite ? new Date(8640000000000000).toISOString() : new Date(`${eventData.date}T${eventData.time}`).toISOString(),
         details: eventData.details || '',
@@ -85,12 +109,16 @@ export const EventProvider = ({ children }: { children: ReactNode }) => {
       if (!n8nWebhookUrl) {
           throw new Error("n8n webhook URL not configured");
       }
+      
+      setEvents(prevEvents => 
+        [...prevEvents, newEventPayload].sort((a, b) => new Date(a.datetime).getTime() - new Date(b.datetime).getTime())
+      );
 
       const response = await fetch(n8nWebhookUrl, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-              event: { ...newEventPayload, event_id: null },
+              event: { ...newEventPayload },
               user: { email: user?.email },
               action: 'create',
           }),
@@ -99,19 +127,7 @@ export const EventProvider = ({ children }: { children: ReactNode }) => {
       if (!response.ok) {
         throw new Error("Failed to create event via n8n webhook");
       }
-
-      const createdEventResult = await response.json();
       
-      const finalEvent: Event = {
-        ...newEventPayload,
-        id: createdEventResult.event_id,
-        event_id: createdEventResult.event_id
-      };
-      
-      setEvents(prevEvents => 
-        [...prevEvents, finalEvent].sort((a, b) => new Date(a.datetime).getTime() - new Date(b.datetime).getTime())
-      );
-
       toast({
         title: "Event Created",
         description: "Your new event has been added successfully.",
@@ -123,7 +139,8 @@ export const EventProvider = ({ children }: { children: ReactNode }) => {
         title: "Error",
         description: "Could not create the event. Please try again.",
       });
-      setEvents(prev => prev.filter(e => e.id !== tempId));
+      // Revert optimistic update on failure
+      setEvents(prev => prev.filter(e => e.id !== e.id));
     } finally {
       setIsLoading(false);
     }
@@ -196,10 +213,13 @@ export const EventProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const deleteEvent = async (id: string) => {
+    const originalEvents = events;
+    setEvents(events.filter(event => event.id !== id));
+    
     const n8nWebhookUrl = process.env.NEXT_PUBLIC_N8N_WEBHOOK_URL;
     if (n8nWebhookUrl) {
         try {
-            await fetch(n8nWebhookUrl, {
+            const response = await fetch(n8nWebhookUrl, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -208,15 +228,23 @@ export const EventProvider = ({ children }: { children: ReactNode }) => {
                     action: 'delete',
                 }),
             });
+            if (!response.ok) {
+              throw new Error("Webhook for delete failed");
+            }
+             toast({
+              title: "Event Deleted",
+              description: "The event has been removed.",
+            });
         } catch (webhookError) {
             console.error("Failed to send delete notification to n8n webhook:", webhookError);
+            setEvents(originalEvents); // Revert on failure
+             toast({
+              variant: "destructive",
+              title: "Error",
+              description: "Could not delete the event from the server. Please try again.",
+            });
         }
     }
-    setEvents(events.filter(event => event.id !== id));
-    toast({
-      title: "Event Deleted",
-      description: "The event has been removed.",
-    });
   };
   
   const contextValue = { events, addEvent, updateEvent, deleteEvent, isLoading };
