@@ -9,7 +9,7 @@ import { fetchEventsFromN8n } from '@/services/n8n';
 
 interface EventContextType {
   events: Event[];
-  addEvent: (eventData: Omit<Event, 'id' | 'datetime' | 'event_id'>) => Promise<void>;
+  addEvent: (eventData: Omit<Event, 'id' | 'datetime' | 'event_id'>) => void;
   updateEvent: (id: string, eventData: Omit<Event, 'id' | 'datetime' | 'event_id'>) => Promise<void>;
   deleteEvent: (id: string) => void;
   isLoading: boolean;
@@ -69,7 +69,7 @@ export const EventProvider = ({ children }: { children: ReactNode }) => {
     loadEvents();
   }, [user]);
 
-  const addEvent = async (eventData: Omit<Event, 'id' | 'datetime' | 'event_id'>) => {
+  const addEvent = (eventData: Omit<Event, 'id' | 'datetime' | 'event_id'>) => {
     if (!user?.email) {
         toast({
             variant: "destructive",
@@ -98,42 +98,52 @@ export const EventProvider = ({ children }: { children: ReactNode }) => {
     const previousEvents = events;
     setEvents(prevEvents => [...prevEvents, newEvent].sort((a, b) => new Date(a.datetime).getTime() - new Date(b.datetime).getTime()));
     
-    try {
-      const n8nWebhookUrl = process.env.NEXT_PUBLIC_N8N_WEBHOOK_URL;
-      if (!n8nWebhookUrl) {
-          throw new Error("n8n webhook URL not configured");
-      }
-
-      const response = await fetch(n8nWebhookUrl, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-              event: { ...newEvent },
-              user: { email: user?.email },
-              action: 'create',
-          }),
-          keepalive: true,
-      });
-      
-      if (!response.ok) {
-        throw new Error("Failed to create event via n8n webhook");
-      }
-      
-      toast({
-        title: "Event Created",
-        description: "Your new event has been added successfully.",
-      });
-
-    } catch (error) {
-      console.error("Failed to add event:", error);
-      // Rollback on error
+    const n8nWebhookUrl = process.env.NEXT_PUBLIC_N8N_WEBHOOK_URL;
+    if (!n8nWebhookUrl) {
+      console.error("n8n webhook URL not configured");
       setEvents(previousEvents);
       toast({
         variant: "destructive",
-        title: "Error",
-        description: "Could not create the event. Please try again.",
+        title: "Configuration Error",
+        description: "Could not save the event due to a configuration issue.",
       });
+      return;
     }
+
+    fetch(n8nWebhookUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            event: { ...newEvent },
+            user: { email: user?.email },
+            action: 'create',
+        }),
+        keepalive: true,
+    }).then(response => {
+        if (!response.ok) {
+            // Rollback on error
+            setEvents(previousEvents);
+            toast({
+                variant: "destructive",
+                title: "Error",
+                description: "Could not create the event. Please try again.",
+            });
+        } else {
+            toast({
+              title: "Event Created",
+              description: "Your new event has been added successfully.",
+            });
+        }
+    }).catch(error => {
+        console.error("Failed to add event:", error);
+        // Rollback on error
+        setEvents(previousEvents);
+        toast({
+            variant: "destructive",
+            title: "Error",
+            description: "Could not create the event. Please try again.",
+        });
+    });
   };
 
   const updateEvent = async (id: string, eventData: Omit<Event, 'id' | 'datetime' | 'event_id'>) => {
