@@ -26,7 +26,7 @@ const generateUniqueEventId = (email: string, title: string, date: string, time:
 
 export const EventProvider = ({ children }: { children: ReactNode }) => {
   const { toast } = useToast();
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const [events, setEvents] = useState<Event[]>([]);
   const { user } = useAuth();
 
@@ -58,23 +58,13 @@ export const EventProvider = ({ children }: { children: ReactNode }) => {
       }
     } else {
       setEvents([]);
+      setIsLoading(false);
     }
   };
 
   useEffect(() => {
     loadEvents();
   }, [user]);
-
-  useEffect(() => {
-    const interval = setInterval(() => {
-      const now = new Date();
-      setEvents(prevEvents =>
-        prevEvents.filter(event => event.isIndefinite || new Date(event.datetime) > now)
-      );
-    }, 60000);
-
-    return () => clearInterval(interval);
-  }, []);
 
   const addEvent = async (eventData: Omit<Event, 'id' | 'datetime' | 'event_id'>) => {
     if (!user?.email) {

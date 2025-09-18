@@ -23,7 +23,7 @@ import { EventListSkeleton } from '@/components/EventListSkeleton';
 import type { Event } from '@/lib/types';
 
 export default function Home() {
-  const { events } = useEvents();
+  const { events, isLoading: areEventsLoading } = useEvents();
   const [isDialogOpen, setDialogOpen] = useState(false);
   const [editingEvent, setEditingEvent] = useState<Event | null>(null);
 
@@ -55,7 +55,7 @@ export default function Home() {
     setEditingEvent(null);
   }
 
-  if (isAuthLoading || !user) {
+  if (isAuthLoading || areEventsLoading) {
     return (
       <div className="w-full mx-auto p-4 md:p-8">
         <div className="flex justify-between items-center mb-6">
@@ -68,6 +68,19 @@ export default function Home() {
         <EventListSkeleton count={4} />
       </div>
     );
+  }
+
+  if (!user) {
+    // This case should be handled by AuthProvider redirect, but it's a good fallback.
+    // You could also render a "Please login" message here.
+    return (
+       <div className="w-full mx-auto p-4 md:p-8">
+        <div className="flex justify-between items-center mb-6">
+          <h1 className="text-3xl font-bold tracking-tight">Upcoming Events</h1>
+        </div>
+         <p>Please log in to see your events.</p>
+      </div>
+    )
   }
 
   return (
