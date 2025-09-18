@@ -181,7 +181,8 @@ export const EventProvider = ({ children }: { children: ReactNode }) => {
                       event_id: updatedEvent.id,
                       title: updatedEvent.title,
                       event_details: updatedEvent.details,
-                      datetime: updatedEvent.datetime,
+                      date: updatedEvent.date,
+                      time: updatedEvent.time,
                       category: updatedEvent.category,
                       is_indefinite: updatedEvent.isIndefinite,
                       summary: updatedEvent.summary
