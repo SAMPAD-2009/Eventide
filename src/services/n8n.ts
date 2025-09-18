@@ -39,7 +39,7 @@ export async function fetchEventsFromN8n(email: string): Promise<Event[]> {
         const mappedEvents = eventsData.map((event: any) => ({
             ...event,
             id: event.event_id, 
-            details: event.event_details || '',
+            details: event.details || '',
         }));
 
         return mappedEvents as Event[];
