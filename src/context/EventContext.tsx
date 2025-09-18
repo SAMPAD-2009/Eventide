@@ -75,24 +75,27 @@ export const EventProvider = ({ children }: { children: ReactNode }) => {
         });
         return;
     }
-    setIsLoading(true);
+    
+    const eventId = generateUniqueEventId(
+        user.email, 
+        eventData.title, 
+        eventData.isIndefinite ? 'indefinite' : eventData.date!, 
+        eventData.isIndefinite ? '' : eventData.time!
+    );
+
+    const newEvent: Event = {
+      ...eventData,
+      id: eventId,
+      event_id: eventId,
+      datetime: eventData.isIndefinite ? new Date(8640000000000000).toISOString() : new Date(`${eventData.date}T${eventData.time}`).toISOString(),
+      details: eventData.details || '',
+    };
+    
+    // Optimistic update
+    const previousEvents = events;
+    setEvents(prevEvents => [...prevEvents, newEvent].sort((a, b) => new Date(a.datetime).getTime() - new Date(b.datetime).getTime()));
     
     try {
-      const eventId = generateUniqueEventId(
-          user.email, 
-          eventData.title, 
-          eventData.isIndefinite ? 'indefinite' : eventData.date!, 
-          eventData.isIndefinite ? '' : eventData.time!
-      );
-
-      const newEventPayload: Event = {
-        ...eventData,
-        id: eventId,
-        event_id: eventId,
-        datetime: eventData.isIndefinite ? new Date(8640000000000000).toISOString() : new Date(`${eventData.date}T${eventData.time}`).toISOString(),
-        details: eventData.details || '',
-      };
-
       const n8nWebhookUrl = process.env.NEXT_PUBLIC_N8N_WEBHOOK_URL;
       if (!n8nWebhookUrl) {
           throw new Error("n8n webhook URL not configured");
@@ -102,7 +105,7 @@ export const EventProvider = ({ children }: { children: ReactNode }) => {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-              event: { ...newEventPayload },
+              event: { ...newEvent },
               user: { email: user?.email },
               action: 'create',
           }),
@@ -112,22 +115,20 @@ export const EventProvider = ({ children }: { children: ReactNode }) => {
         throw new Error("Failed to create event via n8n webhook");
       }
       
-      // After successful creation, reload all events to ensure consistency
-      await loadEvents();
-
       toast({
         title: "Event Created",
         description: "Your new event has been added successfully.",
       });
+
     } catch (error) {
       console.error("Failed to add event:", error);
+      // Rollback on error
+      setEvents(previousEvents);
       toast({
         variant: "destructive",
         title: "Error",
         description: "Could not create the event. Please try again.",
       });
-    } finally {
-      setIsLoading(false);
     }
   };
 
