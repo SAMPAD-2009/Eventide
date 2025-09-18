@@ -3,7 +3,7 @@
 
 import { useEvents } from '@/context/EventContext';
 import { EventList } from '@/components/EventList';
-import { addDays, isAfter, startOfToday } from 'date-fns';
+import { addDays, isAfter, startOfToday, isSameDay } from 'date-fns';
 import { useMemo } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { EventListSkeleton } from '@/components/EventListSkeleton';
@@ -14,7 +14,10 @@ export default function FutureEventsPage() {
 
   const futureEvents = useMemo(() => {
     const sevenDaysFromNow = addDays(startOfToday(), 7);
-    return events.filter(event => isAfter(new Date(event.datetime), sevenDaysFromNow));
+    return events.filter(event => {
+      const eventDate = new Date(event.datetime);
+      return isAfter(eventDate, sevenDaysFromNow) || isSameDay(eventDate, sevenDaysFromNow);
+    });
   }, [events]);
 
   if (isAuthLoading || !user) {
@@ -23,7 +26,7 @@ export default function FutureEventsPage() {
         <div className="max-w-3xl mx-auto">
           <h1 className="text-3xl font-bold tracking-tight mb-6">Future Events</h1>
           <p className="text-muted-foreground mb-6">
-            This page lists all events scheduled more than 7 days from now.
+            This page lists all events scheduled 7 days or more from now.
           </p>
           <EventListSkeleton count={2} />
         </div>
@@ -36,7 +39,7 @@ export default function FutureEventsPage() {
       <div className="max-w-3xl mx-auto">
         <h1 className="text-3xl font-bold tracking-tight mb-6">Future Events</h1>
         <p className="text-muted-foreground mb-6">
-          This page lists all events scheduled more than 7 days from now.
+          This page lists all events scheduled 7 days or more from now.
         </p>
         <EventList events={futureEvents} emptyStateMessage="No events scheduled beyond the next 7 days."/>
       </div>
