@@ -41,7 +41,7 @@ export const EventProvider = ({ children }: { children: ReactNode }) => {
             .map(event => ({
                 ...event,
                 isIndefinite: event.is_indefinite === true || event.is_indefinite === 'true',
-                details: event.event_details || event.details || ''
+                details: event.details || ''
             }))
             .filter((event: Event) => event.isIndefinite || new Date(event.datetime) > now)
             .sort((a: Event, b: Event) => new Date(a.datetime).getTime() - new Date(b.datetime).getTime());
@@ -114,7 +114,7 @@ export const EventProvider = ({ children }: { children: ReactNode }) => {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-              event: { ...newEventPayload, event_details: newEventPayload.details },
+              event: { ...newEventPayload },
               user: { email: user?.email },
               action: 'create',
           }),
@@ -128,7 +128,7 @@ export const EventProvider = ({ children }: { children: ReactNode }) => {
       const finalEvent = {
         ...createdEvent,
         id: createdEvent.event_id,
-        details: createdEvent.event_details || '',
+        details: createdEvent.details || '',
         isIndefinite: createdEvent.is_indefinite === true || createdEvent.is_indefinite === 'true',
       };
       
@@ -181,7 +181,7 @@ export const EventProvider = ({ children }: { children: ReactNode }) => {
                   event: {
                       event_id: updatedEvent.id,
                       title: updatedEvent.title,
-                      event_details: updatedEvent.details,
+                      details: updatedEvent.details,
                       date: updatedEvent.date,
                       time: updatedEvent.time,
                       category: updatedEvent.category,
