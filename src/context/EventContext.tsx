@@ -42,8 +42,7 @@ export const EventProvider = ({ children }: { children: ReactNode }) => {
               isIndefinite: event.is_indefinite === true || event.is_indefinite === 'true',
               details: event.details || ''
           }))
-          .filter((event: Event) => event.isIndefinite || new Date(event.datetime) > now)
-          .sort((a: Event, b: Event) => new Date(a.datetime).getTime() - new Date(b.datetime).getTime());
+          .filter((event: Event) => event.isIndefinite || new Date(event.datetime) > now);
         setEvents(upcomingEvents);
       } catch (error) {
          console.error("Failed to load events from n8n", error);
@@ -96,7 +95,7 @@ export const EventProvider = ({ children }: { children: ReactNode }) => {
     
     // Optimistic update
     const previousEvents = events;
-    setEvents(prevEvents => [...prevEvents, newEvent].sort((a, b) => new Date(a.datetime).getTime() - new Date(b.datetime).getTime()));
+    setEvents(prevEvents => [newEvent, ...prevEvents]);
     
     const n8nWebhookUrl = process.env.NEXT_PUBLIC_N8N_WEBHOOK_URL;
     if (!n8nWebhookUrl) {
@@ -133,6 +132,8 @@ export const EventProvider = ({ children }: { children: ReactNode }) => {
               title: "Event Created",
               description: "Your new event has been added successfully.",
             });
+            // Re-sync with server to get the final sorted list
+            loadEvents();
         }
     }).catch(error => {
         console.error("Failed to add event:", error);
@@ -159,8 +160,7 @@ export const EventProvider = ({ children }: { children: ReactNode }) => {
     updatedEvent.isIndefinite = !!updatedEvent.isIndefinite;
 
     // Optimistic update
-    setEvents(events.map(event => event.id === id ? updatedEvent : event)
-      .sort((a, b) => new Date(a.datetime).getTime() - new Date(b.datetime).getTime()));
+    setEvents(events.map(event => event.id === id ? updatedEvent : event));
 
     try {
       const n8nWebhookUrl = process.env.NEXT_PUBLIC_N8N_WEBHOOK_URL;
@@ -194,6 +194,8 @@ export const EventProvider = ({ children }: { children: ReactNode }) => {
         title: "Event Updated",
         description: "Your event has been successfully updated.",
       });
+      // Re-sync with server to get the final sorted list
+      loadEvents();
 
     } catch (error) {
        console.error("Failed to update event:", error);
