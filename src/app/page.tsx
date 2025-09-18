@@ -4,7 +4,7 @@
 import { useEvents } from '@/context/EventContext';
 import { EventForm } from '@/components/EventForm';
 import { EventList } from '@/components/EventList';
-import { addDays, isWithinInterval, startOfToday } from 'date-fns';
+import { addDays, isWithinInterval, startOfToday, isSameDay } from 'date-fns';
 import { useMemo, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import {
@@ -33,9 +33,11 @@ export default function Home() {
   const upcomingEvents = useMemo(() => {
     const today = startOfToday();
     const sevenDaysFromNow = addDays(today, 7);
-    return events.filter(event =>
-      event.isIndefinite || isWithinInterval(new Date(event.datetime), { start: today, end: sevenDaysFromNow })
-    );
+    return events.filter(event => {
+      if (event.isIndefinite) return true;
+      const eventDate = new Date(event.datetime);
+      return isWithinInterval(eventDate, { start: today, end: sevenDaysFromNow }) || isSameDay(eventDate, sevenDaysFromNow);
+    });
   }, [events]);
 
   const handleCreateClick = () => {
