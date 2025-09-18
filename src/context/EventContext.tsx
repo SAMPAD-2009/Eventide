@@ -90,7 +90,7 @@ export const EventProvider = ({ children }: { children: ReactNode }) => {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-              event: newEventPayload,
+              event: { ...newEventPayload, event_id: null },
               user: { email: user?.email },
               action: 'create',
           }),
