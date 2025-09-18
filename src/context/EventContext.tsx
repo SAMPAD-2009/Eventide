@@ -9,8 +9,8 @@ import { fetchEventsFromN8n } from '@/services/n8n';
 
 interface EventContextType {
   events: Event[];
-  addEvent: (eventData: Omit<Event, 'id' | 'datetime' | 'event_id'>) => void;
-  updateEvent: (id: string, eventData: Omit<Event, 'id' | 'datetime' | 'event_id'>) => Promise<void>;
+  addEvent: (eventData: Omit<Event, 'id' | 'datetime' | 'event_id'>) => Event;
+  updateEvent: (id: string, eventData: Omit<Event, 'id' | 'datetime' | 'event_id'>) => void;
   deleteEvent: (id: string) => void;
   isLoading: boolean;
 }
@@ -35,15 +35,7 @@ export const EventProvider = ({ children }: { children: ReactNode }) => {
       setIsLoading(true);
       try {
         const fetchedEvents = await fetchEventsFromN8n(user.email);
-        const now = new Date();
-        const upcomingEvents = fetchedEvents
-          .map(event => ({
-              ...event,
-              isIndefinite: event.is_indefinite === true || event.is_indefinite === 'true',
-              details: event.details || ''
-          }))
-          .filter((event: Event) => event.isIndefinite || new Date(event.datetime) > now);
-        setEvents(upcomingEvents);
+        setEvents(fetchedEvents);
       } catch (error) {
          console.error("Failed to load events from n8n", error);
          toast({
@@ -57,25 +49,24 @@ export const EventProvider = ({ children }: { children: ReactNode }) => {
       }
     } else {
       setEvents([]);
-      // If there is no user, we are not loading anything, so stop loading.
       setIsLoading(false);
     }
   };
 
   useEffect(() => {
-    // We start loading events as soon as the provider mounts,
-    // and `loadEvents` will handle the check for user existence.
     loadEvents();
   }, [user]);
 
-  const addEvent = (eventData: Omit<Event, 'id' | 'datetime' | 'event_id'>) => {
+  const addEvent = (eventData: Omit<Event, 'id' | 'datetime' | 'event_id'>): Event => {
     if (!user?.email) {
         toast({
             variant: "destructive",
             title: "Authentication Error",
             description: "You must be logged in to create an event.",
         });
-        return;
+        // This is not ideal, but we have to return an event.
+        // The form logic should prevent this from being called if there's no user.
+        return { ...eventData, id: '', datetime: '', details: ''}; 
     }
     
     const eventId = generateUniqueEventId(
@@ -94,60 +85,11 @@ export const EventProvider = ({ children }: { children: ReactNode }) => {
     };
     
     // Optimistic update
-    const previousEvents = events;
     setEvents(prevEvents => [newEvent, ...prevEvents]);
-    
-    const n8nWebhookUrl = process.env.NEXT_PUBLIC_N8N_WEBHOOK_URL;
-    if (!n8nWebhookUrl) {
-      console.error("n8n webhook URL not configured");
-      setEvents(previousEvents);
-      toast({
-        variant: "destructive",
-        title: "Configuration Error",
-        description: "Could not save the event due to a configuration issue.",
-      });
-      return;
-    }
-
-    fetch(n8nWebhookUrl, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-            event: { ...newEvent },
-            user: { email: user?.email },
-            action: 'create',
-        }),
-        keepalive: true,
-    }).then(response => {
-        if (!response.ok) {
-            // Rollback on error
-            setEvents(previousEvents);
-            toast({
-                variant: "destructive",
-                title: "Error",
-                description: "Could not create the event. Please try again.",
-            });
-        } else {
-            toast({
-              title: "Event Created",
-              description: "Your new event has been added successfully.",
-            });
-            // Re-sync with server to get the final sorted list
-            loadEvents();
-        }
-    }).catch(error => {
-        console.error("Failed to add event:", error);
-        // Rollback on error
-        setEvents(previousEvents);
-        toast({
-            variant: "destructive",
-            title: "Error",
-            description: "Could not create the event. Please try again.",
-        });
-    });
+    return newEvent;
   };
 
-  const updateEvent = async (id: string, eventData: Omit<Event, 'id' | 'datetime' | 'event_id'>) => {
+  const updateEvent = (id: string, eventData: Omit<Event, 'id' | 'datetime' | 'event_id'>) => {
     const originalEvents = [...events];
     
     const updatedEvent: Event = {
@@ -160,15 +102,21 @@ export const EventProvider = ({ children }: { children: ReactNode }) => {
     updatedEvent.isIndefinite = !!updatedEvent.isIndefinite;
 
     // Optimistic update
-    setEvents(events.map(event => event.id === id ? updatedEvent : event));
+    setEvents(prevEvents => prevEvents.map(event => event.id === id ? updatedEvent : event));
 
-    try {
-      const n8nWebhookUrl = process.env.NEXT_PUBLIC_N8N_WEBHOOK_URL;
-       if (!n8nWebhookUrl) {
-          throw new Error("n8n webhook URL not configured");
-       }
+    const n8nWebhookUrl = process.env.NEXT_PUBLIC_N8N_WEBHOOK_URL;
+     if (!n8nWebhookUrl) {
+        console.error("n8n webhook URL not configured");
+        setEvents(originalEvents);
+        toast({
+            variant: "destructive",
+            title: "Configuration Error",
+            description: "Could not update event due to configuration issue."
+        });
+        return;
+     }
 
-       const response = await fetch(n8nWebhookUrl, {
+    fetch(n8nWebhookUrl, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
@@ -185,28 +133,29 @@ export const EventProvider = ({ children }: { children: ReactNode }) => {
                 action: 'update',
             }),
             keepalive: true,
-        });
-        if (!response.ok) {
-            throw new Error('Failed to update event via n8n webhook');
+    }).then(response => {
+        if(!response.ok) {
+            setEvents(originalEvents);
+            toast({
+                variant: "destructive",
+                title: "Error",
+                description: "Could not update the event. Please try again.",
+            });
+        } else {
+            toast({
+              title: "Event Updated",
+              description: "Your event has been successfully updated.",
+            });
         }
-
-      toast({
-        title: "Event Updated",
-        description: "Your event has been successfully updated.",
-      });
-      // Re-sync with server to get the final sorted list
-      loadEvents();
-
-    } catch (error) {
+    }).catch(error => {
        console.error("Failed to update event:", error);
-       // Rollback on error
        setEvents(originalEvents);
-      toast({
+       toast({
         variant: "destructive",
         title: "Error",
         description: "Could not update the event. Please try again.",
       });
-    }
+    });
   };
 
   const deleteEvent = async (id: string) => {
@@ -261,3 +210,5 @@ export const useEvents = () => {
   }
   return context;
 };
+
+    

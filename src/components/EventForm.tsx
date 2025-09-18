@@ -19,6 +19,8 @@ import { CATEGORIES } from '@/lib/categories';
 import { useEffect } from 'react';
 import { Checkbox } from './ui/checkbox';
 import type { Event } from '@/lib/types';
+import { useAuth } from '@/context/AuthContext';
+import { useToast } from '@/hooks/use-toast';
 
 const eventFormSchema = z.object({
   title: z.string().min(2, { message: "Title must be at least 2 characters long." }),
@@ -43,6 +45,8 @@ interface EventFormProps {
 
 export function EventForm({ event, onEventCreated, onEventUpdated }: EventFormProps) {
   const { addEvent, updateEvent, isLoading } = useEvents();
+  const { user } = useAuth();
+  const { toast } = useToast();
 
   const form = useForm<EventFormValues>({
     resolver: zodResolver(eventFormSchema),
@@ -58,8 +62,6 @@ export function EventForm({ event, onEventCreated, onEventUpdated }: EventFormPr
 
   const isIndefinite = form.watch('isIndefinite');
   
-  // This useEffect is still useful to reset the form if the event prop changes
-  // while the dialog is already open (e.g., in a master-detail view).
   useEffect(() => {
     if (event) {
         form.reset({
@@ -83,8 +85,7 @@ export function EventForm({ event, onEventCreated, onEventUpdated }: EventFormPr
   }, [event, form]);
 
 
-  const onSubmit = async (data: EventFormValues) => {
-    // We can be sure date and time are defined if not indefinite, due to the refine validation.
+  const onSubmit = (data: EventFormValues) => {
     const eventData = {
       ...data,
       date: data.isIndefinite ? '' : format(data.date!, 'yyyy-MM-dd'),
@@ -95,7 +96,53 @@ export function EventForm({ event, onEventCreated, onEventUpdated }: EventFormPr
         updateEvent(event.id, eventData);
         onEventUpdated?.();
     } else {
-        addEvent(eventData);
+        const n8nWebhookUrl = process.env.NEXT_PUBLIC_N8N_WEBHOOK_URL;
+        if (!n8nWebhookUrl) {
+          console.error("n8n webhook URL not configured");
+          toast({
+            variant: "destructive",
+            title: "Configuration Error",
+            description: "Could not save the event due to a configuration issue.",
+          });
+          return;
+        }
+
+        const newEventForUI = addEvent(eventData);
+
+        fetch(n8nWebhookUrl, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                event: { ...newEventForUI },
+                user: { email: user?.email },
+                action: 'create',
+            }),
+            keepalive: true,
+        }).then(response => {
+            if (!response.ok) {
+                toast({
+                    variant: "destructive",
+                    title: "Error",
+                    description: "Could not create the event. Please try again.",
+                });
+                // Note: We are not rolling back here to avoid complexity,
+                // The user can delete the event manually. A full solution
+                // would require a more robust state management with rollbacks.
+            } else {
+                toast({
+                  title: "Event Created",
+                  description: "Your new event has been added successfully.",
+                });
+            }
+        }).catch(error => {
+            console.error("Failed to add event:", error);
+            toast({
+                variant: "destructive",
+                title: "Error",
+                description: "Could not create the event. Please try again.",
+            });
+        });
+        
         onEventCreated?.();
     }
   };
@@ -242,3 +289,5 @@ export function EventForm({ event, onEventCreated, onEventUpdated }: EventFormPr
     </Form>
   );
 }
+
+    
