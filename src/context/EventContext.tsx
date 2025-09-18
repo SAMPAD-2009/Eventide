@@ -30,37 +30,38 @@ export const EventProvider = ({ children }: { children: ReactNode }) => {
   const [events, setEvents] = useState<Event[]>([]);
   const { user } = useAuth();
 
-  useEffect(() => {
-    const loadEvents = async () => {
-      if (user?.email) {
-        setIsLoading(true);
-        try {
-          const fetchedEvents = await fetchEventsFromN8n(user.email);
-          const now = new Date();
-          const upcomingEvents = fetchedEvents
-            .map(event => ({
-                ...event,
-                isIndefinite: event.is_indefinite === true || event.is_indefinite === 'true',
-                details: event.details || ''
-            }))
-            .filter((event: Event) => event.isIndefinite || new Date(event.datetime) > now)
-            .sort((a: Event, b: Event) => new Date(a.datetime).getTime() - new Date(b.datetime).getTime());
-          setEvents(upcomingEvents);
-        } catch (error) {
-           console.error("Failed to load events from n8n", error);
-           toast({
-             variant: "destructive",
-             title: "Error",
-             description: "Could not fetch your events. Please try again later.",
-           });
-           setEvents([]);
-        } finally {
-            setIsLoading(false);
-        }
-      } else {
-        setEvents([]);
+  const loadEvents = async () => {
+    if (user?.email) {
+      setIsLoading(true);
+      try {
+        const fetchedEvents = await fetchEventsFromN8n(user.email);
+        const now = new Date();
+        const upcomingEvents = fetchedEvents
+          .map(event => ({
+              ...event,
+              isIndefinite: event.is_indefinite === true || event.is_indefinite === 'true',
+              details: event.details || ''
+          }))
+          .filter((event: Event) => event.isIndefinite || new Date(event.datetime) > now)
+          .sort((a: Event, b: Event) => new Date(a.datetime).getTime() - new Date(b.datetime).getTime());
+        setEvents(upcomingEvents);
+      } catch (error) {
+         console.error("Failed to load events from n8n", error);
+         toast({
+           variant: "destructive",
+           title: "Error",
+           description: "Could not fetch your events. Please try again later.",
+         });
+         setEvents([]);
+      } finally {
+          setIsLoading(false);
       }
-    };
+    } else {
+      setEvents([]);
+    }
+  };
+
+  useEffect(() => {
     loadEvents();
   }, [user, toast]);
 
@@ -85,6 +86,7 @@ export const EventProvider = ({ children }: { children: ReactNode }) => {
         return;
     }
     setIsLoading(true);
+    const originalEvents = events;
     
     try {
       const eventId = generateUniqueEventId(
@@ -124,16 +126,8 @@ export const EventProvider = ({ children }: { children: ReactNode }) => {
         throw new Error("Failed to create event via n8n webhook");
       }
       
-      const createdEvent = await response.json();
-      const finalEvent = {
-        ...createdEvent,
-        id: createdEvent.event_id,
-        details: createdEvent.details || '',
-        isIndefinite: createdEvent.is_indefinite === true || createdEvent.is_indefinite === 'true',
-      };
-      
-      const finalEvents = optimisticEvents.map(e => e.id === eventId ? finalEvent : e);
-      setEvents(finalEvents);
+      // After successful creation, reload all events to ensure consistency
+      await loadEvents();
 
       toast({
         title: "Event Created",
@@ -147,7 +141,7 @@ export const EventProvider = ({ children }: { children: ReactNode }) => {
         description: "Could not create the event. Please try again.",
       });
       // Revert optimistic update on failure
-      setEvents(prev => prev.filter(e => e.id !== e.event_id));
+      setEvents(originalEvents);
     } finally {
       setIsLoading(false);
     }
