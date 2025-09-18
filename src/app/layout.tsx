@@ -35,6 +35,11 @@ export default function RootLayout({
               <div className="relative flex min-h-screen flex-col">
                 <ConditionalHeader />
                 <main className="flex-1">{children}</main>
+                <footer className="py-4 px-4 md:px-8">
+                  <div className="max-w-7xl mx-auto text-center text-sm text-muted-foreground">
+                    <p>created by His Royal Highness Lord-Samp2009</p>
+                  </div>
+                </footer>
               </div>
               <Toaster />
             </EventProvider>
