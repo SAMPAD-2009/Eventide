@@ -38,6 +38,11 @@ export const EventProvider = ({ children }: { children: ReactNode }) => {
           const fetchedEvents = await fetchEventsFromN8n(user.email);
           const now = new Date();
           const upcomingEvents = fetchedEvents
+            .map(event => ({
+                ...event,
+                isIndefinite: event.is_indefinite === true || event.is_indefinite === 'true',
+                details: event.event_details || event.details || ''
+            }))
             .filter((event: Event) => event.isIndefinite || new Date(event.datetime) > now)
             .sort((a: Event, b: Event) => new Date(a.datetime).getTime() - new Date(b.datetime).getTime());
           setEvents(upcomingEvents);
@@ -109,7 +114,7 @@ export const EventProvider = ({ children }: { children: ReactNode }) => {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-              event: { ...newEventPayload },
+              event: { ...newEventPayload, event_details: newEventPayload.details },
               user: { email: user?.email },
               action: 'create',
           }),
@@ -120,7 +125,14 @@ export const EventProvider = ({ children }: { children: ReactNode }) => {
       }
       
       const createdEvent = await response.json();
-      const finalEvents = optimisticEvents.map(e => e.id === eventId ? { ...createdEvent, id: createdEvent.event_id, details: createdEvent.event_details || '' } : e);
+      const finalEvent = {
+        ...createdEvent,
+        id: createdEvent.event_id,
+        details: createdEvent.event_details || '',
+        isIndefinite: createdEvent.is_indefinite === true || createdEvent.is_indefinite === 'true',
+      };
+      
+      const finalEvents = optimisticEvents.map(e => e.id === eventId ? finalEvent : e);
       setEvents(finalEvents);
 
       toast({
@@ -156,6 +168,9 @@ export const EventProvider = ({ children }: { children: ReactNode }) => {
         datetime: eventData.isIndefinite ? new Date(8640000000000000).toISOString() : new Date(`${eventData.date}T${eventData.time}`).toISOString(),
         details: eventData.details || '',
       };
+      
+      updatedEvent.isIndefinite = !!updatedEvent.isIndefinite;
+
 
       const n8nWebhookUrl = process.env.NEXT_PUBLIC_N8N_WEBHOOK_URL;
        if (n8nWebhookUrl) {
