@@ -25,7 +25,7 @@ const eventFormSchema = z.object({
   details: z.string().optional(),
   date: z.date().optional(),
   time: z.string().optional(),
-  category: z.string().min(2, { message: "Category must be at least 2 characters long." }),
+  category: z.string().min(1, { message: "Please select a category." }),
   isIndefinite: z.boolean().default(false).optional(),
 }).refine(data => data.isIndefinite || (data.date && data.time), {
     message: "Date and time are required unless the event is indefinite.",
@@ -46,14 +46,6 @@ export function EventForm({ event, onEventCreated, onEventUpdated }: EventFormPr
 
   const form = useForm<EventFormValues>({
     resolver: zodResolver(eventFormSchema),
-    defaultValues: {
-      title: "",
-      details: "",
-      date: new Date(),
-      time: format(new Date(), 'HH:mm'),
-      category: "Personal",
-      isIndefinite: false,
-    },
   });
 
   const isIndefinite = form.watch('isIndefinite');
