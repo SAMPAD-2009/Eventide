@@ -1,11 +1,12 @@
 
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { AlertCircle } from 'lucide-react';
+import { HistoryEventCard } from '@/components/HistoryEventCard';
 
 interface HistoryEvent {
   year: number;
-  event: string;
+  description: string;
+  picture: string;
 }
 
 async function fetchHistoryEventsFromGoogleSheet(): Promise<{ events: HistoryEvent[]; error: string | null }> {
@@ -21,24 +22,34 @@ async function fetchHistoryEventsFromGoogleSheet(): Promise<{ events: HistoryEve
     }
 
     const csvText = await response.text();
-    const today = new Date();
-    const currentMonth = today.getMonth() + 1;
-    const currentDay = today.getDate();
+    
+    // Assumes CSV header: event_year,event_description,event_picture
+    const headers = csvText.split('\n')[0].trim().split(',');
+    const yearIndex = headers.indexOf('event_year');
+    const descriptionIndex = headers.indexOf('event_description');
+    const pictureIndex = headers.indexOf('event_picture');
+
+    if (yearIndex === -1 || descriptionIndex === -1 || pictureIndex === -1) {
+        throw new Error('CSV headers are incorrect. Expected "event_year", "event_description", "event_picture".');
+    }
 
     const events: HistoryEvent[] = csvText
       .split('\n')
       .slice(1) // Skip header row
       .map(row => {
-        const [month, day, year, ...eventParts] = row.split(',');
-        const eventText = eventParts.join(',').replace(/"/g, '').trim();
+        // Basic CSV parsing, handles commas inside quoted strings
+        const columns = row.match(/(".*?"|[^",]+)(?=\s*,|\s*$)/g) || [];
+        const year = parseInt(columns[yearIndex]?.replace(/"/g, '').trim() || '0', 10);
+        const description = columns[descriptionIndex]?.replace(/"/g, '').trim() || '';
+        const picture = columns[pictureIndex]?.replace(/"/g, '').trim() || '';
+        
         return {
-          month: parseInt(month, 10),
-          day: parseInt(day, 10),
-          year: parseInt(year, 10),
-          event: eventText,
+          year,
+          description,
+          picture
         };
       })
-      .filter(e => e.month === currentMonth && e.day === currentDay && e.year && e.event);
+      .filter(e => e.year && e.description); // Ensure essential data exists
 
     return { events, error: null };
   } catch (err: any) {
@@ -50,16 +61,13 @@ async function fetchHistoryEventsFromGoogleSheet(): Promise<{ events: HistoryEve
 
 export default async function HistoryPage() {
   const { events, error } = await fetchHistoryEventsFromGoogleSheet();
-  const today = new Date();
-  const formattedDate = today.toLocaleDateString('en-US', { month: 'long', day: 'numeric' });
-
 
   return (
     <div className="w-full mx-auto p-4 md:p-8">
       <div className="max-w-7xl mx-auto">
-        <h1 className="text-3xl font-bold tracking-tight mb-2">On This Day in History: {formattedDate}</h1>
+        <h1 className="text-3xl font-bold tracking-tight mb-2">Moments in History</h1>
         <p className="text-muted-foreground mb-6">
-          Events that occurred on this day throughout history, from a public Google Sheet.
+          A collection of notable events from a public Google Sheet.
         </p>
 
         {error && (
@@ -71,20 +79,13 @@ export default async function HistoryPage() {
         )}
 
         {!error && (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {events.map((event, index) => (
-              <Card key={index} className="flex flex-col">
-                <CardHeader>
-                  <CardTitle>Year: {event.year}</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-muted-foreground">{event.event}</p>
-                </CardContent>
-              </Card>
+                <HistoryEventCard key={index} event={event} />
             ))}
              {events.length === 0 && !error && (
                 <p className="text-muted-foreground col-span-full text-center">
-                    No historical events found for this day in the Google Sheet.
+                    No historical events found in the Google Sheet.
                 </p>
             )}
           </div>
@@ -93,4 +94,3 @@ export default async function HistoryPage() {
     </div>
   );
 }
-
