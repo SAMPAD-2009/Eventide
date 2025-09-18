@@ -19,7 +19,6 @@ export async function fetchEventsFromN8n(email: string): Promise<Event[]> {
             headers: {
                 'Content-Type': 'application/json',
             },
-            // Explicitly disable caching to ensure the webhook is always triggered.
             cache: 'no-store',
         });
 
@@ -29,15 +28,21 @@ export async function fetchEventsFromN8n(email: string): Promise<Event[]> {
             throw new Error(`Failed to fetch events from n8n. Status: ${response.status}`);
         }
 
-        const events = await response.json();
+        const eventsData = await response.json();
         
-        // It's good practice to ensure the response is an array.
-        if (!Array.isArray(events)) {
+        if (!Array.isArray(eventsData)) {
             console.error("n8n webhook did not return an array of events.");
             return [];
         }
 
-        return events as Event[];
+        // Map event_id from n8n/Baserow to the app's id field
+        const mappedEvents = eventsData.map((event: any) => ({
+            ...event,
+            id: event.event_id, 
+            details: event.event_details || '',
+        }));
+
+        return mappedEvents as Event[];
 
     } catch (error) {
         console.error("Error calling n8n webhook:", error);

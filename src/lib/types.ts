@@ -8,4 +8,5 @@ export interface Event {
   category: string;
   datetime: string;
   isIndefinite?: boolean;
+  event_id?: string; // a.k.a Baserow row ID
 }
