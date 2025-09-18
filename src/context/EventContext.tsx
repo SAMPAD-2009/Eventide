@@ -102,9 +102,8 @@ export const EventProvider = ({ children }: { children: ReactNode }) => {
           throw new Error("n8n webhook URL not configured");
       }
       
-      setEvents(prevEvents => 
-        [...prevEvents, newEventPayload].sort((a, b) => new Date(a.datetime).getTime() - new Date(b.datetime).getTime())
-      );
+      const optimisticEvents = [...events, newEventPayload].sort((a, b) => new Date(a.datetime).getTime() - new Date(b.datetime).getTime());
+      setEvents(optimisticEvents);
 
       const response = await fetch(n8nWebhookUrl, {
           method: 'POST',
@@ -120,6 +119,10 @@ export const EventProvider = ({ children }: { children: ReactNode }) => {
         throw new Error("Failed to create event via n8n webhook");
       }
       
+      const createdEvent = await response.json();
+      const finalEvents = optimisticEvents.map(e => e.id === eventId ? { ...createdEvent, id: createdEvent.event_id, details: createdEvent.event_details || '' } : e);
+      setEvents(finalEvents);
+
       toast({
         title: "Event Created",
         description: "Your new event has been added successfully.",
@@ -132,7 +135,7 @@ export const EventProvider = ({ children }: { children: ReactNode }) => {
         description: "Could not create the event. Please try again.",
       });
       // Revert optimistic update on failure
-      setEvents(prev => prev.filter(e => e.id !== e.id));
+      setEvents(prev => prev.filter(e => e.id !== e.event_id));
     } finally {
       setIsLoading(false);
     }
