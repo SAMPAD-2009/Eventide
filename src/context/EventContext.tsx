@@ -58,19 +58,15 @@ export const EventProvider = ({ children }: { children: ReactNode }) => {
       }
     } else {
       setEvents([]);
+      // If there is no user, we are not loading anything, so stop loading.
       setIsLoading(false);
     }
   };
 
   useEffect(() => {
-    // Only load events if a user is logged in.
-    // The loading state will be managed until the user object is available.
-    if (user) {
-      loadEvents();
-    } else {
-      // If there's no user, we're not loading events, so set loading to false.
-      setIsLoading(false);
-    }
+    // We start loading events as soon as the provider mounts,
+    // and `loadEvents` will handle the check for user existence.
+    loadEvents();
   }, [user]);
 
   const addEvent = async (eventData: Omit<Event, 'id' | 'datetime' | 'event_id'>) => {
@@ -116,6 +112,7 @@ export const EventProvider = ({ children }: { children: ReactNode }) => {
               user: { email: user?.email },
               action: 'create',
           }),
+          keepalive: true,
       });
       
       if (!response.ok) {
@@ -140,7 +137,7 @@ export const EventProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const updateEvent = async (id: string, eventData: Omit<Event, 'id' | 'datetime' | 'event_id'>) => {
-    const originalEvents = events;
+    const originalEvents = [...events];
     
     const updatedEvent: Event = {
       ...eventData,
@@ -177,6 +174,7 @@ export const EventProvider = ({ children }: { children: ReactNode }) => {
                 user: { email: user?.email },
                 action: 'update',
             }),
+            keepalive: true,
         });
         if (!response.ok) {
             throw new Error('Failed to update event via n8n webhook');
@@ -214,6 +212,7 @@ export const EventProvider = ({ children }: { children: ReactNode }) => {
                     user: { email: user?.email },
                     action: 'delete',
                 }),
+                keepalive: true,
             });
             if (!response.ok) {
               throw new Error("Webhook for delete failed");
