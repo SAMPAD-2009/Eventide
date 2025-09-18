@@ -83,7 +83,7 @@ export function EventForm({ event, onEventCreated, onEventUpdated }: EventFormPr
   }, [event, form]);
 
 
-  const onSubmit = async (data: EventFormValues) => {
+  const onSubmit = (data: EventFormValues) => {
     // We can be sure date and time are defined if not indefinite, due to the refine validation.
     const eventData = {
       ...data,
@@ -92,10 +92,10 @@ export function EventForm({ event, onEventCreated, onEventUpdated }: EventFormPr
     };
 
     if (event) {
-        await updateEvent(event.id, eventData);
+        updateEvent(event.id, eventData);
         onEventUpdated?.();
     } else {
-        await addEvent(eventData);
+        addEvent(eventData);
         onEventCreated?.();
     }
   };
