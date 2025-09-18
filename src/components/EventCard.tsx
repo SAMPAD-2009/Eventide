@@ -32,7 +32,7 @@ export function EventCard({ event, onEdit }: EventCardProps) {
   const categoryInfo = getCategoryByName(event.category);
 
   return (
-    <Card className="border-2" style={{ borderColor: categoryInfo ? `hsl(var(${categoryInfo?.cssVars.fg}))` : undefined }}>
+    <Card className="border-2 flex flex-col" style={{ borderColor: categoryInfo ? `hsl(var(${categoryInfo?.cssVars.fg}))` : undefined }}>
       <CardHeader className="p-4">
         <div className="flex justify-between items-start">
             <div className="flex-1">
@@ -69,11 +69,11 @@ export function EventCard({ event, onEdit }: EventCardProps) {
             </div>
         </div>
       </CardHeader>
-      {event.details && (
-        <CardContent className="p-4 pt-0">
+      <CardContent className="p-4 pt-0 flex-grow min-h-[60px]">
+        {event.details && (
           <p className="text-sm text-muted-foreground">{event.details}</p>
-        </CardContent>
-      )}
+        )}
+      </CardContent>
       <CardFooter className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground p-4 pt-0">
         {event.isIndefinite ? (
             <div className="flex items-center gap-2">
