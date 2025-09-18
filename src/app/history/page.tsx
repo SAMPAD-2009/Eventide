@@ -1,3 +1,4 @@
+
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { AlertCircle } from 'lucide-react';
@@ -7,40 +8,48 @@ interface HistoryEvent {
   event: string;
 }
 
-async function fetchHistoryEvents() {
+async function fetchHistoryEventsFromGoogleSheet(): Promise<{ events: HistoryEvent[]; error: string | null }> {
   try {
-    const apiKey = process.env.API_NINJAS_KEY;
-    if (!apiKey || apiKey === "YOUR_API_NINJAS_KEY") {
-      throw new Error('API key for API-Ninjas is not configured. Please add it to your .env file.');
-    }
+    const sheetUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTcIRABYOByGbUfKWWzuytEc5hFkf_LAa_bKzszku57h0uI2kkBvTXDmFEruIDtLCL1xB-0U25AcPoV/pub?gid=0&single=true&output=csv";
     
-    const today = new Date();
-    const month = today.getMonth() + 1;
-    const day = today.getDate();
-    
-    const url = `https://api.api-ninjas.com/v1/historicalevents?month=${month}&day=${day}`;
-    const response = await fetch(url, {
-      headers: {
-        'X-Api-Key': apiKey,
-      },
+    const response = await fetch(sheetUrl, {
       next: { revalidate: 3600 } // Revalidate once per hour
     });
 
     if (!response.ok) {
-      const errorText = await response.text();
-      console.error("API Error Response:", errorText);
-      throw new Error('Failed to fetch historical events. Check API key and network.');
+      throw new Error('Failed to fetch historical events from Google Sheet. Please ensure the sheet is published and the link is correct.');
     }
 
-    const data: HistoryEvent[] = await response.json();
-    return { events: data, error: null };
+    const csvText = await response.text();
+    const today = new Date();
+    const currentMonth = today.getMonth() + 1;
+    const currentDay = today.getDate();
+
+    const events: HistoryEvent[] = csvText
+      .split('\n')
+      .slice(1) // Skip header row
+      .map(row => {
+        const [month, day, year, ...eventParts] = row.split(',');
+        const eventText = eventParts.join(',').replace(/"/g, '').trim();
+        return {
+          month: parseInt(month, 10),
+          day: parseInt(day, 10),
+          year: parseInt(year, 10),
+          event: eventText,
+        };
+      })
+      .filter(e => e.month === currentMonth && e.day === currentDay && e.year && e.event);
+
+    return { events, error: null };
   } catch (err: any) {
-    return { events: [], error: err.message || 'An unexpected error occurred.' };
+    console.error("Error fetching from Google Sheet:", err);
+    return { events: [], error: err.message || 'An unexpected error occurred while fetching data.' };
   }
 }
 
+
 export default async function HistoryPage() {
-  const { events, error } = await fetchHistoryEvents();
+  const { events, error } = await fetchHistoryEventsFromGoogleSheet();
   const today = new Date();
   const formattedDate = today.toLocaleDateString('en-US', { month: 'long', day: 'numeric' });
 
@@ -50,7 +59,7 @@ export default async function HistoryPage() {
       <div className="max-w-7xl mx-auto">
         <h1 className="text-3xl font-bold tracking-tight mb-2">On This Day in History: {formattedDate}</h1>
         <p className="text-muted-foreground mb-6">
-          Events that occurred on this day throughout history, powered by API-Ninjas.
+          Events that occurred on this day throughout history, from a public Google Sheet.
         </p>
 
         {error && (
@@ -73,9 +82,9 @@ export default async function HistoryPage() {
                 </CardContent>
               </Card>
             ))}
-             {events.length === 0 && (
+             {events.length === 0 && !error && (
                 <p className="text-muted-foreground col-span-full text-center">
-                    No historical events found for this day.
+                    No historical events found for this day in the Google Sheet.
                 </p>
             )}
           </div>
@@ -84,3 +93,4 @@ export default async function HistoryPage() {
     </div>
   );
 }
+
