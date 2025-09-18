@@ -37,7 +37,6 @@ export function EventCard({ event, onEdit }: EventCardProps) {
         <div className="flex justify-between items-start">
             <div className="flex-1">
                 <CardTitle className="text-xl">{event.title}</CardTitle>
-                {event.summary && <CardDescription className="pt-1">{event.summary}</CardDescription>}
             </div>
             <div className="flex items-center">
                  <Button variant="ghost" size="icon" className="flex-shrink-0" onClick={() => onEdit(event)}>

@@ -3,15 +3,14 @@
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import type { Event } from '@/lib/types';
-import { summarizeEvent } from '@/ai/flows/summarize-event';
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from './AuthContext';
 import { fetchEventsFromN8n } from '@/services/n8n';
 
 interface EventContextType {
   events: Event[];
-  addEvent: (eventData: Omit<Event, 'id' | 'summary' | 'datetime' | 'event_id'>) => Promise<void>;
-  updateEvent: (id: string, eventData: Omit<Event, 'id' | 'summary' | 'datetime' | 'event_id'>) => Promise<void>;
+  addEvent: (eventData: Omit<Event, 'id' | 'datetime' | 'event_id'>) => Promise<void>;
+  updateEvent: (id: string, eventData: Omit<Event, 'id' | 'datetime' | 'event_id'>) => Promise<void>;
   deleteEvent: (id: string) => void;
   isLoading: boolean;
 }
@@ -71,7 +70,7 @@ export const EventProvider = ({ children }: { children: ReactNode }) => {
     return () => clearInterval(interval);
   }, []);
 
-  const addEvent = async (eventData: Omit<Event, 'id' | 'summary' | 'datetime' | 'event_id'>) => {
+  const addEvent = async (eventData: Omit<Event, 'id' | 'datetime' | 'event_id'>) => {
     if (!user?.email) {
         toast({
             variant: "destructive",
@@ -83,12 +82,6 @@ export const EventProvider = ({ children }: { children: ReactNode }) => {
     setIsLoading(true);
     
     try {
-      let summary = '';
-      if (eventData.details && eventData.details.trim().length > 0) {
-        const result = await summarizeEvent({ details: eventData.details });
-        summary = result.summary;
-      }
-
       const eventId = generateUniqueEventId(
           user.email, 
           eventData.title, 
@@ -100,7 +93,6 @@ export const EventProvider = ({ children }: { children: ReactNode }) => {
         ...eventData,
         id: eventId,
         event_id: eventId,
-        summary,
         datetime: eventData.isIndefinite ? new Date(8640000000000000).toISOString() : new Date(`${eventData.date}T${eventData.time}`).toISOString(),
         details: eventData.details || '',
       };
@@ -146,7 +138,7 @@ export const EventProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
-  const updateEvent = async (id: string, eventData: Omit<Event, 'id' | 'summary' | 'datetime' | 'event_id'>) => {
+  const updateEvent = async (id: string, eventData: Omit<Event, 'id' | 'datetime' | 'event_id'>) => {
     setIsLoading(true);
     try {
       const existingEvent = events.find(event => event.id === id);
@@ -154,19 +146,10 @@ export const EventProvider = ({ children }: { children: ReactNode }) => {
           throw new Error("Event not found");
       }
 
-      let summary = existingEvent.summary;
-      if (eventData.details && eventData.details.trim().length > 0 && eventData.details !== existingEvent.details) {
-        const result = await summarizeEvent({ details: eventData.details });
-        summary = result.summary;
-      } else if (!eventData.details || eventData.details.trim().length === 0) {
-        summary = '';
-      }
-
       const updatedEvent: Event = {
         ...eventData,
         id: id,
         event_id: id,
-        summary,
         datetime: eventData.isIndefinite ? new Date(8640000000000000).toISOString() : new Date(`${eventData.date}T${eventData.time}`).toISOString(),
         details: eventData.details || '',
       };
@@ -185,7 +168,6 @@ export const EventProvider = ({ children }: { children: ReactNode }) => {
                       time: updatedEvent.time,
                       category: updatedEvent.category,
                       is_indefinite: updatedEvent.isIndefinite,
-                      summary: updatedEvent.summary
                   },
                   user: { email: user?.email },
                   action: 'update',

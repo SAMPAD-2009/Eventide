@@ -229,7 +229,7 @@ export function EventForm({ event, onEventCreated, onEventUpdated }: EventFormPr
             {isLoading ? (
             <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                {event ? 'Updating...' : 'Generating Summary...'}
+                {event ? 'Updating...' : 'Creating...'}
             </>
             ) : (
              event ? 'Update Event' : 'Add Event'
