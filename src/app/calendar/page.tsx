@@ -93,49 +93,15 @@ export default function CalendarPage() {
     const categoryInfo = getCategoryByName(category.name);
     if (!categoryInfo) return '';
     return `
-      .has-event-${category.name.toLowerCase()} .rdp-day-contents::after {
-        background-color: hsl(var(${categoryInfo.cssVars.fg}));
+      .has-event-${category.name.toLowerCase()} {
+        border-bottom: 3px solid hsl(var(${categoryInfo.cssVars.fg}));
       }
     `;
   }).join('');
 
   return (
     <>
-      <style>{`
-        .rdp-day {
-          position: relative;
-        }
-        .rdp-day-contents {
-          position: relative;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          width: 100%;
-          height: 100%;
-        }
-        .rdp-day-contents::after {
-          content: '';
-          position: absolute;
-          bottom: 1px;
-          width: 5px;
-          height: 5px;
-          border-radius: 50%;
-          display: none;
-        }
-        .rdp-day_selected .rdp-day-contents::after {
-           background-color: hsl(var(--primary-foreground)) !important;
-        }
-        ${categoryStyles}
-        
-        /* Logic for dot positioning */
-        ${CATEGORIES.map((cat, i) => `.has-event-${cat.name.toLowerCase()}`).join(', ')} .rdp-day-contents::after { display: block; }
-        
-        .has-event-personal .rdp-day-contents::after { transform: translateX(-6px); }
-        .has-event-work .rdp-day-contents::after { transform: translateX(0px); }
-        .has-event-social .rdp-day-contents::after { transform: translateX(6px); }
-        .has-event-health .rdp-day-contents::after { transform: translateX(-3px) translateY(4px); }
-        .has-event-other .rdp-day-contents::after { transform: translateX(3px) translateY(4px); }
-      `}</style>
+      <style>{categoryStyles}</style>
       <div className="w-full mx-auto p-4 md:p-8">
         <div className="max-w-4xl mx-auto">
           <h1 className="text-3xl font-bold tracking-tight mb-6">Event Calendar</h1>
@@ -149,11 +115,6 @@ export default function CalendarPage() {
                     className="p-3 w-full"
                     modifiers={dayModifiers}
                     modifiersClassNames={dayModifiersClassNames}
-                    components={{
-                        DayContent: (props) => (
-                          <span className="rdp-day-contents">{props.date.getDate()}</span>
-                        ),
-                      }}
                   />
               </CardContent>
             </Card>
