@@ -32,7 +32,7 @@ export function Header() {
     { href: "/", label: "Upcoming" },
     { href: "/future", label: "Future" },
     { href: "/history", label: "History" },
-    { href: "/calendar", label: "Calendar" },
+    { href: "/calendar", label: <CalendarDays className="h-5 w-5" />, textLabel: "Calendar" },
   ];
 
   const navLinkClasses = (path: string) =>
@@ -53,7 +53,7 @@ export function Header() {
             <Calendar className="h-6 w-6 text-primary" />
             <span className="inline-block font-bold text-lg">Eventide</span>
           </Link>
-          <nav className="hidden md:flex gap-6">
+          <nav className="hidden md:flex gap-6 items-center">
             {navLinks.map(link => (
               <Link key={link.href} href={link.href} className={navLinkClasses(link.href)} prefetch={true}>
                 {link.label}
@@ -126,7 +126,7 @@ export function Header() {
                       onClick={handleLinkClick}
                       prefetch={true}
                     >
-                      {link.label}
+                      {link.textLabel || link.label}
                     </Link>
                   ))}
                   <DropdownMenuSeparator />
