@@ -2,6 +2,7 @@
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { AlertCircle } from 'lucide-react';
 import { HistoryEventCard } from '@/components/HistoryEventCard';
+import { supabase } from '@/lib/supabase';
 
 interface HistoryEvent {
   year: number;
@@ -9,65 +10,39 @@ interface HistoryEvent {
   picture: string;
 }
 
-async function fetchHistoryEventsFromGoogleSheet(): Promise<{ events: HistoryEvent[]; error: string | null }> {
+async function fetchHistoryEventsFromSupabase(): Promise<{ events: HistoryEvent[]; error: string | null }> {
   try {
-    const sheetUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTcIRABYOByGbUfKWWzuytEc5hFkf_LAa_bKzszku57h0uI2kkBvTXDmFEruIDtLCL1xB-0U25AcPoV/pub?gid=0&single=true&output=csv";
-    
-    const response = await fetch(sheetUrl, {
-      next: { revalidate: 3600 } // Revalidate once per hour
-    });
+    const { data, error } = await supabase
+      .from('historical_events')
+      .select('event_year, event_description, event_picture');
 
-    if (!response.ok) {
-      throw new Error('Failed to fetch historical events from Google Sheet. Please ensure the sheet is published and the link is correct.');
+    if (error) {
+      throw error;
     }
 
-    const csvText = await response.text();
-    
-    // Assumes CSV header: event_year,event_description,event_picture
-    const headers = csvText.split('\n')[0].trim().split(',');
-    const yearIndex = headers.indexOf('event_year');
-    const descriptionIndex = headers.indexOf('event_description');
-    const pictureIndex = headers.indexOf('event_picture');
-
-    if (yearIndex === -1 || descriptionIndex === -1 || pictureIndex === -1) {
-        throw new Error('CSV headers are incorrect. Expected "event_year", "event_description", "event_picture".');
-    }
-
-    const events: HistoryEvent[] = csvText
-      .split('\n')
-      .slice(1) // Skip header row
-      .map(row => {
-        // Basic CSV parsing, handles commas inside quoted strings
-        const columns = row.match(/(".*?"|[^",]+)(?=\s*,|\s*$)/g) || [];
-        const year = parseInt(columns[yearIndex]?.replace(/"/g, '').trim() || '0', 10);
-        const description = columns[descriptionIndex]?.replace(/"/g, '').trim() || '';
-        const picture = columns[pictureIndex]?.replace(/"/g, '').trim() || '';
-        
-        return {
-          year,
-          description,
-          picture
-        };
-      })
-      .filter(e => e.year && e.description); // Ensure essential data exists
+    const events: HistoryEvent[] = data.map((item: any) => ({
+      year: item.event_year,
+      description: item.event_description,
+      picture: item.event_picture,
+    }));
 
     return { events, error: null };
   } catch (err: any) {
-    console.error("Error fetching from Google Sheet:", err);
-    return { events: [], error: err.message || 'An unexpected error occurred while fetching data.' };
+    console.error("Error fetching from Supabase:", err);
+    return { events: [], error: err.message || 'An unexpected error occurred while fetching data from Supabase.' };
   }
 }
 
 
 export default async function HistoryPage() {
-  const { events, error } = await fetchHistoryEventsFromGoogleSheet();
+  const { events, error } = await fetchHistoryEventsFromSupabase();
 
   return (
     <div className="w-full mx-auto p-4 md:p-8">
       <div className="max-w-7xl mx-auto">
         <h1 className="text-3xl font-bold tracking-tight mb-2">Moments in History</h1>
         <p className="text-muted-foreground mb-6">
-          A collection of notable events from a public Google Sheet.
+          A collection of notable events from a Supabase database.
         </p>
 
         {error && (
@@ -85,7 +60,7 @@ export default async function HistoryPage() {
             ))}
              {events.length === 0 && !error && (
                 <p className="text-muted-foreground col-span-full text-center">
-                    No historical events found in the Google Sheet.
+                    No historical events found.
                 </p>
             )}
           </div>
