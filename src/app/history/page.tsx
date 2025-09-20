@@ -1,7 +1,5 @@
 
-"use client";
-
-import { useState, useEffect } from 'react';
+import { Suspense } from 'react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { AlertCircle } from 'lucide-react';
 import { HistoryEventCard } from '@/components/HistoryEventCard';
@@ -16,9 +14,6 @@ interface HistoryEvent {
 
 async function fetchHistoryEventsFromSupabase(): Promise<{ events: HistoryEvent[]; error: string | null }> {
   try {
-    // Add a delay to simulate loading
-    // await new Promise(resolve => setTimeout(resolve, 2000));
-
     const { data, error } = await supabase
       .from('historical_events')
       .select('event_year, event_description, event_picture');
@@ -40,24 +35,47 @@ async function fetchHistoryEventsFromSupabase(): Promise<{ events: HistoryEvent[
   }
 }
 
+async function HistoricalEvents() {
+  const { events, error } = await fetchHistoryEventsFromSupabase();
+
+  if (error) {
+    return (
+      <Alert variant="destructive" className="max-w-2xl mx-auto my-8">
+        <AlertCircle className="h-4 w-4" />
+        <AlertTitle>Error</AlertTitle>
+        <AlertDescription>{error}</AlertDescription>
+      </Alert>
+    );
+  }
+
+  if (events.length === 0) {
+    return (
+      <p className="text-muted-foreground col-span-full text-center mt-8">
+        No historical events found.
+      </p>
+    );
+  }
+
+  return (
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+      {events.map((event, index) => (
+        <HistoryEventCard key={index} event={event} />
+      ))}
+    </div>
+  );
+}
+
+function HistorySkeleton() {
+    return (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {Array.from({ length: 6 }).map((_, index) => (
+                <HistoryEventCardSkeleton key={index} />
+            ))}
+        </div>
+    );
+}
 
 export default function HistoryPage() {
-  const [events, setEvents] = useState<HistoryEvent[]>([]);
-  const [error, setError] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-
-  useEffect(() => {
-    const loadEvents = async () => {
-      setIsLoading(true);
-      const { events: fetchedEvents, error: fetchError } = await fetchHistoryEventsFromSupabase();
-      setEvents(fetchedEvents);
-      setError(fetchError);
-      setIsLoading(false);
-    };
-
-    loadEvents();
-  }, []);
-
   return (
     <div className="w-full mx-auto p-4 md:p-8">
       <div className="max-w-7xl mx-auto">
@@ -66,32 +84,9 @@ export default function HistoryPage() {
           A collection of notable events from a Supabase database.
         </p>
 
-        {error && (
-            <Alert variant="destructive" className="max-w-2xl mx-auto">
-                <AlertCircle className="h-4 w-4" />
-                <AlertTitle>Error</AlertTitle>
-                <AlertDescription>{error}</AlertDescription>
-            </Alert>
-        )}
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {isLoading ? (
-                Array.from({ length: 6 }).map((_, index) => (
-                    <HistoryEventCardSkeleton key={index} />
-                ))
-            ) : (
-                 <>
-                    {events.map((event, index) => (
-                        <HistoryEventCard key={index} event={event} />
-                    ))}
-                    {events.length === 0 && !error && (
-                        <p className="text-muted-foreground col-span-full text-center">
-                            No historical events found.
-                        </p>
-                    )}
-                </>
-            )}
-        </div>
+        <Suspense fallback={<HistorySkeleton />}>
+            <HistoricalEvents />
+        </Suspense>
       </div>
     </div>
   );
