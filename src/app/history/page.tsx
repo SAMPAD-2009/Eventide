@@ -1,8 +1,12 @@
 
+"use client";
+
+import { useState, useEffect } from 'react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { AlertCircle } from 'lucide-react';
 import { HistoryEventCard } from '@/components/HistoryEventCard';
 import { supabase } from '@/lib/supabase';
+import { HistoryEventCardSkeleton } from '@/components/HistoryEventCardSkeleton';
 
 interface HistoryEvent {
   year: number;
@@ -12,6 +16,9 @@ interface HistoryEvent {
 
 async function fetchHistoryEventsFromSupabase(): Promise<{ events: HistoryEvent[]; error: string | null }> {
   try {
+    // Add a delay to simulate loading
+    // await new Promise(resolve => setTimeout(resolve, 2000));
+
     const { data, error } = await supabase
       .from('historical_events')
       .select('event_year, event_description, event_picture');
@@ -34,8 +41,22 @@ async function fetchHistoryEventsFromSupabase(): Promise<{ events: HistoryEvent[
 }
 
 
-export default async function HistoryPage() {
-  const { events, error } = await fetchHistoryEventsFromSupabase();
+export default function HistoryPage() {
+  const [events, setEvents] = useState<HistoryEvent[]>([]);
+  const [error, setError] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const loadEvents = async () => {
+      setIsLoading(true);
+      const { events: fetchedEvents, error: fetchError } = await fetchHistoryEventsFromSupabase();
+      setEvents(fetchedEvents);
+      setError(fetchError);
+      setIsLoading(false);
+    };
+
+    loadEvents();
+  }, []);
 
   return (
     <div className="w-full mx-auto p-4 md:p-8">
@@ -53,18 +74,24 @@ export default async function HistoryPage() {
             </Alert>
         )}
 
-        {!error && (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {events.map((event, index) => (
-                <HistoryEventCard key={index} event={event} />
-            ))}
-             {events.length === 0 && !error && (
-                <p className="text-muted-foreground col-span-full text-center">
-                    No historical events found.
-                </p>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {isLoading ? (
+                Array.from({ length: 6 }).map((_, index) => (
+                    <HistoryEventCardSkeleton key={index} />
+                ))
+            ) : (
+                 <>
+                    {events.map((event, index) => (
+                        <HistoryEventCard key={index} event={event} />
+                    ))}
+                    {events.length === 0 && !error && (
+                        <p className="text-muted-foreground col-span-full text-center">
+                            No historical events found.
+                        </p>
+                    )}
+                </>
             )}
-          </div>
-        )}
+        </div>
       </div>
     </div>
   );
