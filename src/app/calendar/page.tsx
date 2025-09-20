@@ -55,13 +55,13 @@ export default function CalendarPage() {
         <div className="max-w-5xl mx-auto">
           <h1 className="text-3xl font-bold tracking-tight mb-6">Event Calendar</h1>
            <div className="flex flex-col md:flex-row gap-8">
-            <Card className="flex-grow" style={{ width: '45vw', height: '45vh' }}>
-              <CardContent className="p-0 h-full">
+            <Card className="flex-grow md:w-1/2">
+              <CardContent className="p-0">
                  <Calendar
                     mode="single"
                     selected={date}
                     onSelect={setDate}
-                    className="p-3 w-full h-full"
+                    className="p-3 w-full"
                     disabled
                   />
               </CardContent>
@@ -81,13 +81,13 @@ export default function CalendarPage() {
       <div className="max-w-5xl mx-auto">
         <h1 className="text-3xl font-bold tracking-tight mb-6">Event Calendar</h1>
         <div className="flex flex-col md:flex-row gap-8">
-          <Card className="flex-grow" style={{ width: '45vw', height: '45vh' }}>
-            <CardContent className="p-0 h-full">
+          <Card className="flex-grow md:w-1/2">
+            <CardContent className="p-0">
                <Calendar
                   mode="single"
                   selected={date}
                   onSelect={setDate}
-                  className="p-3 w-full h-full"
+                  className="p-3 w-full"
                   components={{
                     DayContent: DayContentWithDots
                   }}
