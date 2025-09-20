@@ -3,7 +3,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Calendar, LogOut, Menu } from 'lucide-react';
+import { Calendar, LogOut, Menu, CalendarDays } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { ThemeToggle } from './ThemeToggle';
 import { useAuth } from '@/context/AuthContext';
@@ -32,6 +32,7 @@ export function Header() {
     { href: "/", label: "Upcoming" },
     { href: "/future", label: "Future" },
     { href: "/history", label: "History" },
+    { href: "/calendar", label: "Calendar" },
   ];
 
   const navLinkClasses = (path: string) =>
