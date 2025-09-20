@@ -80,14 +80,14 @@ export default function CalendarPage() {
     <div className="w-full mx-auto p-4 md:p-8">
       <div className="max-w-5xl mx-auto">
         <h1 className="text-3xl font-bold tracking-tight mb-6">Event Calendar</h1>
-        <div className="flex flex-col md:flex-row gap-8 md:items-start">
-          <Card className="flex-grow md:w-1/2">
-            <CardContent className="p-0">
+        <div className="flex flex-col md:flex-row gap-8">
+          <Card className="flex-grow flex">
+            <CardContent className="p-0 flex flex-1">
                <Calendar
                   mode="single"
                   selected={date}
                   onSelect={setDate}
-                  className="p-3 w-full"
+                  className="p-3 w-full h-full"
                   components={{
                     DayContent: DayContentWithDots
                   }}
