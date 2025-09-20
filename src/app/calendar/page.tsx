@@ -67,8 +67,8 @@ export default function CalendarPage() {
       <div className="w-full mx-auto p-4 md:p-8">
         <div className="max-w-4xl mx-auto">
           <h1 className="text-3xl font-bold tracking-tight mb-6">Event Calendar</h1>
-           <div className="flex flex-col items-center gap-8">
-            <Card className="w-full">
+           <div className="flex flex-col md:flex-row gap-8">
+            <Card className="md:w-1/2">
               <CardContent className="p-0">
                  <Calendar
                     mode="single"
@@ -79,7 +79,7 @@ export default function CalendarPage() {
                   />
               </CardContent>
             </Card>
-             <div className="w-full">
+             <div className="md:w-1/2">
                 <h2 className="text-xl font-semibold mb-4">Events on Selected Date</h2>
                 <EventListSkeleton count={1} />
             </div>
@@ -105,8 +105,8 @@ export default function CalendarPage() {
       <div className="w-full mx-auto p-4 md:p-8">
         <div className="max-w-4xl mx-auto">
           <h1 className="text-3xl font-bold tracking-tight mb-6">Event Calendar</h1>
-          <div className="flex flex-col items-center gap-8">
-            <Card className="w-full">
+          <div className="flex flex-col md:flex-row gap-8">
+            <Card className="md:w-1/2">
               <CardContent className="p-0">
                  <Calendar
                     mode="single"
@@ -118,7 +118,7 @@ export default function CalendarPage() {
                   />
               </CardContent>
             </Card>
-            <div className="w-full">
+            <div className="md:w-1/2">
                 <h2 className="text-xl font-semibold mb-4">
                     {date ? `Events on ${date.toLocaleDateString()}` : 'Select a date'}
                 </h2>
