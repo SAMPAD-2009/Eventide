@@ -96,3 +96,30 @@ body {
     @apply bg-background text-foreground;
   }
 }
+
+@layer utilities {
+  @keyframes move-cloud {
+    0% { transform: translateX(-20%); }
+    50% { transform: translateX(20%); }
+    100% { transform: translateX(-20%); }
+  }
+  .animate-move-cloud {
+    animation: move-cloud 20s ease-in-out infinite;
+  }
+
+  @keyframes rain {
+    0% { transform: translateY(-100%) scaleY(1); opacity: 0.6; }
+    100% { transform: translateY(100vh) scaleY(1.5); opacity: 0; }
+  }
+  .animate-rain {
+    animation: rain 1s linear infinite;
+  }
+  
+  @keyframes snow {
+    0% { transform: translateY(-100%) translateX(0); opacity: 0.8; }
+    100% { transform: translateY(100vh) translateX(50px); opacity: 0; }
+  }
+  .animate-snow {
+    animation: snow 3s linear infinite;
+  }
+}
