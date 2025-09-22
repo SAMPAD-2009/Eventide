@@ -31,13 +31,13 @@ const WeatherAnimation = ({ condition }: { condition: string }) => {
 const getBackgroundImage = (condition: string): string => {
     const lowerCaseCondition = condition.toLowerCase();
     if (lowerCaseCondition.includes('sun') || lowerCaseCondition.includes('clear')) {
-        return 'https://i.ibb.co/3T8Y1fM/sunny.jpg';
+        return 'https://i.ibb.co/mrCFXPkD/sunny.jpg';
     }
     if (lowerCaseCondition.includes('rain') || lowerCaseCondition.includes('drizzle')) {
-        return 'https://i.ibb.co/rpxmJcT/rainy.jpg';
+        return 'https://i.ibb.co/9mgLNXpP/rainy.jpg';
     }
     // Default to cloudy for cloud, overcast, snow, etc.
-    return 'https://i.ibb.co/sKk61sP/cloudy.jpg';
+    return 'https://i.ibb.co/3Yy2PTqd/cloudy.jpg';
 };
 
 
