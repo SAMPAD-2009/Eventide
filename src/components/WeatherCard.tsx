@@ -45,7 +45,7 @@ const WeatherSidebar = ({ weather, isCelsius, onRefresh }: { weather: WeatherDat
     const bgImage = getBackgroundImage(weather.current.condition.text);
     return (
       <aside 
-        className="relative w-full lg:w-1/3 xl:w-1/4 text-white flex flex-col items-center justify-between p-6 text-center bg-cover bg-center"
+        className="relative w-full lg:w-1/3 xl:w-1/4 flex flex-col items-center justify-between p-6 text-center bg-cover bg-center"
         style={{ backgroundImage: `url(${bgImage})` }}
       >
         <div className="absolute inset-0 bg-black/30 -z-10" />
@@ -58,16 +58,16 @@ const WeatherSidebar = ({ weather, isCelsius, onRefresh }: { weather: WeatherDat
         <div className="relative h-48 w-full my-8 flex items-center justify-center">
             <WeatherAnimation condition={weather.current.condition.text} />
         </div>
-        <div className="flex-grow flex flex-col justify-center text-center z-10">
+        <div className="flex-grow flex flex-col justify-center text-center z-10 text-social-tag-fg">
           <h1 className="text-7xl font-bold">
             {Math.round(isCelsius ? weather.current.temp_c : weather.current.temp_f)}
-            <span className="text-4xl text-white/80 align-top">°{isCelsius ? 'C' : 'F'}</span>
+            <span className="text-4xl text-social-tag-fg/80 align-top">°{isCelsius ? 'C' : 'F'}</span>
           </h1>
-          <p className="text-2xl font-semibold text-white/90 mt-4">{weather.current.condition.text}</p>
+          <p className="text-2xl font-semibold text-social-tag-fg/90 mt-4">{weather.current.condition.text}</p>
         </div>
-        <div className="mt-auto z-10">
-          <p className="text-white/80">Today • {format(new Date(), 'E, d MMM')}</p>
-          <p className="text-white/80 mt-2">{weather.location.name}, {weather.location.region}</p>
+        <div className="mt-auto z-10 text-social-tag-fg">
+          <p className="text-social-tag-fg/80">Today • {format(new Date(), 'E, d MMM')}</p>
+          <p className="text-social-tag-fg/80 mt-2">{weather.location.name}, {weather.location.region}</p>
         </div>
       </aside>
     );
