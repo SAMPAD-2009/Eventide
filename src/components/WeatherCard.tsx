@@ -28,30 +28,56 @@ const WeatherAnimation = ({ condition }: { condition: string }) => {
     return <Cloudy />; // Default fallback
 };
 
-const WeatherSidebar = ({ weather, isCelsius, onRefresh }: { weather: WeatherData; isCelsius: boolean, onRefresh: () => void }) => (
-  <aside className="w-full lg:w-1/3 xl:w-1/4 bg-card-foreground/5 dark:bg-card flex flex-col items-center justify-between p-6 text-center">
-    <div className="w-full flex justify-between items-center">
-      <Button variant="secondary" size="sm">Search for places</Button>
-      <Button variant="ghost" size="icon" className="rounded-full" onClick={onRefresh}>
-        <LocateFixed className="h-5 w-5" />
-      </Button>
-    </div>
-    <div className="relative h-48 w-full my-8">
-      <WeatherAnimation condition={weather.current.condition.text} />
-    </div>
-    <div className="flex-grow flex flex-col justify-center text-center">
-      <h1 className="text-7xl font-bold">
-        {Math.round(isCelsius ? weather.current.temp_c : weather.current.temp_f)}
-        <span className="text-4xl text-muted-foreground align-top">°{isCelsius ? 'C' : 'F'}</span>
-      </h1>
-      <p className="text-2xl font-semibold text-muted-foreground mt-4">{weather.current.condition.text}</p>
-    </div>
-    <div className="mt-auto">
-      <p className="text-muted-foreground">Today • {format(new Date(), 'E, d MMM')}</p>
-      <p className="text-muted-foreground mt-2">{weather.location.name}, {weather.location.region}</p>
-    </div>
-  </aside>
-);
+const getBackgroundImage = (condition: string): string => {
+    const lowerCaseCondition = condition.toLowerCase();
+    if (lowerCaseCondition.includes('sun') || lowerCaseCondition.includes('clear')) {
+        return 'https://i.ibb.co/3T8Y1fM/sunny.jpg';
+    }
+    if (lowerCaseCondition.includes('rain') || lowerCaseCondition.includes('drizzle')) {
+        return 'https://i.ibb.co/rpxmJcT/rainy.jpg';
+    }
+    // Default to cloudy for cloud, overcast, snow, etc.
+    return 'https://i.ibb.co/sKk61sP/cloudy.jpg';
+};
+
+
+const WeatherSidebar = ({ weather, isCelsius, onRefresh }: { weather: WeatherData; isCelsius: boolean, onRefresh: () => void }) => {
+    const bgImage = getBackgroundImage(weather.current.condition.text);
+    return (
+      <aside className="relative w-full lg:w-1/3 xl:w-1/4 text-white flex flex-col items-center justify-between p-6 text-center overflow-hidden">
+        <Image
+            src={bgImage}
+            alt={weather.current.condition.text}
+            fill
+            style={{ objectFit: 'cover' }}
+            className="-z-10"
+            priority
+        />
+        <div className="absolute inset-0 bg-black/30 -z-10" />
+        <div className="w-full flex justify-between items-center z-10">
+          <Button variant="secondary" size="sm">Search for places</Button>
+          <Button variant="ghost" size="icon" className="rounded-full bg-white/20 hover:bg-white/30" onClick={onRefresh}>
+            <LocateFixed className="h-5 w-5" />
+          </Button>
+        </div>
+        <div className="relative h-48 w-full my-8 flex items-center justify-center">
+            <WeatherAnimation condition={weather.current.condition.text} />
+        </div>
+        <div className="flex-grow flex flex-col justify-center text-center z-10">
+          <h1 className="text-7xl font-bold">
+            {Math.round(isCelsius ? weather.current.temp_c : weather.current.temp_f)}
+            <span className="text-4xl text-white/80 align-top">°{isCelsius ? 'C' : 'F'}</span>
+          </h1>
+          <p className="text-2xl font-semibold text-white/90 mt-4">{weather.current.condition.text}</p>
+        </div>
+        <div className="mt-auto z-10">
+          <p className="text-white/80">Today • {format(new Date(), 'E, d MMM')}</p>
+          <p className="text-white/80 mt-2">{weather.location.name}, {weather.location.region}</p>
+        </div>
+      </aside>
+    );
+};
+
 
 const Forecast = ({ forecast, isCelsius }: { forecast: ForecastDay[], isCelsius: boolean }) => (
   <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4">
@@ -113,14 +139,14 @@ export function WeatherCard({ weather, onRefresh }: WeatherCardProps) {
                 <div className="flex justify-end gap-2 mb-8">
                     <Button
                         onClick={() => setIsCelsius(true)}
-                        variant={isCelsius ? 'primary' : 'secondary'}
+                        variant={isCelsius ? 'default' : 'secondary'}
                         className="rounded-full font-bold"
                     >
                         °C
                     </Button>
                     <Button
                         onClick={() => setIsCelsius(false)}
-                        variant={!isCelsius ? 'primary' : 'secondary'}
+                        variant={!isCelsius ? 'default' : 'secondary'}
                         className="rounded-full font-bold"
                     >
                         °F
