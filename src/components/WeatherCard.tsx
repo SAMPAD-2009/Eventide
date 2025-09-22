@@ -126,6 +126,10 @@ const WeatherHighlights = ({ weather, isCelsius }: { weather: WeatherData, isCel
 export function WeatherCard({ weather, onRefresh }: WeatherCardProps) {
     const [isCelsius, setIsCelsius] = useState(true);
 
+    if (!weather || !weather.current) {
+        return null;
+    }
+
     return (
         <div className="flex flex-col lg:flex-row bg-background rounded-lg shadow-lg overflow-hidden w-full min-h-[calc(100vh-8rem)]">
             <WeatherSidebar weather={weather} isCelsius={isCelsius} onRefresh={onRefresh} />
