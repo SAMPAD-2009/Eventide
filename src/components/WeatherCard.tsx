@@ -44,15 +44,10 @@ const getBackgroundImage = (condition: string): string => {
 const WeatherSidebar = ({ weather, isCelsius, onRefresh }: { weather: WeatherData; isCelsius: boolean, onRefresh: () => void }) => {
     const bgImage = getBackgroundImage(weather.current.condition.text);
     return (
-      <aside className="relative w-full lg:w-1/3 xl:w-1/4 text-white flex flex-col items-center justify-between p-6 text-center overflow-hidden">
-        <Image
-            src={bgImage}
-            alt={weather.current.condition.text}
-            fill
-            style={{ objectFit: 'cover' }}
-            className="-z-10"
-            priority
-        />
+      <aside 
+        className="relative w-full lg:w-1/3 xl:w-1/4 text-white flex flex-col items-center justify-between p-6 text-center bg-cover bg-center"
+        style={{ backgroundImage: `url(${bgImage})` }}
+      >
         <div className="absolute inset-0 bg-black/30 -z-10" />
         <div className="w-full flex justify-between items-center z-10">
           <Button variant="secondary" size="sm">Search for places</Button>
