@@ -45,10 +45,10 @@ const WeatherSidebar = ({ weather, isCelsius, onRefresh }: { weather: WeatherDat
     const bgImage = getBackgroundImage(weather.current.condition.text);
     return (
       <aside 
-        className="relative w-full lg:w-1/3 xl:w-1/4 flex flex-col items-center justify-between p-6 text-center bg-cover bg-center"
+        className="relative w-full lg:w-1/3 xl:w-1/4 flex flex-col items-center justify-between p-6 text-center bg-cover bg-center text-white"
         style={{ backgroundImage: `url(${bgImage})` }}
       >
-        <div className="absolute inset-0 bg-black/30 -z-10" />
+        <div className="absolute inset-0 bg-black/30 z-0" />
         <div className="w-full flex justify-between items-center z-10">
           <Button variant="secondary" size="sm">Search for places</Button>
           <Button variant="ghost" size="icon" className="rounded-full bg-white/20 hover:bg-white/30" onClick={onRefresh}>
@@ -58,16 +58,16 @@ const WeatherSidebar = ({ weather, isCelsius, onRefresh }: { weather: WeatherDat
         <div className="relative h-48 w-full my-8 flex items-center justify-center">
             <WeatherAnimation condition={weather.current.condition.text} />
         </div>
-        <div className="flex-grow flex flex-col justify-center text-center z-10 text-social-tag-fg">
-          <h1 className="text-7xl font-bold">
+        <div className="flex-grow flex flex-col justify-center text-center z-10">
+          <h1 className="text-7xl font-bold" style={{ color: '#FF9500', textShadow: '2px 2px 4px rgba(0,0,0,0.5)' }}>
             {Math.round(isCelsius ? weather.current.temp_c : weather.current.temp_f)}
-            <span className="text-4xl text-social-tag-fg/80 align-top">°{isCelsius ? 'C' : 'F'}</span>
+            <span className="text-4xl align-top" style={{ color: '#FFB84D' }}>°{isCelsius ? 'C' : 'F'}</span>
           </h1>
-          <p className="text-2xl font-semibold text-social-tag-fg/90 mt-4">{weather.current.condition.text}</p>
+          <p className="text-2xl font-semibold mt-4" style={{ color: '#FFDDC1', textShadow: '1px 1px 3px rgba(0,0,0,0.5)' }}>{weather.current.condition.text}</p>
         </div>
-        <div className="mt-auto z-10 text-social-tag-fg">
-          <p className="text-social-tag-fg/80">Today • {format(new Date(), 'E, d MMM')}</p>
-          <p className="text-social-tag-fg/80 mt-2">{weather.location.name}, {weather.location.region}</p>
+        <div className="mt-auto z-10" style={{ color: '#FFDDC1', textShadow: '1px 1px 3px rgba(0,0,0,0.5)' }}>
+          <p>Today • {format(new Date(), 'E, d MMM')}</p>
+          <p className="mt-2">{weather.location.name}, {weather.location.region}</p>
         </div>
       </aside>
     );
@@ -76,7 +76,7 @@ const WeatherSidebar = ({ weather, isCelsius, onRefresh }: { weather: WeatherDat
 
 const Forecast = ({ forecast, isCelsius }: { forecast: ForecastDay[], isCelsius: boolean }) => (
   <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4">
-    {forecast.slice(1, 6).map((day) => (
+    {forecast.slice(0, 5).map((day) => (
       <Card key={day.date} className="p-4 flex flex-col items-center text-center">
         <p className="font-semibold text-muted-foreground">{format(parseISO(day.date), 'E, d MMM')}</p>
         <Image src={`https:${day.day.condition.icon}`} alt={day.day.condition.text} width={64} height={64} className="my-2"/>
