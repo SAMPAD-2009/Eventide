@@ -43,6 +43,11 @@ const getBackgroundImage = (condition: string): string => {
 
 const WeatherSidebar = ({ weather, isCelsius, onRefresh }: { weather: WeatherData; isCelsius: boolean, onRefresh: () => void }) => {
     const bgImage = getBackgroundImage(weather.current.condition.text);
+    const todayForecast = weather.forecast.forecastday[0];
+
+    const maxTemp = Math.round(isCelsius ? todayForecast.day.maxtemp_c : todayForecast.day.maxtemp_f);
+    const minTemp = Math.round(isCelsius ? todayForecast.day.mintemp_c : todayForecast.day.mintemp_f);
+
     return (
       <aside 
         className="relative w-full lg:w-1/3 xl:w-1/4 flex flex-col items-center justify-between p-6 text-center bg-cover bg-center text-white"
@@ -64,6 +69,9 @@ const WeatherSidebar = ({ weather, isCelsius, onRefresh }: { weather: WeatherDat
             <span className="text-4xl align-top" style={{ color: '#FFB84D' }}>°{isCelsius ? 'C' : 'F'}</span>
           </h1>
           <p className="text-2xl font-semibold mt-4" style={{ color: '#FFDDC1', textShadow: '1px 1px 3px rgba(0,0,0,0.5)' }}>{weather.current.condition.text}</p>
+          <p className="text-md font-medium mt-2" style={{ color: '#FFDDC1', textShadow: '1px 1px 3px rgba(0,0,0,0.5)' }}>
+            mx-{maxTemp}° / mn-{minTemp}°
+          </p>
         </div>
         <div className="mt-auto z-10" style={{ color: '#FFDDC1', textShadow: '1px 1px 3px rgba(0,0,0,0.5)' }}>
           <p>Today • {format(new Date(), 'E, d MMM')}</p>
