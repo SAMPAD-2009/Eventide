@@ -56,6 +56,15 @@ export interface WeatherData {
     }
 }
 
+export interface AstroData {
+    sunrise: string;
+    sunset: string;
+    moonrise: string;
+    moonset: string;
+    moon_phase: string;
+    moon_illumination: string;
+}
+
 export interface ForecastDay {
   date: string;
   date_epoch: number;
@@ -85,6 +94,6 @@ export interface ForecastDay {
     };
     uv: number;
   },
-  astro: object, // Not using this for now
+  astro: AstroData,
   hour: object[], // Not using this for now
 }

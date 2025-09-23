@@ -5,7 +5,7 @@ import { useState } from 'react';
 import { format, parseISO } from 'date-fns';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Wind, Droplets, Compass, Gauge, Eye, Navigation, LocateFixed } from 'lucide-react';
+import { Wind, Droplets, Compass, Gauge, Eye, Navigation, LocateFixed, Sunrise, Sunset } from 'lucide-react';
 import { Sunny } from './weather-animations/Sunny';
 import { Cloudy } from './weather-animations/Cloudy';
 import { Rainy } from './weather-animations/Rainy';
@@ -91,7 +91,7 @@ const Forecast = ({ forecast, isCelsius }: { forecast: ForecastDay[], isCelsius:
 
 const WeatherHighlights = ({ weather, isCelsius }: { weather: WeatherData, isCelsius: boolean }) => {
     const { current, forecast } = weather;
-    const todayForecast = forecast.forecastday[0].day;
+    const todayForecast = forecast.forecastday[0];
 
     return (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -117,6 +117,20 @@ const WeatherHighlights = ({ weather, isCelsius }: { weather: WeatherData, isCel
             <Card className="p-6">
                 <h3 className="text-muted-foreground mb-2">Air Pressure</h3>
                 <p className="text-5xl font-bold">{Math.round(current.pressure_mb)}<span className="text-xl"> mb</span></p>
+            </Card>
+            <Card className="p-6 flex flex-col justify-between">
+                <h3 className="text-muted-foreground mb-2">Sunrise</h3>
+                <div className="flex items-center gap-4">
+                  <Sunrise className="h-10 w-10 text-yellow-400" />
+                  <p className="text-4xl font-bold">{todayForecast.astro.sunrise}</p>
+                </div>
+            </Card>
+            <Card className="p-6 flex flex-col justify-between">
+                <h3 className="text-muted-foreground mb-2">Sunset</h3>
+                <div className="flex items-center gap-4">
+                  <Sunset className="h-10 w-10 text-orange-400" />
+                  <p className="text-4xl font-bold">{todayForecast.astro.sunset}</p>
+                </div>
             </Card>
         </div>
     )
