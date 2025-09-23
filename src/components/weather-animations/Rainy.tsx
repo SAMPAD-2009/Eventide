@@ -8,7 +8,7 @@ export function Rainy() {
     return (
         <div className="relative w-full h-full overflow-hidden">
             <CloudRain
-                className="absolute top-1/4 left-1/2 -translate-x-1/2 text-gray-400 dark:text-gray-500"
+                className="absolute top-1/4 left-1/2 -translate-x-1/2 text-blue-300 dark:text-blue-400"
                 size={100}
             />
             {drops.map((_, i) => (
