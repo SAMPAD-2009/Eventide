@@ -30,7 +30,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning className={inter.variable}>
-      <head />
+      <head>
+        <link rel="icon" href="https://img.icons8.com/?size=100&id=15753&format=png&color=000000" />
+      </head>
       <body className="font-body antialiased min-h-screen bg-background text-foreground">
         <AuthProvider>
           <ThemeProvider>
