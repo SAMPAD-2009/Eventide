@@ -6,6 +6,8 @@ import { HistoryEventCard } from '@/components/HistoryEventCard';
 import { supabase } from '@/lib/supabase';
 import { HistoryEventCardSkeleton } from '@/components/HistoryEventCardSkeleton';
 
+export const dynamic = 'force-dynamic';
+
 interface HistoryEvent {
   year: number;
   description: string;
