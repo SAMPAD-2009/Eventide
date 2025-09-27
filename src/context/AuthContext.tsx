@@ -33,7 +33,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 const auth = getAuth(app);
 
 // Define paths that don't require authentication
-const PUBLIC_PATHS = ['/login', '/signup'];
+const PUBLIC_PATHS = ['/login', '/signup', '/terms'];
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const { toast } = useToast();
