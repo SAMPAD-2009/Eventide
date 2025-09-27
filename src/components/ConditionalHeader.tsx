@@ -6,7 +6,7 @@ import { Header } from '@/components/Header';
 
 export function ConditionalHeader() {
   const pathname = usePathname();
-  const noHeaderPaths = ['/login', '/signup'];
+  const noHeaderPaths = ['/login', '/signup', '/terms'];
 
   if (noHeaderPaths.includes(pathname)) {
     return null;

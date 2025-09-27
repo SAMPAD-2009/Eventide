@@ -1,6 +1,8 @@
-
 import fs from 'fs';
 import path from 'path';
+import Link from 'next/link';
+import { ArrowLeft } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 
 // This function is not 'async' because we are in a server component
 // and can read the file synchronously during the build process.
@@ -59,6 +61,14 @@ export default function TermsPage() {
 
   return (
     <div className="w-full mx-auto p-4 md:p-8">
+       <div className="max-w-3xl mx-auto mb-6">
+         <Button asChild variant="outline">
+          <Link href="/">
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            Back to Home
+          </Link>
+        </Button>
+      </div>
       <div className="max-w-3xl mx-auto bg-card p-6 md:p-10 rounded-lg shadow-sm border">
         <MarkdownRenderer content={termsContent} />
       </div>
