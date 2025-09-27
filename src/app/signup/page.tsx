@@ -121,6 +121,16 @@ export default function SignupPage() {
                         Log in
                     </Link>
                 </div>
+                 <p className="mt-4 px-8 text-center text-xs text-muted-foreground">
+                    By creating an account, you agree to our{' '}
+                    <Link
+                        href="/terms"
+                        className="underline underline-offset-4 hover:text-primary"
+                    >
+                        Terms & Conditions
+                    </Link>
+                    .
+                </p>
             </CardContent>
         </Card>
     </div>

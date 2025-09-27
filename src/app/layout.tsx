@@ -7,6 +7,7 @@ import { ThemeProvider } from '@/context/ThemeProvider';
 import { AuthProvider } from '@/context/AuthContext';
 import { ConditionalHeader } from '@/components/ConditionalHeader';
 import { Inter } from 'next/font/google';
+import Link from 'next/link';
 
 const inter = Inter({
   subsets: ['latin'],
@@ -42,8 +43,11 @@ export default function RootLayout({
                 <ConditionalHeader />
                 <main className="flex-1">{children}</main>
                 <footer className="py-4 px-4 md:px-8">
-                  <div className="max-w-7xl mx-auto text-center text-sm text-muted-foreground">
+                  <div className="max-w-7xl mx-auto text-center text-sm text-muted-foreground flex justify-center items-center gap-4">
                     <p>created by His Royal Highness Lord-Samp2009</p>
+                    <Link href="/terms" className="underline hover:text-primary">
+                      Terms & Conditions
+                    </Link>
                   </div>
                 </footer>
               </div>

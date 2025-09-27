@@ -87,6 +87,16 @@ export default function LoginPage() {
                         Sign up
                     </Link>
                 </div>
+                 <p className="mt-4 px-8 text-center text-xs text-muted-foreground">
+                    By continuing, you agree to our{' '}
+                    <Link
+                        href="/terms"
+                        className="underline underline-offset-4 hover:text-primary"
+                    >
+                        Terms & Conditions
+                    </Link>
+                    .
+                </p>
             </CardContent>
         </Card>
     </div>
