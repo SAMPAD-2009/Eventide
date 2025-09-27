@@ -19,28 +19,38 @@ function getTermsContent() {
 
 // A simple component to render markdown-like text into basic HTML
 const MarkdownRenderer = ({ content }: { content: string }) => {
-    const lines = content.split('\n');
-    const elements = lines.map((line, index) => {
-        if (line.startsWith('## ')) {
-            return <h2 key={index} className="text-xl font-semibold mt-6 mb-2">{line.substring(3)}</h2>;
-        }
-        if (line.startsWith('# ')) {
-            return <h1 key={index} className="text-3xl font-bold mt-8 mb-4">{line.substring(2)}</h1>;
-        }
-        if (line.startsWith('- ')) {
-             // This is a simple approach; it doesn't group items into a single <ul>
-            return <li key={index} className="ml-6 list-disc">{line.substring(2)}</li>;
-        }
-        if (line.startsWith('**') && line.endsWith('**')) {
-            return <p key={index} className="font-bold my-2">{line.substring(2, line.length - 2)}</p>;
-        }
-        if (line.trim() === '') {
-            return <br key={index} />;
-        }
-        return <p key={index} className="my-2 leading-relaxed">{line}</p>;
-    });
+  const lines = content.split('\n');
 
-    return <>{elements}</>;
+  const renderLine = (line: string) => {
+    // Escape HTML to prevent XSS, though for this controlled content it's less of a risk.
+    // For a real app, a proper sanitizer would be better.
+    let htmlLine = line;
+
+    // Bold **text**
+    htmlLine = htmlLine.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+    // Italic *text*
+    htmlLine = htmlLine.replace(/\*(.*?)\*/g, '<em>$1</em>');
+    
+    return <span dangerouslySetInnerHTML={{ __html: htmlLine }} />;
+  }
+
+  const elements = lines.map((line, index) => {
+    if (line.startsWith('## ')) {
+      return <h2 key={index} className="text-xl font-semibold mt-6 mb-2">{renderLine(line.substring(3))}</h2>;
+    }
+    if (line.startsWith('# ')) {
+      return <h1 key={index} className="text-3xl font-bold mt-8 mb-4">{renderLine(line.substring(2))}</h1>;
+    }
+    if (line.startsWith('- ')) {
+      return <li key={index} className="ml-6 list-disc">{renderLine(line.substring(2))}</li>;
+    }
+    if (line.trim() === '') {
+      return <br key={index} />;
+    }
+    return <p key={index} className="my-2 leading-relaxed">{renderLine(line)}</p>;
+  });
+
+  return <>{elements}</>;
 };
 
 
