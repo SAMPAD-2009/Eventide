@@ -69,6 +69,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
 
     const isPublicPath = PUBLIC_PATHS.includes(pathname);
+    const isAdminPath = pathname.startsWith('/admin');
+
+    // Allow admin user to access admin path
+    if (user?.email === 'sampad81@admin.com' && isAdminPath) {
+       setIsLoading(false);
+       return;
+    }
 
     if (user && isPublicPath) {
       router.push('/');
@@ -83,14 +90,23 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const login = async (email: string, pass: string) => {
     setIsLoading(true);
     try {
-      await signInWithEmailAndPassword(auth, email, pass);
+      const userCredential = await signInWithEmailAndPassword(auth, email, pass);
+      
+      // Admin user check
+      if (email === 'sampad81@admin.com' && pass === 'sam@2009') {
+        toast({ title: "Admin Login Successful", description: "Welcome, Admin!" });
+        router.push('/admin');
+        return true;
+      }
+      
       toast({ title: "Login Successful", description: "Welcome back!" });
+      // For regular users, onAuthStateChanged will handle redirect to '/' via useEffect
       return true;
     } catch (error: any) {
       toast({ variant: 'destructive', title: "Login Failed", description: error.message });
       return false;
     } finally {
-      // Don't set isLoading to false here. The onAuthStateChanged listener will handle it.
+       // Let onAuthStateChanged handle loading state to avoid flashes
     }
   };
 
@@ -228,7 +244,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           await updatePassword(auth.currentUser, password);
           return true;
       } catch (e: any) {
-          console.error("Password update error:", e);
           toast({ 
               variant: 'destructive', 
               title: "Update Failed", 
@@ -257,3 +272,6 @@ export const useAuth = () => {
   }
   return context;
 };
+
+    
+    
