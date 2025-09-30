@@ -7,15 +7,15 @@ import { Megaphone } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 
 interface SiteAlertData {
-  name: string;
-  description: string;
+  Name: string;
+  Description: string;
 }
 
 // This function now runs on the client
 async function getAlerts(): Promise<SiteAlertData[] | null> {
   const supabase = createClient();
   try {
-    const { data, error } = await supabase.from('alerts').select('name, description');
+    const { data, error } = await supabase.from('alerts').select('Name, Description');
     if (error) {
       console.error('Error fetching alerts from Supabase:', error);
       return null;
@@ -39,10 +39,10 @@ export function SiteAlert() {
             title: (
               <div className="flex items-center gap-2">
                 <Megaphone className="h-4 w-4" />
-                <span className="font-bold">{alert.name}</span>
+                <span className="font-bold">{alert.Name}</span>
               </div>
             ),
-            description: alert.description,
+            description: alert.Description,
             duration: 15000,
           });
         });
