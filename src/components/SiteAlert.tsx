@@ -1,17 +1,13 @@
 
-"use client";
+import { createClient } from '@/lib/supabase/server';
+import { SiteAlertClient } from './SiteAlertClient';
 
-import { useEffect } from 'react';
-import { useToast } from '@/hooks/use-toast';
-import { Megaphone } from 'lucide-react';
-import { createClient } from '@/lib/supabase/client';
-
-interface SiteAlertData {
+export interface SiteAlertData {
   Name: string;
   Description: string;
 }
 
-// This function now runs on the client
+// This is now a Server Component
 async function getAlerts(): Promise<SiteAlertData[] | null> {
   const supabase = createClient();
   try {
@@ -27,30 +23,12 @@ async function getAlerts(): Promise<SiteAlertData[] | null> {
   }
 }
 
-export function SiteAlert() {
-  const { toast } = useToast();
+export async function SiteAlert() {
+  const alerts = await getAlerts();
 
-  useEffect(() => {
-    const fetchAndShowAlerts = async () => {
-      const alerts = await getAlerts();
-      if (alerts && alerts.length > 0) {
-        alerts.forEach(alert => {
-          toast({
-            title: (
-              <div className="flex items-center gap-2">
-                <Megaphone className="h-4 w-4" />
-                <span className="font-bold">{alert.Name}</span>
-              </div>
-            ),
-            description: alert.Description,
-            duration: 15000,
-          });
-        });
-      }
-    };
+  if (!alerts || alerts.length === 0) {
+    return null;
+  }
 
-    fetchAndShowAlerts();
-  }, [toast]);
-
-  return null;
+  return <SiteAlertClient alerts={alerts} />;
 }
