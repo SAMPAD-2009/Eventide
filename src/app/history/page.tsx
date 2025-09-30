@@ -3,7 +3,7 @@ import { Suspense } from 'react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { AlertCircle } from 'lucide-react';
 import { HistoryEventCard } from '@/components/HistoryEventCard';
-import { supabase } from '@/lib/supabase';
+import { createClient } from '@/lib/supabase/server';
 import { HistoryEventCardSkeleton } from '@/components/HistoryEventCardSkeleton';
 
 export const dynamic = 'force-dynamic';
@@ -15,6 +15,7 @@ interface HistoryEvent {
 }
 
 async function fetchHistoryEventsFromSupabase(): Promise<{ events: HistoryEvent[]; error: string | null }> {
+  const supabase = createClient();
   try {
     const { data, error } = await supabase
       .from('historical_events')

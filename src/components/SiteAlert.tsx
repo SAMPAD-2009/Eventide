@@ -2,16 +2,18 @@
 "use client";
 
 import { useEffect } from 'react';
-import { supabase } from '@/lib/supabase';
 import { useToast } from '@/hooks/use-toast';
 import { Megaphone } from 'lucide-react';
+import { createClient } from '@/lib/supabase/client';
 
 interface SiteAlertData {
   name: string;
   description: string;
 }
 
+// This function now runs on the client
 async function getAlerts(): Promise<SiteAlertData[] | null> {
+  const supabase = createClient();
   try {
     const { data, error } = await supabase.from('alerts').select('name, description');
     if (error) {
@@ -41,7 +43,7 @@ export function SiteAlert() {
               </div>
             ),
             description: alert.description,
-            duration: 15000, 
+            duration: 15000,
           });
         });
       }
