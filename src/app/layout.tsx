@@ -8,6 +8,7 @@ import { AuthProvider } from '@/context/AuthContext';
 import { ConditionalHeader } from '@/components/ConditionalHeader';
 import { Inter } from 'next/font/google';
 import Link from 'next/link';
+import { SiteAlert } from '@/components/SiteAlert';
 
 const inter = Inter({
   subsets: ['latin'],
@@ -40,6 +41,7 @@ export default function RootLayout({
           <ThemeProvider>
             <EventProvider>
               <div className="relative flex min-h-screen flex-col">
+                <SiteAlert />
                 <ConditionalHeader />
                 <main className="flex-1">{children}</main>
                 <footer className="py-4 px-4 md:px-8">
