@@ -13,7 +13,7 @@ interface SiteAlertData {
 
 async function getAlerts(): Promise<SiteAlertData[] | null> {
   try {
-    const { data, error } = await supabase.from('alerts').select('*');
+    const { data, error } = await supabase.from('alerts').select('name, description');
     if (error) {
       console.error('Error fetching alerts from Supabase:', error);
       return null;
@@ -41,7 +41,7 @@ export function SiteAlert() {
               </div>
             ),
             description: alert.description,
-            duration: Infinity, // Keep the toast visible until dismissed
+            duration: 15000, 
           });
         });
       }
@@ -50,5 +50,5 @@ export function SiteAlert() {
     fetchAndShowAlerts();
   }, [toast]);
 
-  return null; // The component itself renders nothing, it just triggers toasts.
+  return null;
 }
