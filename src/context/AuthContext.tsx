@@ -32,8 +32,11 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 const auth = getAuth(app);
 
-// Define paths that don't require authentication
+// Define paths that are public (accessible to non-logged-in users)
 const PUBLIC_PATHS = ['/login', '/signup', '/terms'];
+
+// Define paths that a logged-in user should be redirected from (e.g., away from login/signup)
+const AUTH_REDIRECT_PATHS = ['/login', '/signup'];
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const { toast } = useToast();
@@ -70,6 +73,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
     const isPublicPath = PUBLIC_PATHS.includes(pathname);
     const isAdminPath = pathname.startsWith('/admin');
+    const isAuthRedirectPath = AUTH_REDIRECT_PATHS.includes(pathname);
 
     // Allow admin user to access admin path
     if (user?.email === 'sampad81@admin.com' && isAdminPath) {
@@ -77,7 +81,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
        return;
     }
 
-    if (user && isPublicPath) {
+    if (user && isAuthRedirectPath) {
       router.push('/');
     } else if (!user && !isPublicPath) {
       router.push('/login');
