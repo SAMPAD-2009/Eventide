@@ -97,16 +97,26 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const login = async (email: string, pass: string) => {
     setIsLoading(true);
+
+    // Admin user check before Firebase authentication
+    if (email === 'sampad81@admin.com' && pass === 'sam@2009') {
+        try {
+            // We still sign in the admin user to firebase to get a user session
+            await signInWithEmailAndPassword(auth, email, pass);
+            toast({ title: "Admin Login Successful", description: "Welcome, Admin!" });
+            router.push('/admin');
+            return true;
+        } catch (error: any) {
+             // If admin doesn't exist in Firebase, we can create it here or just show an error.
+             // For now, we'll assume the admin must exist in firebase auth as well.
+             toast({ variant: 'destructive', title: "Admin Login Failed", description: "Admin user not found in Firebase. Please sign up first." });
+             setIsLoading(false);
+             return false;
+        }
+    }
+
     try {
-      const userCredential = await signInWithEmailAndPassword(auth, email, pass);
-      
-      // Admin user check
-      if (email === 'sampad81@admin.com' && pass === 'sam@2009') {
-        toast({ title: "Admin Login Successful", description: "Welcome, Admin!" });
-        router.push('/admin');
-        return true;
-      }
-      
+      await signInWithEmailAndPassword(auth, email, pass);
       toast({ title: "Login Successful", description: "Welcome back!" });
       // For regular users, onAuthStateChanged will handle redirect to '/' via useEffect
       return true;
