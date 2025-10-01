@@ -2,7 +2,7 @@
 "use client";
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signOut, updateProfile, User as FirebaseUser, updatePassword } from "firebase/auth";
+import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signOut, updateProfile, User as FirebaseUser, updatePassword, GoogleAuthProvider, signInWithPopup } from "firebase/auth";
 import { app } from '@/lib/firebase';
 import { useToast } from "@/hooks/use-toast";
 import { usePathname, useRouter } from 'next/navigation';
@@ -21,6 +21,7 @@ interface AuthContextType {
   user: User | null;
   login: (email: string, pass: string) => Promise<boolean>;
   signup: (email: string, pass: string, username: string) => Promise<boolean>;
+  signInWithGoogle: () => Promise<boolean>;
   logout: () => void;
   updateUserProfile: (photo: File) => Promise<boolean>;
   updateUserUsername: (username: string) => Promise<boolean>;
@@ -31,6 +32,7 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 const auth = getAuth(app);
+const googleProvider = new GoogleAuthProvider();
 
 // Define paths that are public (accessible to non-logged-in users)
 const PUBLIC_PATHS = ['/login', '/signup', '/terms', '/privacy'];
@@ -75,7 +77,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const isAdminPath = pathname.startsWith('/admin');
     
     // Determine if the current path is one from which a logged-in user should be redirected.
-    // Exclude /terms and /privacy from this, as logged-in users should be able to see them.
     const isAuthRedirectPath = AUTH_REDIRECT_PATHS.includes(pathname);
 
     // Allow admin user to access admin path
@@ -160,6 +161,44 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       return false;
     } finally {
         // Don't set isLoading to false here. The onAuthStateChanged listener will handle it.
+    }
+  };
+
+  const signInWithGoogle = async () => {
+    setIsLoading(true);
+    try {
+      const userCredential = await signInWithPopup(auth, googleProvider);
+      const firebaseUser = userCredential.user;
+
+      const existingBaserowUser = await getUserFromBaserow(firebaseUser.email!);
+
+      if (!existingBaserowUser) {
+        const baserowResult = await createUserInBaserow({
+          email: firebaseUser.email!,
+          username: firebaseUser.displayName!,
+          theme: 'light',
+          photoURL: firebaseUser.photoURL!,
+        });
+
+        if (!baserowResult.success) {
+           console.error("Failed to create user in Baserow after Google sign-in:", baserowResult.error);
+           toast({
+              variant: 'destructive',
+              title: "Signup Warning",
+              description: "Your account was created, but we failed to sync with our database. Please contact support.",
+           });
+        }
+      }
+
+      toast({ title: "Login Successful", description: "Welcome!" });
+      router.push('/');
+      return true;
+
+    } catch (error: any) {
+      toast({ variant: 'destructive', title: "Google Sign-In Failed", description: error.message });
+      return false;
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -263,7 +302,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
 
-  const contextValue = { user, login, signup, logout, updateUserProfile, updateUserUsername, updateUserPassword, isLoading };
+  const contextValue = { user, login, signup, signInWithGoogle, logout, updateUserProfile, updateUserUsername, updateUserPassword, isLoading };
 
   return (
     <AuthContext.Provider value={contextValue}>
