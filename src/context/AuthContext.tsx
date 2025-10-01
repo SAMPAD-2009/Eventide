@@ -33,7 +33,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 const auth = getAuth(app);
 
 // Define paths that are public (accessible to non-logged-in users)
-const PUBLIC_PATHS = ['/login', '/signup', '/terms'];
+const PUBLIC_PATHS = ['/login', '/signup', '/terms', '/privacy'];
 
 // Define paths that a logged-in user should be redirected from (e.g., away from login/signup)
 const AUTH_REDIRECT_PATHS = ['/login', '/signup'];
@@ -73,6 +73,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
     const isPublicPath = PUBLIC_PATHS.includes(pathname);
     const isAdminPath = pathname.startsWith('/admin');
+    
+    // Determine if the current path is one from which a logged-in user should be redirected.
+    // Exclude /terms and /privacy from this, as logged-in users should be able to see them.
     const isAuthRedirectPath = AUTH_REDIRECT_PATHS.includes(pathname);
 
     // Allow admin user to access admin path
@@ -276,6 +279,3 @@ export const useAuth = () => {
   }
   return context;
 };
-
-    
-    
