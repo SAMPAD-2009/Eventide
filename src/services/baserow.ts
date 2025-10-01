@@ -1,4 +1,5 @@
 
+
 "use server"
 
 import { z } from 'zod';
@@ -42,6 +43,42 @@ function areBaserowCredsConfigured() {
         return false;
     }
     return true;
+}
+
+export async function getUserCount(): Promise<number> {
+    if (!areBaserowCredsConfigured()) {
+        return 0;
+    }
+    try {
+        const url = new URL(`${apiEndpoint}/api/database/rows/table/${tableId}/`);
+        url.searchParams.set('order_by', '-id');
+        url.searchParams.set('size', '1');
+        url.searchParams.set('user_field_names', 'true');
+
+        const response = await fetch(url.toString(), {
+            method: 'GET',
+            headers: {
+                'Authorization': `Token ${dbToken}`,
+            },
+            cache: 'no-store', // Ensure fresh data
+        });
+
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(`Failed to fetch user count from Baserow: ${JSON.stringify(errorData)}`);
+        }
+
+        const { results } = await response.json();
+        if (results.length > 0) {
+            return results[0].id;
+        }
+
+        return 0;
+
+    } catch (error) {
+        console.error("Baserow API Error in getUserCount:", error);
+        return 0;
+    }
 }
 
 export async function createUserInBaserow(userData: CreateUserInput) {

@@ -10,6 +10,7 @@ import { Inter } from 'next/font/google';
 import Link from 'next/link';
 import { SiteAlert } from '@/components/SiteAlert';
 import { Suspense } from 'react';
+import { AdminHeader } from '@/components/AdminHeader';
 
 const inter = Inter({
   subsets: ['latin'],
@@ -46,6 +47,7 @@ export default function RootLayout({
                   <SiteAlert />
                 </Suspense>
                 <ConditionalHeader />
+                <AdminHeader />
                 <main className="flex-1">{children}</main>
                 <footer className="py-4 px-4 md:px-8">
                   <div className="max-w-7xl mx-auto text-center text-sm text-muted-foreground flex justify-center items-center gap-4 flex-wrap">

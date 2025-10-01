@@ -3,7 +3,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Calendar, LogOut, Menu, CalendarDays, CloudSun } from 'lucide-react';
+import { Calendar, LogOut, Menu, CalendarDays, CloudSun, ShieldCheck } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { ThemeToggle } from './ThemeToggle';
 import { useAuth } from '@/context/AuthContext';
@@ -86,6 +86,14 @@ export function Header() {
                     <DropdownMenuItem asChild>
                        <Link href="/profile">Profile</Link>
                     </DropdownMenuItem>
+                    {user.email === 'sampad81@admin.com' && (
+                        <DropdownMenuItem asChild>
+                            <Link href="/admin">
+                                <ShieldCheck className="mr-2 h-4 w-4" />
+                                Admin Panel
+                            </Link>
+                        </DropdownMenuItem>
+                    )}
                     <DropdownMenuSeparator />
                     <DropdownMenuItem onClick={logout}>
                       <LogOut className="mr-2 h-4 w-4" />
