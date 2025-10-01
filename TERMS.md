@@ -54,4 +54,4 @@ The Developer reserves the exclusive right, at its sole discretion, to modify or
 7. **Contact Information**
 Inquiries regarding these Terms should be directed to the Developer via the following email address:
 
-Sampadchakrabarty81@gmail.com
+scscs5982@gmail.com

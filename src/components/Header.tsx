@@ -30,7 +30,6 @@ export function Header() {
 
   const navLinks = [
     { href: "/", label: "Upcoming" },
-    { href: "/future", label: "Future" },
     { href: "/history", label: "History" },
     { href: "/weather", label: <CloudSun className="h-5 w-5" />, textLabel: "Weather" },
     { href: "/calendar", label: <CalendarDays className="h-5 w-5" />, textLabel: "Calendar" },
