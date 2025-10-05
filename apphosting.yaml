@@ -5,3 +5,12 @@ runConfig:
   # Increase this value if you'd like to automatically spin up
   # more instances in response to increased traffic.
   maxInstances: 1
+
+# Defines backend jobs that will be triggered by a schedule.
+# https://firebase.google.com/docs/app-hosting/configure#jobs
+jobs:
+  - name: daily-scraper
+    schedule: "every day 00:00"
+    http:
+      path: /api/scrape
+      method: GET
