@@ -4,7 +4,8 @@
 import dotenv from 'dotenv';
 dotenv.config();
 import { createClient } from '@supabase/supabase-js'
-import puppeteer from 'puppeteer';
+import puppeteer from 'puppeteer-core';
+import chromium from '@sparticuz/chromium';
 
 export async function runScraper() {
     const today = new Date();
@@ -27,21 +28,18 @@ export async function runScraper() {
     let browser;
     try {
         browser = await puppeteer.launch({
-          // Recommended for running in server environments
-          args: [
-            '--no-sandbox', 
-            '--disable-setuid-sandbox',
-            '--disable-gpu',
-            '--disable-dev-shm-usage'
-          ]
+            args: chromium.args,
+            defaultViewport: chromium.defaultViewport,
+            executablePath: await chromium.executablePath(),
+            headless: chromium.headless,
         });
+
         const page = await browser.newPage();
         await page.goto(url, { waitUntil: 'networkidle2' });
 
         const allarticles = await page.evaluate(() => {
             const articles = document.querySelectorAll('.md-history-event, .featured-event-card');
             
-            // This is a good guard, but let's make it safer.
             const titleElement = document.querySelector('.card-body > .title');
             if (titleElement) {
                 titleElement.remove();
@@ -53,7 +51,6 @@ export async function runScraper() {
 
                 const dateElement = article.querySelector('.card-media > .date-label');
                 const dateText = dateElement ? dateElement.textContent!.replace(/\s+/g, ' ').trim() : '';
-                // Extract just the year part
                 const year = dateText.match(/\d{4}/)?.[0] ?? dateText;
 
 
@@ -61,17 +58,15 @@ export async function runScraper() {
                 const desc = descElement ? descElement.textContent!.replace(/\s+/g, ' ').trim() : '';
 
                 return { event_year: year, event_description: desc, event_picture: img };
-            }).filter(item => item.event_year && item.event_description); // Filter out empty items
+            }).filter(item => item.event_year && item.event_description);
         });
 
         if (allarticles.length > 0) {
-            // Clear existing data
             const { error: deleteError } = await supabase.from('historical_events').delete().gt('id', 0);
             if (deleteError) {
                 throw new Error(`Supabase delete failed: ${deleteError.message}`);
             }
 
-            // Insert new data
             const { error: insertError } = await supabase.from('historical_events').insert(allarticles);
             if (insertError) {
                 throw new Error(`Supabase insert failed: ${insertError.message}`);
