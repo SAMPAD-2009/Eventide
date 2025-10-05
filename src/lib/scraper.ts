@@ -28,7 +28,12 @@ export async function runScraper() {
     try {
         browser = await puppeteer.launch({
           // Recommended for running in server environments
-          args: ['--no-sandbox', '--disable-setuid-sandbox']
+          args: [
+            '--no-sandbox', 
+            '--disable-setuid-sandbox',
+            '--disable-gpu',
+            '--disable-dev-shm-usage'
+          ]
         });
         const page = await browser.newPage();
         await page.goto(url, { waitUntil: 'networkidle2' });
