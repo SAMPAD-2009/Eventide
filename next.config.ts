@@ -53,7 +53,7 @@ const nextConfig: NextConfig = {
     // Keep other experimental features here if any
     outputFileTracingExcludes: {
       '*': [
-        './node_modules/@sparticuz/chromium/bin',
+        './node_modules/chrome-aws-lambda/bin',
       ],
     },
   },
