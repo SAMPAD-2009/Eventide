@@ -2,7 +2,7 @@
 "use server";
 
 import { createClient } from '@supabase/supabase-js';
-import chrome from 'chrome-aws-lambda';
+import chromium from '@sparticuz/chromium';
 import puppeteer from 'puppeteer-core';
 
 const supabase = createClient(
@@ -26,13 +26,11 @@ export async function runScraper() {
     let browser;
     
     try {
-        const executablePath = await chrome.executablePath;
-
         browser = await puppeteer.launch({
-            args: chrome.args,
-            defaultViewport: chrome.defaultViewport,
-            executablePath: executablePath || '/var/task/node_modules/puppeteer/.local-chromium/linux-1022525/chrome-linux/chrome',
-            headless: chrome.headless,
+            args: chromium.args,
+            defaultViewport: chromium.defaultViewport,
+            executablePath: await chromium.executablePath(),
+            headless: chromium.headless,
             ignoreHTTPSErrors: true,
         });
 

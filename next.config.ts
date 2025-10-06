@@ -54,7 +54,6 @@ const nextConfig: NextConfig = {
     outputFileTracingExcludes: {
       '*': [
         './node_modules/@sparticuz/chromium/bin',
-        './node_modules/puppeteer/.local-chromium',
       ],
     },
   },
