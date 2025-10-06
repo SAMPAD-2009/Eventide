@@ -51,13 +51,7 @@ const nextConfig: NextConfig = {
   },
   experimental: {
     // Keep other experimental features here if any
-    outputFileTracingExcludes: {
-      '*': [
-        './node_modules/chrome-aws-lambda/bin',
-      ],
-    },
   },
-  allowedDevOrigins: ["https://*.cloudworkstations.dev"],
 };
 
 export default nextConfig;
