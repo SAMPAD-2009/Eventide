@@ -51,6 +51,12 @@ const nextConfig: NextConfig = {
   },
   experimental: {
     // Keep other experimental features here if any
+    outputFileTracingExcludes: {
+      '*': [
+        './node_modules/@sparticuz/chromium/bin',
+        './node_modules/puppeteer/.local-chromium',
+      ],
+    },
   },
   allowedDevOrigins: ["https://*.cloudworkstations.dev"],
 };
