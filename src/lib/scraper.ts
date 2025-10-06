@@ -71,11 +71,15 @@ export async function runScraper() {
                 throw new Error(`Supabase delete failed: ${deleteError.message}`);
             }
             console.log('Successfully deleted all old events.');
-
+            let nextId = 1;
+            const articlesWithId = allArticles.map((article: any) => ({
+                id: nextId++, 
+                ...article,
+            }));
             // Insert new data
             const { data: insertedData, error: insertError } = await supabase
                 .from(tableName)
-                .insert(allArticles)
+                .insert(articlesWithId)
                 .select(); // Use select() to get back the inserted data
 
             if (insertError) {
