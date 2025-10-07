@@ -1,6 +1,6 @@
 
 export interface Event {
-  id: number; // Changed to number to represent a DB primary key
+  event_id: string;
   title: string;
   details: string;
   date: string;

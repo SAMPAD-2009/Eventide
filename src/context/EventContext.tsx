@@ -8,14 +8,14 @@ import { useAuth } from './AuthContext';
 import { createClient } from '@/lib/supabase/client';
 import type { SupabaseClient } from '@supabase/supabase-js';
 
-type EventCreationData = Omit<Event, 'id' | 'datetime' | 'user_email'>;
+type EventCreationData = Omit<Event, 'event_id' | 'datetime' | 'user_email'>;
 
 
 interface EventContextType {
   events: Event[];
   addEvent: (eventData: EventCreationData) => Promise<void>;
-  updateEvent: (id: number, eventData: EventCreationData) => Promise<void>;
-  deleteEvent: (id: number) => Promise<void>;
+  updateEvent: (event_id: string, eventData: EventCreationData) => Promise<void>;
+  deleteEvent: (event_id: string) => Promise<void>;
   isLoading: boolean;
 }
 
@@ -49,7 +49,7 @@ export const EventProvider = ({ children }: { children: ReactNode }) => {
           // The datetime might come back in a format that needs parsing.
           // Also handle optional properties.
           const formattedEvents: Event[] = data.map((e: any) => ({
-            id: e.id,
+            event_id: e.event_id,
             title: e.title,
             details: e.details || '',
             datetime: e.datetime,
@@ -93,6 +93,7 @@ export const EventProvider = ({ children }: { children: ReactNode }) => {
     }
     
     const newRecord = {
+      event_id: crypto.randomUUID(),
       title: eventData.title,
       details: eventData.details || '',
       datetime: eventData.isIndefinite ? new Date(8640000000000000).toISOString() : new Date(`${eventData.date}T${eventData.time}`).toISOString(),
@@ -118,7 +119,7 @@ export const EventProvider = ({ children }: { children: ReactNode }) => {
 
     // Map DB record to client-side Event type
      const formattedEvent: Event = {
-        id: newEvent.id,
+        event_id: newEvent.event_id,
         title: newEvent.title,
         details: newEvent.details || '',
         datetime: newEvent.datetime,
@@ -136,7 +137,7 @@ export const EventProvider = ({ children }: { children: ReactNode }) => {
     });
   };
 
-  const updateEvent = async (id: number, eventData: EventCreationData) => {
+  const updateEvent = async (event_id: string, eventData: EventCreationData) => {
     if (!supabase) return;
     const originalEvents = [...events];
     
@@ -150,17 +151,17 @@ export const EventProvider = ({ children }: { children: ReactNode }) => {
 
     // Optimistic update
     const optimisticEvent: Event = {
-        id,
+        event_id,
         user_email: user?.email || '',
         ...eventData,
         datetime: updatedRecord.datetime
     };
-    setEvents(prevEvents => prevEvents.map(event => event.id === id ? optimisticEvent : event));
+    setEvents(prevEvents => prevEvents.map(event => event.event_id === event_id ? optimisticEvent : event));
 
     const { error } = await supabase
       .from('events')
       .update(updatedRecord)
-      .eq('id', id);
+      .eq('event_id', event_id);
 
     if (error) {
         setEvents(originalEvents);
@@ -177,15 +178,15 @@ export const EventProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
-  const deleteEvent = async (id: number) => {
+  const deleteEvent = async (event_id: string) => {
     if (!supabase) return;
     const originalEvents = events;
-    setEvents(events.filter(event => event.id !== id));
+    setEvents(events.filter(event => event.event_id !== event_id));
     
     const { error } = await supabase
         .from('events')
         .delete()
-        .eq('id', id);
+        .eq('event_id', event_id);
 
     if (error) {
         setEvents(originalEvents);

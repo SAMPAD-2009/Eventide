@@ -58,7 +58,7 @@ export function EventCard({ event, onEdit }: EventCardProps) {
                         <AlertDialogFooter>
                         <AlertDialogCancel>Cancel</AlertDialogCancel>
                         <AlertDialogAction 
-                          onClick={() => deleteEvent(event.id)}
+                          onClick={() => deleteEvent(event.event_id)}
                           className="bg-red-600 text-destructive-foreground hover:bg-red-700"
                         >
                           Delete

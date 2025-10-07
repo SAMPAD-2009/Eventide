@@ -102,7 +102,7 @@ export default function CalendarPage() {
                   eventsOnSelectedDate.length > 0 ? (
                       <div className="space-y-4">
                           {eventsOnSelectedDate.map(event => (
-                              <CalendarEventCard key={event.id} event={event} />
+                              <CalendarEventCard key={event.event_id} event={event} />
                           ))}
                       </div>
                   ) : (

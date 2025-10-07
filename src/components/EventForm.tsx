@@ -93,7 +93,7 @@ export function EventForm({ event, onEventCreated, onEventUpdated }: EventFormPr
     };
 
     if (event) {
-        await updateEvent(event.id, eventData);
+        await updateEvent(event.event_id, eventData);
         onEventUpdated?.();
     } else {
         await addEvent(eventData);
