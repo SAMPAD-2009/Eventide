@@ -5,192 +5,192 @@ import React, { createContext, useContext, useState, useEffect, ReactNode } from
 import type { Event } from '@/lib/types';
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from './AuthContext';
-import { fetchEventsFromN8n } from '@/services/n8n';
+import { createClient } from '@/lib/supabase/client';
+
+type EventCreationData = Omit<Event, 'id' | 'datetime' | 'user_email'>;
+
 
 interface EventContextType {
   events: Event[];
-  addEvent: (eventData: Omit<Event, 'id' | 'datetime' | 'event_id'>) => Event;
-  updateEvent: (id: string, eventData: Omit<Event, 'id' | 'datetime' | 'event_id'>) => void;
-  deleteEvent: (id: string) => void;
+  addEvent: (eventData: EventCreationData) => Promise<void>;
+  updateEvent: (id: number, eventData: EventCreationData) => Promise<void>;
+  deleteEvent: (id: number) => Promise<void>;
   isLoading: boolean;
 }
 
 const EventContext = createContext<EventContextType | undefined>(undefined);
-
-const generateUniqueEventId = (email: string, title: string, date: string, time: string): string => {
-    const combinedString = `${email}-${title}-${date}-${time}`;
-    // Use btoa for a simple, client-side base64 encoding to create a unique-looking ID
-    return btoa(combinedString);
-}
-
 
 export const EventProvider = ({ children }: { children: ReactNode }) => {
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(true);
   const [events, setEvents] = useState<Event[]>([]);
   const { user } = useAuth();
-
-  const loadEvents = async () => {
-    if (user?.email) {
-      setIsLoading(true);
-      try {
-        const fetchedEvents = await fetchEventsFromN8n(user.email);
-        setEvents(fetchedEvents);
-      } catch (error) {
-         console.error("Failed to load events from n8n", error);
-         toast({
-           variant: "destructive",
-           title: "Error",
-           description: "Could not fetch your events. Please try again later.",
-         });
-         setEvents([]);
-      } finally {
-          setIsLoading(false);
-      }
-    } else {
-      setEvents([]);
-      setIsLoading(false);
-    }
-  };
+  const supabase = createClient();
 
   useEffect(() => {
-    loadEvents();
-  }, [user]);
+    const loadEvents = async () => {
+      if (user?.email) {
+        setIsLoading(true);
+        try {
+          const { data, error } = await supabase
+            .from('events')
+            .select('*')
+            .eq('user_email', user.email)
+            .order('datetime', { ascending: false });
 
-  const addEvent = (eventData: Omit<Event, 'id' | 'datetime' | 'event_id'>): Event => {
+          if (error) throw error;
+          
+          // The datetime might come back in a format that needs parsing.
+          // Also handle optional properties.
+          const formattedEvents: Event[] = data.map((e: any) => ({
+            id: e.id,
+            title: e.title,
+            details: e.details || '',
+            datetime: e.datetime,
+            date: e.datetime.split('T')[0],
+            time: new Date(e.datetime).toTimeString().substring(0,5),
+            category: e.category,
+            isIndefinite: e.is_indefinite,
+            user_email: e.user_email
+          }));
+
+          setEvents(formattedEvents);
+
+        } catch (error: any) {
+           console.error("Failed to load events from Supabase", error);
+           toast({
+             variant: "destructive",
+             title: "Error",
+             description: `Could not fetch your events: ${error.message}`,
+           });
+           setEvents([]);
+        } finally {
+            setIsLoading(false);
+        }
+      } else {
+        setEvents([]);
+        setIsLoading(false);
+      }
+    };
+
+    loadEvents();
+  }, [user, supabase, toast]);
+
+  const addEvent = async (eventData: EventCreationData) => {
     if (!user?.email) {
         toast({
             variant: "destructive",
             title: "Authentication Error",
             description: "You must be logged in to create an event.",
         });
-        // This is not ideal, but we have to return an event.
-        // The form logic should prevent this from being called if there's no user.
-        return { ...eventData, id: '', datetime: '', details: ''}; 
+        return;
     }
     
-    const eventId = generateUniqueEventId(
-        user.email, 
-        eventData.title, 
-        eventData.isIndefinite ? 'indefinite' : eventData.date!, 
-        eventData.isIndefinite ? '' : eventData.time!
-    );
-
-    const newEvent: Event = {
-      ...eventData,
-      id: eventId,
-      event_id: eventId,
-      datetime: eventData.isIndefinite ? new Date(8640000000000000).toISOString() : new Date(`${eventData.date}T${eventData.time}`).toISOString(),
+    const newRecord = {
+      title: eventData.title,
       details: eventData.details || '',
-    };
-    
-    // Optimistic update
-    setEvents(prevEvents => [newEvent, ...prevEvents]);
-    return newEvent;
-  };
-
-  const updateEvent = (id: string, eventData: Omit<Event, 'id' | 'datetime' | 'event_id'>) => {
-    const originalEvents = [...events];
-    
-    const updatedEvent: Event = {
-      ...eventData,
-      id: id,
-      event_id: id,
       datetime: eventData.isIndefinite ? new Date(8640000000000000).toISOString() : new Date(`${eventData.date}T${eventData.time}`).toISOString(),
-      details: eventData.details || '',
+      category: eventData.category,
+      is_indefinite: !!eventData.isIndefinite,
+      user_email: user.email,
     };
-    updatedEvent.isIndefinite = !!updatedEvent.isIndefinite;
 
-    // Optimistic update
-    setEvents(prevEvents => prevEvents.map(event => event.id === id ? updatedEvent : event));
-
-    const n8nWebhookUrl = process.env.NEXT_PUBLIC_N8N_WEBHOOK_URL;
-     if (!n8nWebhookUrl) {
-        console.error("n8n webhook URL not configured");
-        setEvents(originalEvents);
-        toast({
+    const { data: newEvent, error } = await supabase
+        .from('events')
+        .insert(newRecord)
+        .select()
+        .single();
+    
+    if (error) {
+         toast({
             variant: "destructive",
-            title: "Configuration Error",
-            description: "Could not update event due to configuration issue."
+            title: "Error Creating Event",
+            description: error.message,
         });
         return;
-     }
+    }
 
-    fetch(n8nWebhookUrl, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                event: {
-                    event_id: updatedEvent.id,
-                    title: updatedEvent.title,
-                    details: updatedEvent.details,
-                    date: updatedEvent.date,
-                    time: updatedEvent.time,
-                    category: updatedEvent.category,
-                    is_indefinite: updatedEvent.isIndefinite,
-                },
-                user: { email: user?.email },
-                action: 'update',
-            }),
-            keepalive: true,
-    }).then(response => {
-        if(!response.ok) {
-            setEvents(originalEvents);
-            toast({
-                variant: "destructive",
-                title: "Error",
-                description: "Could not update the event. Please try again.",
-            });
-        } else {
-            toast({
-              title: "Event Updated",
-              description: "Your event has been successfully updated.",
-            });
-        }
-    }).catch(error => {
-       console.error("Failed to update event:", error);
-       setEvents(originalEvents);
-       toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Could not update the event. Please try again.",
-      });
+    // Map DB record to client-side Event type
+     const formattedEvent: Event = {
+        id: newEvent.id,
+        title: newEvent.title,
+        details: newEvent.details || '',
+        datetime: newEvent.datetime,
+        date: newEvent.datetime.split('T')[0],
+        time: new Date(newEvent.datetime).toTimeString().substring(0,5),
+        category: newEvent.category,
+        isIndefinite: newEvent.is_indefinite,
+        user_email: newEvent.user_email
+      };
+
+    setEvents(prevEvents => [formattedEvent, ...prevEvents]);
+    toast({
+        title: "Event Created",
+        description: "Your new event has been added successfully.",
     });
   };
 
-  const deleteEvent = async (id: string) => {
+  const updateEvent = async (id: number, eventData: EventCreationData) => {
+    const originalEvents = [...events];
+    
+    const updatedRecord = {
+      title: eventData.title,
+      details: eventData.details || '',
+      datetime: eventData.isIndefinite ? new Date(8640000000000000).toISOString() : new Date(`${eventData.date}T${eventData.time}`).toISOString(),
+      category: eventData.category,
+      is_indefinite: !!eventData.isIndefinite,
+    };
+
+    // Optimistic update
+    const optimisticEvent: Event = {
+        id,
+        user_email: user?.email || '',
+        ...eventData,
+        datetime: updatedRecord.datetime
+    };
+    setEvents(prevEvents => prevEvents.map(event => event.id === id ? optimisticEvent : event));
+
+    const { error } = await supabase
+      .from('events')
+      .update(updatedRecord)
+      .eq('id', id);
+
+    if (error) {
+        setEvents(originalEvents);
+        toast({
+            variant: "destructive",
+            title: "Error Updating Event",
+            description: error.message,
+        });
+    } else {
+       toast({
+          title: "Event Updated",
+          description: "Your event has been successfully updated.",
+       });
+    }
+  };
+
+  const deleteEvent = async (id: number) => {
     const originalEvents = events;
     setEvents(events.filter(event => event.id !== id));
     
-    const n8nWebhookUrl = process.env.NEXT_PUBLIC_N8N_WEBHOOK_URL;
-    if (n8nWebhookUrl) {
-        try {
-            const response = await fetch(n8nWebhookUrl, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    event: { event_id: id },
-                    user: { email: user?.email },
-                    action: 'delete',
-                }),
-                keepalive: true,
-            });
-            if (!response.ok) {
-              throw new Error("Webhook for delete failed");
-            }
-             toast({
-              title: "Event Deleted",
-              description: "The event has been removed.",
-            });
-        } catch (webhookError) {
-            console.error("Failed to send delete notification to n8n webhook:", webhookError);
-            setEvents(originalEvents); // Revert on failure
-             toast({
-              variant: "destructive",
-              title: "Error",
-              description: "Could not delete the event from the server. Please try again.",
-            });
-        }
+    const { error } = await supabase
+        .from('events')
+        .delete()
+        .eq('id', id);
+
+    if (error) {
+        setEvents(originalEvents);
+        toast({
+            variant: "destructive",
+            title: "Error Deleting Event",
+            description: error.message,
+        });
+    } else {
+        toast({
+            title: "Event Deleted",
+            description: "The event has been removed.",
+        });
     }
   };
   
@@ -210,5 +210,3 @@ export const useEvents = () => {
   }
   return context;
 };
-
-    

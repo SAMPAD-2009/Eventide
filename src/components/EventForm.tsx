@@ -85,7 +85,7 @@ export function EventForm({ event, onEventCreated, onEventUpdated }: EventFormPr
   }, [event, form]);
 
 
-  const onSubmit = (data: EventFormValues) => {
+  const onSubmit = async (data: EventFormValues) => {
     const eventData = {
       ...data,
       date: data.isIndefinite ? '' : format(data.date!, 'yyyy-MM-dd'),
@@ -93,56 +93,10 @@ export function EventForm({ event, onEventCreated, onEventUpdated }: EventFormPr
     };
 
     if (event) {
-        updateEvent(event.id, eventData);
+        await updateEvent(event.id, eventData);
         onEventUpdated?.();
     } else {
-        const n8nWebhookUrl = process.env.NEXT_PUBLIC_N8N_WEBHOOK_URL;
-        if (!n8nWebhookUrl) {
-          console.error("n8n webhook URL not configured");
-          toast({
-            variant: "destructive",
-            title: "Configuration Error",
-            description: "Could not save the event due to a configuration issue.",
-          });
-          return;
-        }
-
-        const newEventForUI = addEvent(eventData);
-
-        fetch(n8nWebhookUrl, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                event: { ...newEventForUI },
-                user: { email: user?.email },
-                action: 'create',
-            }),
-            keepalive: true,
-        }).then(response => {
-            if (!response.ok) {
-                toast({
-                    variant: "destructive",
-                    title: "Error",
-                    description: "Could not create the event. Please try again.",
-                });
-                // Note: We are not rolling back here to avoid complexity,
-                // The user can delete the event manually. A full solution
-                // would require a more robust state management with rollbacks.
-            } else {
-                toast({
-                  title: "Event Created",
-                  description: "Your new event has been added successfully.",
-                });
-            }
-        }).catch(error => {
-            console.error("Failed to add event:", error);
-            toast({
-                variant: "destructive",
-                title: "Error",
-                description: "Could not create the event. Please try again.",
-            });
-        });
-        
+        await addEvent(eventData);
         onEventCreated?.();
     }
   };
@@ -289,5 +243,3 @@ export function EventForm({ event, onEventCreated, onEventUpdated }: EventFormPr
     </Form>
   );
 }
-
-    

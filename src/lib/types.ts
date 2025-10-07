@@ -1,6 +1,6 @@
 
 export interface Event {
-  id: string;
+  id: number; // Changed to number to represent a DB primary key
   title: string;
   details: string;
   date: string;
@@ -8,7 +8,7 @@ export interface Event {
   category: string;
   datetime: string;
   isIndefinite?: boolean;
-  event_id?: string; // a.k.a Baserow row ID
+  user_email: string;
 }
 
 export interface WeatherData {
@@ -61,7 +61,6 @@ export interface AstroData {
     sunset: string;
     moonrise: string;
     moonset: string;
-    moon_phase: string;
     moon_illumination: string;
 }
 
