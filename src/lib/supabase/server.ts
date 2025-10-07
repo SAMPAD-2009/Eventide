@@ -9,7 +9,7 @@ export function createClient() {
   const supabaseServiceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
 
   if (!supabaseUrl || !supabaseServiceRoleKey) {
-    throw new Error('Missing Supabase URL or service role key. Check your .env.local file.');
+    throw new Error('Missing Supabase URL or service role key. Check your environment variables.');
   }
 
   // Create a server-side client with the service role key for admin-level access
