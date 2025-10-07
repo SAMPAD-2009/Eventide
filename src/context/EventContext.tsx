@@ -5,10 +5,11 @@ import React, { createContext, useContext, useState, useEffect, ReactNode } from
 import type { Event } from '@/lib/types';
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from './AuthContext';
-import { createClient } from '@/lib/supabase/client';
-import type { SupabaseClient } from '@supabase/supabase-js';
 
-type EventCreationData = Omit<Event, 'event_id' | 'datetime' | 'user_email'>;
+type EventCreationData = Omit<Event, 'event_id' | 'datetime' | 'user_email'> & {
+    date?: string;
+    time?: string;
+};
 
 
 interface EventContextType {
@@ -26,28 +27,19 @@ export const EventProvider = ({ children }: { children: ReactNode }) => {
   const [isLoading, setIsLoading] = useState(true);
   const [events, setEvents] = useState<Event[]>([]);
   const { user } = useAuth();
-  const [supabase, setSupabase] = useState<SupabaseClient | null>(null);
-
-  useEffect(() => {
-    // Initialize the Supabase client only on the client-side
-    setSupabase(createClient());
-  }, []);
 
   useEffect(() => {
     const loadEvents = async () => {
-      if (user?.email && supabase) {
+      if (user?.email) {
         setIsLoading(true);
         try {
-          const { data, error } = await supabase
-            .from('events')
-            .select('*')
-            .eq('user_email', user.email)
-            .order('datetime', { ascending: false });
-
-          if (error) throw error;
+          const response = await fetch(`/api/events?user_email=${encodeURIComponent(user.email)}`);
+          if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.error || 'Failed to fetch events');
+          }
+          const data = await response.json();
           
-          // The datetime might come back in a format that needs parsing.
-          // Also handle optional properties.
           const formattedEvents: Event[] = data.map((e: any) => ({
             event_id: e.event_id,
             title: e.title,
@@ -63,7 +55,7 @@ export const EventProvider = ({ children }: { children: ReactNode }) => {
           setEvents(formattedEvents);
 
         } catch (error: any) {
-           console.error("Failed to load events from Supabase", error);
+           console.error("Failed to load events", error);
            toast({
              variant: "destructive",
              title: "Error",
@@ -80,10 +72,10 @@ export const EventProvider = ({ children }: { children: ReactNode }) => {
     };
 
     loadEvents();
-  }, [user, supabase, toast]);
+  }, [user, toast]);
 
   const addEvent = async (eventData: EventCreationData) => {
-    if (!user?.email || !supabase) {
+    if (!user?.email) {
         toast({
             variant: "destructive",
             title: "Authentication Error",
@@ -102,43 +94,47 @@ export const EventProvider = ({ children }: { children: ReactNode }) => {
       user_email: user.email,
     };
 
-    const { data: newEvent, error } = await supabase
-        .from('events')
-        .insert(newRecord)
-        .select()
-        .single();
-    
-    if (error) {
+    try {
+        const response = await fetch('/api/events', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(newRecord)
+        });
+
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.error || "Failed to create event");
+        }
+        
+        const newEvent = await response.json();
+
+        const formattedEvent: Event = {
+            event_id: newEvent.event_id,
+            title: newEvent.title,
+            details: newEvent.details || '',
+            datetime: newEvent.datetime,
+            date: newEvent.datetime.split('T')[0],
+            time: new Date(newEvent.datetime).toTimeString().substring(0,5),
+            category: newEvent.category,
+            isIndefinite: newEvent.is_indefinite,
+            user_email: newEvent.user_email
+        };
+
+        setEvents(prevEvents => [formattedEvent, ...prevEvents]);
+        toast({
+            title: "Event Created",
+            description: "Your new event has been added successfully.",
+        });
+    } catch(error: any) {
          toast({
             variant: "destructive",
             title: "Error Creating Event",
             description: error.message,
         });
-        return;
     }
-
-    // Map DB record to client-side Event type
-     const formattedEvent: Event = {
-        event_id: newEvent.event_id,
-        title: newEvent.title,
-        details: newEvent.details || '',
-        datetime: newEvent.datetime,
-        date: newEvent.datetime.split('T')[0],
-        time: new Date(newEvent.datetime).toTimeString().substring(0,5),
-        category: newEvent.category,
-        isIndefinite: newEvent.is_indefinite,
-        user_email: newEvent.user_email
-      };
-
-    setEvents(prevEvents => [formattedEvent, ...prevEvents]);
-    toast({
-        title: "Event Created",
-        description: "Your new event has been added successfully.",
-    });
   };
 
   const updateEvent = async (event_id: string, eventData: EventCreationData) => {
-    if (!supabase) return;
     const originalEvents = [...events];
     
     const updatedRecord = {
@@ -146,7 +142,7 @@ export const EventProvider = ({ children }: { children: ReactNode }) => {
       details: eventData.details || '',
       datetime: eventData.isIndefinite ? new Date(8640000000000000).toISOString() : new Date(`${eventData.date}T${eventData.time}`).toISOString(),
       category: eventData.category,
-      is_indefinite: !!eventData.isIndefinite,
+      isIndefinite: !!eventData.isIndefinite,
     };
 
     // Optimistic update
@@ -158,47 +154,56 @@ export const EventProvider = ({ children }: { children: ReactNode }) => {
     };
     setEvents(prevEvents => prevEvents.map(event => event.event_id === event_id ? optimisticEvent : event));
 
-    const { error } = await supabase
-      .from('events')
-      .update(updatedRecord)
-      .eq('event_id', event_id);
+    try {
+        const response = await fetch(`/api/events/${event_id}`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(updatedRecord)
+        });
 
-    if (error) {
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.error || 'Failed to update event');
+        }
+
+        toast({
+          title: "Event Updated",
+          description: "Your event has been successfully updated.",
+        });
+    } catch (error: any) {
         setEvents(originalEvents);
         toast({
             variant: "destructive",
             title: "Error Updating Event",
             description: error.message,
         });
-    } else {
-       toast({
-          title: "Event Updated",
-          description: "Your event has been successfully updated.",
-       });
     }
   };
 
   const deleteEvent = async (event_id: string) => {
-    if (!supabase) return;
     const originalEvents = events;
     setEvents(events.filter(event => event.event_id !== event_id));
     
-    const { error } = await supabase
-        .from('events')
-        .delete()
-        .eq('event_id', event_id);
+    try {
+        const response = await fetch(`/api/events/${event_id}`, {
+            method: 'DELETE'
+        });
 
-    if (error) {
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.error || 'Failed to delete event');
+        }
+
+        toast({
+            title: "Event Deleted",
+            description: "The event has been removed.",
+        });
+    } catch(error: any) {
         setEvents(originalEvents);
         toast({
             variant: "destructive",
             title: "Error Deleting Event",
             description: error.message,
-        });
-    } else {
-        toast({
-            title: "Event Deleted",
-            description: "The event has been removed.",
         });
     }
   };
