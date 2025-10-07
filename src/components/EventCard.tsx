@@ -21,6 +21,8 @@ import type { Event } from '@/lib/types';
 import { getCategoryByName } from '@/lib/categories';
 import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
+import { Checkbox } from '@/components/ui/checkbox';
+import { useState } from 'react';
 
 interface EventCardProps {
   event: Event;
@@ -30,13 +32,40 @@ interface EventCardProps {
 export function EventCard({ event, onEdit }: EventCardProps) {
   const { deleteEvent } = useEvents();
   const categoryInfo = getCategoryByName(event.category);
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  const handleQuickDelete = () => {
+    setIsDeleting(true);
+    setTimeout(() => {
+      deleteEvent(event.event_id);
+    }, 500); // Wait for the animation to finish
+  };
+
 
   return (
-    <Card className="border-2 flex flex-col" style={{ borderColor: categoryInfo ? `hsl(var(${categoryInfo?.cssVars.fg}))` : undefined }}>
+    <Card 
+        className={cn(
+            "border-2 flex flex-col transition-opacity duration-500",
+            isDeleting ? "opacity-50" : "opacity-100"
+        )} 
+        style={{ borderColor: categoryInfo ? `hsl(var(${categoryInfo?.cssVars.fg}))` : undefined }}>
       <CardHeader className="p-4 pb-2">
         <div className="flex justify-between items-start gap-2">
-            <div className="flex-1">
-                <CardTitle className="text-lg leading-tight">{event.title}</CardTitle>
+            <div className="flex items-start gap-3 flex-1">
+                 <Checkbox
+                    id={`delete-${event.event_id}`}
+                    aria-label={`Mark and delete ${event.title}`}
+                    className="mt-1"
+                    onCheckedChange={handleQuickDelete}
+                 />
+                <div className="flex-1">
+                    <CardTitle className={cn(
+                        "text-lg leading-tight transition-all duration-300",
+                        isDeleting ? "line-through text-muted-foreground" : ""
+                    )}>
+                        {event.title}
+                    </CardTitle>
+                </div>
             </div>
             <div className="flex items-center -mr-2 -mt-2">
                  <Button variant="ghost" size="icon" className="flex-shrink-0" onClick={() => onEdit(event)}>
@@ -69,12 +98,12 @@ export function EventCard({ event, onEdit }: EventCardProps) {
             </div>
         </div>
       </CardHeader>
-      <CardContent className="p-4 pt-0 flex-grow min-h-[40px]">
+      <CardContent className="p-4 pt-0 pl-11 flex-grow min-h-[40px]">
         {event.details && (
           <p className="text-sm text-muted-foreground line-clamp-2">{event.details}</p>
         )}
       </CardContent>
-      <CardFooter className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-muted-foreground p-4 pt-0">
+      <CardFooter className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-muted-foreground p-4 pt-0 pl-11">
         {event.isIndefinite ? (
             <div className="flex items-center gap-2">
                 <Infinity className="h-4 w-4" />
