@@ -6,6 +6,7 @@ import type { Event } from '@/lib/types';
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from './AuthContext';
 import { createClient } from '@/lib/supabase/client';
+import type { SupabaseClient } from '@supabase/supabase-js';
 
 type EventCreationData = Omit<Event, 'id' | 'datetime' | 'user_email'>;
 
@@ -25,11 +26,16 @@ export const EventProvider = ({ children }: { children: ReactNode }) => {
   const [isLoading, setIsLoading] = useState(true);
   const [events, setEvents] = useState<Event[]>([]);
   const { user } = useAuth();
-  const supabase = createClient();
+  const [supabase, setSupabase] = useState<SupabaseClient | null>(null);
+
+  useEffect(() => {
+    // Initialize the Supabase client only on the client-side
+    setSupabase(createClient());
+  }, []);
 
   useEffect(() => {
     const loadEvents = async () => {
-      if (user?.email) {
+      if (user?.email && supabase) {
         setIsLoading(true);
         try {
           const { data, error } = await supabase
@@ -77,7 +83,7 @@ export const EventProvider = ({ children }: { children: ReactNode }) => {
   }, [user, supabase, toast]);
 
   const addEvent = async (eventData: EventCreationData) => {
-    if (!user?.email) {
+    if (!user?.email || !supabase) {
         toast({
             variant: "destructive",
             title: "Authentication Error",
@@ -131,6 +137,7 @@ export const EventProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const updateEvent = async (id: number, eventData: EventCreationData) => {
+    if (!supabase) return;
     const originalEvents = [...events];
     
     const updatedRecord = {
@@ -171,6 +178,7 @@ export const EventProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const deleteEvent = async (id: number) => {
+    if (!supabase) return;
     const originalEvents = events;
     setEvents(events.filter(event => event.id !== id));
     
