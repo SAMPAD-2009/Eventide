@@ -1,6 +1,5 @@
 
 import { initializeApp, getApps } from 'firebase/app';
-import { getPerformance } from "firebase/performance";
 
 const firebaseConfig = {
   "projectId": "eventide-x19jx",
@@ -19,10 +18,11 @@ if (!getApps().length) {
   app = getApps()[0];
 }
 
-// Initialize Performance Monitoring and get a reference to the service
-if (typeof window !== 'undefined') {
-  getPerformance(app);
-}
+// Performance Monitoring is currently causing issues with long CSS class names.
+// It is disabled for now to prevent runtime errors.
+// if (typeof window !== 'undefined') {
+//   getPerformance(app);
+// }
 
 
 export { app };
