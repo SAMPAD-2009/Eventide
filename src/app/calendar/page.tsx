@@ -171,7 +171,7 @@ export default function CalendarPage() {
 
                 <div className="md:w-1/2">
                     <h2 className="text-xl font-semibold mb-4">
-                        {date ? `Events on ${date.toLocaleDateDateString()}` : 'Select a date'}
+                        {date ? `Events on ${date.toLocaleDateString()}` : 'Select a date'}
                     </h2>
                     {date ? (
                          <Droppable droppableId={`event-list-${date.toISOString().split('T')[0]}`}>
@@ -198,5 +198,3 @@ export default function CalendarPage() {
     </DragDropContext>
   );
 }
-
-    
