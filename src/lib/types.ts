@@ -11,6 +11,17 @@ export interface Event {
   user_email: string;
 }
 
+export interface AirQualityData {
+    co: number;
+    no2: number;
+    o3: number;
+    so2: number;
+    pm2_5: number;
+    pm10: number;
+    "us-epa-index": number;
+    "gb-defra-index": number;
+}
+
 export interface WeatherData {
     location: {
         name: string;
@@ -50,6 +61,7 @@ export interface WeatherData {
         uv: number;
         gust_mph: number;
         gust_kph: number;
+        air_quality: AirQualityData;
     };
     forecast: {
         forecastday: ForecastDay[];
@@ -62,6 +74,19 @@ export interface AstroData {
     moonrise: string;
     moonset: string;
     moon_illumination: string;
+}
+
+export interface HourData {
+    time_epoch: number;
+    time: string;
+    temp_c: number;
+    temp_f: number;
+    is_day: number;
+    condition: {
+        text: string;
+        icon: string;
+        code: number;
+    };
 }
 
 export interface ForecastDay {
@@ -94,5 +119,5 @@ export interface ForecastDay {
     uv: number;
   },
   astro: AstroData,
-  hour: object[], // Not using this for now
+  hour: HourData[],
 }
