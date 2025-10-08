@@ -34,8 +34,8 @@ export default function WeatherPage() {
             if (!airQualityResponse.ok) throw new Error("Failed to fetch air quality data.");
             const airQualityData = await airQualityResponse.json();
 
-            // Reverse geocoding with Open-Meteo
-            const locationResponse = await fetch(`https://geocoding-api.open-meteo.com/v1/reverse?latitude=${latitude}&longitude=${longitude}`);
+            // Reverse geocoding with geocode.maps.co
+            const locationResponse = await fetch(`https://geocode.maps.co/reverse?lat=${latitude}&lon=${longitude}&api_key=${process.env.NEXT_PUBLIC_GEOCODE_API_KEY}`);
             if (!locationResponse.ok) throw new Error("Failed to fetch location name.");
             const locationData = await locationResponse.json();
 
@@ -43,8 +43,8 @@ export default function WeatherPage() {
                 ...weatherData, 
                 air_quality: airQualityData.current,
                 location: {
-                    name: locationData.name || 'Unknown Location',
-                    country: locationData.country || ''
+                    name: locationData.address?.city || locationData.address?.town || 'Unknown Location',
+                    country: locationData.address?.country || ''
                 }
             };
         } catch (err: any) {
@@ -92,11 +92,11 @@ export default function WeatherPage() {
         setLoading(true);
         setError(null);
         try {
-            const response = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${city}&count=1`);
+            const response = await fetch(`https://geocode.maps.co/search?q=${city}&api_key=${process.env.NEXT_PUBLIC_GEOCODE_API_KEY}`);
             const data = await response.json();
-            if (data && data.results && data.results.length > 0) {
-                const { latitude, longitude } = data.results[0];
-                fetchWeatherForCoords(latitude, longitude);
+            if (data && data.length > 0) {
+                const { lat, lon } = data[0];
+                fetchWeatherForCoords(parseFloat(lat), parseFloat(lon));
             } else {
                 throw new Error("Could not find location. Please try another city name.");
             }
