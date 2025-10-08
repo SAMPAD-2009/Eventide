@@ -2,7 +2,8 @@
 "use client";
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { format, parseISO } from 'date-fns-tz';
+import { format } from 'date-fns-tz';
+import { parseISO } from 'date-fns';
 
 interface HourlyForecastCardProps {
   hourlyData: {

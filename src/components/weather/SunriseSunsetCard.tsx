@@ -4,7 +4,8 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import type { WeatherData } from '@/lib/types';
 import { Sunrise, Sunset } from 'lucide-react';
-import { format, parseISO } from 'date-fns';
+import { parseISO } from 'date-fns';
+import { format } from 'date-fns-tz';
 
 interface SunriseSunsetCardProps {
   astro: WeatherData['daily'];
