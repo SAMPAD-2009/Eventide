@@ -1,17 +1,23 @@
 
 "use client"
 
-import Image from 'next/image';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import type { ForecastDay } from '@/lib/types';
+import type { WeatherData } from '@/lib/types';
 import { format } from 'date-fns';
 
 interface ForecastCardProps {
-  forecast: ForecastDay[];
+  forecast: WeatherData['daily'];
   tempUnit: 'c' | 'f';
 }
 
 export function ForecastCard({ forecast, tempUnit }: ForecastCardProps) {
+
+  // We show next 2 days, so we slice from index 1 to 3
+  const nextTwoDays = forecast.time.slice(1, 3).map((date, index) => ({
+    date: date,
+    maxtemp: forecast.temperature_2m_max[index + 1],
+    mintemp: forecast.temperature_2m_min[index + 1],
+  }));
 
   return (
     <Card className="bg-card text-card-foreground shadow-sm rounded-2xl p-6">
@@ -20,20 +26,15 @@ export function ForecastCard({ forecast, tempUnit }: ForecastCardProps) {
       </CardHeader>
       <CardContent className="p-0">
         <div className="space-y-4">
-          {forecast.map((day) => {
-            const displayMaxTemp = tempUnit === 'c' ? Math.round(day.day.maxtemp_c) : Math.round(day.day.maxtemp_f);
-            const displayMinTemp = tempUnit === 'c' ? Math.round(day.day.mintemp_c) : Math.round(day.day.mintemp_f);
+          {nextTwoDays.map((day, index) => {
+            const displayMaxTemp = Math.round(day.maxtemp);
+            const displayMinTemp = Math.round(day.mintemp);
             return (
-              <div key={day.date_epoch} className="flex items-center justify-between">
-                <div className="flex items-center gap-3 w-[45%]">
-                   <Image 
-                    src={`https:${day.day.condition.icon}`} 
-                    alt={day.day.condition.text}
-                    width={32}
-                    height={32}
-                  />
-                  <p className="font-semibold text-sm truncate">{day.day.condition.text}</p>
-                </div>
+              <div key={index} className="flex items-center justify-between">
+                {/* No icon/text condition from this API */}
+                <p className="font-semibold text-sm w-[45%]">
+                  {`${displayMaxTemp}°/${displayMinTemp}°${tempUnit.toUpperCase()}`}
+                </p>
                 <p className="text-muted-foreground w-[25%] text-center">{format(new Date(day.date), 'd MMM')}</p>
                 <p className="text-muted-foreground w-[30%] text-right">{format(new Date(day.date), 'EEEE')}</p>
               </div>

@@ -2,23 +2,34 @@
 "use client";
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import type { HourData } from '@/lib/types';
-import { format } from 'date-fns-tz';
-import Image from 'next/image';
+import { format, parseISO } from 'date-fns-tz';
 
 interface HourlyForecastCardProps {
-  hourlyData: HourData[];
+  hourlyData: {
+    time: string[];
+    temperature_2m: number[];
+  };
   timezone: string;
   tempUnit: 'c' | 'f';
 }
 
 export function HourlyForecastCard({ hourlyData, timezone, tempUnit }: HourlyForecastCardProps) {
     
-    // Filter to get a forecast for roughly every 3 hours starting from the current time
     const now = new Date();
-    const relevantHours = hourlyData.filter(hour => new Date(hour.time) > now)
-                                   .filter((_, index) => index % 3 === 0)
-                                   .slice(0, 8);
+    const currentHourIndex = hourlyData.time.findIndex(timeStr => parseISO(timeStr) > now);
+
+    if (currentHourIndex === -1) return null; // No future hours available
+
+    // Get the next 8 available hourly forecasts, skipping every other one for spacing (e.g., 2-hour intervals)
+    const relevantHours = hourlyData.time
+        .slice(currentHourIndex)
+        .map((time, index) => ({
+            time,
+            temp: hourlyData.temperature_2m[currentHourIndex + index]
+        }))
+        .filter((_, index) => index % 2 === 0)
+        .slice(0, 8);
+
 
     return (
         <Card className="bg-card text-card-foreground shadow-sm rounded-2xl p-6">
@@ -27,19 +38,14 @@ export function HourlyForecastCard({ hourlyData, timezone, tempUnit }: HourlyFor
             </CardHeader>
             <CardContent className="p-0">
                 <div className="flex justify-between overflow-x-auto gap-4">
-                    {relevantHours.map(hour => {
-                        const displayTemp = tempUnit === 'c' ? Math.round(hour.temp_c) : Math.round(hour.temp_f);
+                    {relevantHours.map((hour, index) => {
+                        const displayTemp = Math.round(hour.temp);
                         return (
-                            <div key={hour.time_epoch} className="flex flex-col items-center justify-center gap-2 flex-shrink-0">
+                            <div key={index} className="flex flex-col items-center justify-center gap-2 flex-shrink-0">
                                 <p className="text-sm text-muted-foreground">
-                                    {format(new Date(hour.time), 'ha', { timeZone: timezone })}
+                                    {format(parseISO(hour.time), 'ha', { timeZone: timezone })}
                                 </p>
-                                <Image
-                                    src={`https:${hour.condition.icon}`}
-                                    alt={hour.condition.text}
-                                    width={48}
-                                    height={48}
-                                />
+                                {/* No icon with this API */}
                                 <p className="font-bold text-lg">{displayTemp}°</p>
                             </div>
                         )

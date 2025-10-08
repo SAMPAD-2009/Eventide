@@ -3,7 +3,7 @@
 
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { Loader2, LocateFixed, Search } from 'lucide-react';
+import { LocateFixed, Search } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { WeatherPageSkeleton } from '@/components/WeatherPageSkeleton';
 import type { WeatherData } from '@/lib/types';
@@ -22,35 +22,41 @@ export default function WeatherPage() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [city, setCity] = useState('');
-    const [query, setQuery] = useState('');
     const [tempUnit, setTempUnit] = useState<'c' | 'f'>('c');
 
+    const fetchWeatherData = async (latitude: number, longitude: number) => {
+        try {
+            const weatherResponse = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&daily=temperature_2m_max,temperature_2m_min,sunrise,sunset&hourly=temperature_2m,visibility&current=temperature_2m,relative_humidity_2m,apparent_temperature,surface_pressure&temperature_unit=${tempUnit === 'f' ? 'fahrenheit' : 'celsius'}&wind_speed_unit=ms&precipitation_unit=inch&timezone=auto`);
+            if (!weatherResponse.ok) throw new Error("Failed to fetch weather forecast.");
+            const weatherData = await weatherResponse.json();
 
-    const apiKey = process.env.NEXT_PUBLIC_WEATHER_API_KEY;
+            const airQualityResponse = await fetch(`https://air-quality-api.open-meteo.com/v1/air-quality?latitude=${latitude}&longitude=${longitude}&current=nitrogen_dioxide,sulphur_dioxide,ozone,pm2_5,european_aqi`);
+            if (!airQualityResponse.ok) throw new Error("Failed to fetch air quality data.");
+            const airQualityData = await airQualityResponse.json();
 
-    const fetchWeather = (locationQuery: string) => {
-        if (!apiKey || apiKey === "YOUR_API_KEY") {
-            setError("Weather API key is not configured. Please add NEXT_PUBLIC_WEATHER_API_KEY to your environment variables.");
-            setLoading(false);
-            return;
+            // A simple reverse geocoding to get city name
+            const locationResponse = await fetch(`https://geocode.maps.co/reverse?lat=${latitude}&lon=${longitude}&api_key=6628aa4105829237277634lpn42f36f`);
+            const locationData = await locationResponse.json();
+
+            return { 
+                ...weatherData, 
+                air_quality: airQualityData.current,
+                location: {
+                    name: locationData.address?.city || locationData.address?.town || 'Unknown Location',
+                    country: locationData.address?.country || ''
+                }
+            };
+        } catch (err: any) {
+            throw new Error(err.message);
         }
+    }
 
+    const fetchWeatherForCoords = (lat: number, lon: number) => {
         setLoading(true);
         setError(null);
-        
-        fetch(`https://api.weatherapi.com/v1/forecast.json?key=${apiKey}&q=${locationQuery}&days=3&aqi=yes&alerts=no`)
-            .then(res => {
-                if (!res.ok) {
-                    throw new Error('Failed to fetch weather data. Please check the city name and your network connection.');
-                }
-                return res.json();
-            })
+        fetchWeatherData(lat, lon)
             .then(data => {
-                if (data.error) {
-                    throw new Error(data.error.message);
-                }
                 setWeather(data);
-                setQuery(locationQuery);
             })
             .catch(err => {
                 setError(err.message);
@@ -60,36 +66,55 @@ export default function WeatherPage() {
     };
 
     const getLocation = () => {
+        setLoading(true);
         if (navigator.geolocation) {
             navigator.geolocation.getCurrentPosition(
                 (position) => {
-                    fetchWeather(`${position.coords.latitude},${position.coords.longitude}`);
+                    fetchWeatherForCoords(position.coords.latitude, position.coords.longitude);
                 },
                 (err) => {
-                    setError(`Could not get location: ${err.message}. Please enable location services or use the search bar.`);
-                    setLoading(false);
-                    // Fallback to a default location if geolocation fails
-                    if (!weather) fetchWeather('London');
+                    setError(`Could not get location: ${err.message}. Please enable location services or search for a city.`);
+                    // Fallback to a default location (e.g., London)
+                    fetchWeatherForCoords(51.5074, -0.1278);
                 }
             );
         } else {
-            setError("Geolocation is not supported by this browser.");
-            setLoading(false);
-            // Fallback to a default location
-            if (!weather) fetchWeather('London');
+             setError("Geolocation is not supported by this browser.");
+             // Fallback to a default location
+             fetchWeatherForCoords(51.5074, -0.1278);
         }
     };
     
-    const handleSearch = (e: React.FormEvent) => {
+    const handleSearch = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (city) {
-            fetchWeather(city);
+        if (!city) return;
+        setLoading(true);
+        setError(null);
+        try {
+            const response = await fetch(`https://geocode.maps.co/search?q=${city}&api_key=6628aa4105829237277634lpn42f36f`);
+            const data = await response.json();
+            if (data && data.length > 0) {
+                const { lat, lon } = data[0];
+                fetchWeatherForCoords(parseFloat(lat), parseFloat(lon));
+            } else {
+                throw new Error("Could not find location. Please try another city name.");
+            }
+        } catch (err: any) {
+            setError(err.message);
+            setLoading(false);
         }
     }
 
     useEffect(() => {
         getLocation();
     }, []);
+
+    // Refetch data when temp unit changes
+     useEffect(() => {
+        if (weather) {
+            fetchWeatherForCoords(weather.latitude, weather.longitude);
+        }
+    }, [tempUnit]);
 
     const renderContent = () => {
         if (loading) {
@@ -116,27 +141,27 @@ export default function WeatherPage() {
                     {/* Left Sidebar */}
                     <div className="lg:col-span-1 xl:col-span-1 space-y-6">
                         <CurrentWeatherCard weather={weather} tempUnit={tempUnit} />
-                        <ForecastCard forecast={weather.forecast.forecastday.slice(1, 3)} tempUnit={tempUnit} />
+                        <ForecastCard forecast={weather.daily} tempUnit={tempUnit} />
                     </div>
 
                     {/* Main Content */}
                     <div className="lg:col-span-2 xl:col-span-3 space-y-6">
                         <h2 className="text-xl font-bold text-foreground">Today's Highlights</h2>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <AirQualityCard airQuality={weather.current.air_quality} />
-                            <SunriseSunsetCard astro={weather.forecast.forecastday[0].astro} />
+                            <AirQualityCard airQuality={weather.air_quality} />
+                            <SunriseSunsetCard astro={weather.daily} />
                         </div>
                         <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-                             <HighlightCard title="Humidity" icon={<Droplets />} value={`${weather.current.humidity}%`} />
-                            <HighlightCard title="Pressure" icon={<Wind />} value={`${Math.round(weather.current.pressure_mb)}hPa`} />
-                            <HighlightCard title="Visibility" icon={<Eye />} value={`${weather.current.vis_km}km`} />
+                             <HighlightCard title="Humidity" icon={<Droplets />} value={`${weather.current.relative_humidity_2m}%`} />
+                            <HighlightCard title="Pressure" icon={<Wind />} value={`${Math.round(weather.current.surface_pressure)}hPa`} />
+                            <HighlightCard title="Visibility" icon={<Eye />} value={`${(weather.hourly.visibility[0] / 1000).toFixed(1)} km`} />
                             <HighlightCard 
                                 title="Feels Like" 
                                 icon={<Thermometer />} 
-                                value={`${tempUnit === 'c' ? Math.round(weather.current.feelslike_c) : Math.round(weather.current.feelslike_f)}°${tempUnit}`} 
+                                value={`${Math.round(weather.current.apparent_temperature)}°`} 
                             />
                         </div>
-                        <HourlyForecastCard hourlyData={weather.forecast.forecastday[0].hour} timezone={weather.location.tz_id} tempUnit={tempUnit} />
+                        <HourlyForecastCard hourlyData={weather.hourly} timezone={weather.timezone} tempUnit={tempUnit} />
                     </div>
                 </div>
             );
