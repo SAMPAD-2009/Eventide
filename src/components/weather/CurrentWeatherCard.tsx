@@ -25,7 +25,7 @@ const getBackgroundImage = (temp: number) => {
 }
 
 export function CurrentWeatherCard({ weather, tempUnit }: CurrentWeatherCardProps) {
-  const { current, location, daily } = weather;
+  const { current, location, daily, timezone } = weather;
   
   const tempInC = current.temperature_2m;
   const displayTemp = Math.round(tempUnit === 'c' ? tempInC : (tempInC * 9/5) + 32);
@@ -38,6 +38,8 @@ export function CurrentWeatherCard({ weather, tempUnit }: CurrentWeatherCardProp
 
   const maxTemp = Math.round(tempUnit === 'c' ? maxTempC : (maxTempC * 9/5) + 32);
   const minTemp = Math.round(tempUnit === 'c' ? minTempC : (minTempC * 9/5) + 32);
+
+  const locationName = location?.name || timezone.split('/')[1].replace('_', ' ');
 
   return (
     <Card 
@@ -56,7 +58,7 @@ export function CurrentWeatherCard({ weather, tempUnit }: CurrentWeatherCardProp
                 </div>
             </CardContent>
              <CardDescription className="text-base mt-2 text-white/90 capitalize">
-                {weather.timezone.split('/')[1].replace('_', ' ')}
+                {timezone.split('/')[1].replace('_', ' ')}
              </CardDescription>
              <div className="flex items-center gap-2 mt-2 text-white/80 text-sm">
                 <Thermometer className="h-4 w-4" />
@@ -70,10 +72,12 @@ export function CurrentWeatherCard({ weather, tempUnit }: CurrentWeatherCardProp
                 </div>
                 <div className="flex items-center gap-2 text-white/80">
                     <MapPin className="h-5 w-5" />
-                    <span>{location.name}, {location.country}</span>
+                    <span>{locationName}</span>
                 </div>
             </CardFooter>
         </div>
     </Card>
   );
 }
+
+    

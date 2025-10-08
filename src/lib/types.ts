@@ -1,4 +1,5 @@
 
+
 export interface Event {
   event_id: string;
   title: string;
@@ -28,7 +29,7 @@ export interface WeatherData {
   timezone: string;
   timezone_abbreviation: string;
   elevation: number;
-  location: {
+  location?: { // Optional now
     name: string;
     country: string;
   };
@@ -86,3 +87,5 @@ export interface HourData {
   time: string;
   temp: number;
 }
+
+    

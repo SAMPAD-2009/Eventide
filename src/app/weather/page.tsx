@@ -33,18 +33,28 @@ export default function WeatherPage() {
             const airQualityResponse = await fetch(`https://air-quality-api.open-meteo.com/v1/air-quality?latitude=${latitude}&longitude=${longitude}&current=nitrogen_dioxide,sulphur_dioxide,ozone,pm2_5,european_aqi`);
             if (!airQualityResponse.ok) throw new Error("Failed to fetch air quality data.");
             const airQualityData = await airQualityResponse.json();
+            
+            // For search, get the location name from the forward geocoding response
+            if (city) {
+                 const locationResponse = await fetch(`https://geocode.maps.co/search?q=${city}&api_key=${process.env.NEXT_PUBLIC_GEOCODE_API_KEY}`);
+                 if (!locationResponse.ok) throw new Error("Failed to fetch location name.");
+                 const locationData = await locationResponse.json();
+                 if (locationData && locationData.length > 0) {
+                    return { 
+                        ...weatherData, 
+                        air_quality: airQualityData.current,
+                         location: {
+                            name: locationData[0].display_name.split(',')[0],
+                            country: ''
+                        }
+                    };
+                 }
+            }
 
-            const locationResponse = await fetch(`https://geocode.maps.co/reverse?lat=${latitude}&lon=${longitude}&api_key=${process.env.NEXT_PUBLIC_GEOCODE_API_KEY}`);
-            if (!locationResponse.ok) throw new Error("Failed to fetch location name.");
-            const locationData = await locationResponse.json();
 
             return { 
                 ...weatherData, 
-                air_quality: airQualityData.current,
-                location: {
-                    name: locationData.address?.city || locationData.address?.town || 'Unknown Location',
-                    country: locationData.address?.country || ''
-                }
+                air_quality: airQualityData.current
             };
         } catch (err: any) {
             let errorMessage = err.message;
@@ -71,6 +81,7 @@ export default function WeatherPage() {
 
     const getLocation = () => {
         setLoading(true);
+        setCity(''); // Clear city on current location fetch
         if (navigator.geolocation) {
             navigator.geolocation.getCurrentPosition(
                 (position) => {
@@ -213,3 +224,5 @@ export default function WeatherPage() {
         </div>
     );
 }
+
+    
