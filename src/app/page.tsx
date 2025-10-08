@@ -34,7 +34,7 @@ export default function Home() {
     const today = startOfToday();
     const sevenDaysFromNow = addDays(today, 7);
     return events.filter(event => {
-      if (event.isIndefinite) return true;
+      if (event.isIndefinite || !event.datetime) return true;
       const eventDate = new Date(event.datetime);
       return isWithinInterval(eventDate, { start: today, end: sevenDaysFromNow }) || isSameDay(eventDate, sevenDaysFromNow);
     });

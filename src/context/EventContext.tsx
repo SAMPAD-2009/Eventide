@@ -45,8 +45,8 @@ export const EventProvider = ({ children }: { children: ReactNode }) => {
             title: e.title,
             details: e.details || '',
             datetime: e.datetime,
-            date: e.datetime.split('T')[0],
-            time: new Date(e.datetime).toTimeString().substring(0,5),
+            date: e.datetime ? e.datetime.split('T')[0] : '',
+            time: e.datetime ? new Date(e.datetime).toTimeString().substring(0,5) : '',
             category: e.category,
             isIndefinite: e.is_indefinite,
             user_email: e.user_email
@@ -88,7 +88,7 @@ export const EventProvider = ({ children }: { children: ReactNode }) => {
       event_id: crypto.randomUUID(),
       title: eventData.title,
       details: eventData.details || '',
-      datetime: eventData.isIndefinite ? new Date(8640000000000000).toISOString() : new Date(`${eventData.date}T${eventData.time}`).toISOString(),
+      datetime: eventData.isIndefinite ? null : new Date(`${eventData.date}T${eventData.time}`).toISOString(),
       category: eventData.category,
       is_indefinite: !!eventData.isIndefinite,
       user_email: user.email,
@@ -113,8 +113,8 @@ export const EventProvider = ({ children }: { children: ReactNode }) => {
             title: newEvent.title,
             details: newEvent.details || '',
             datetime: newEvent.datetime,
-            date: newEvent.datetime.split('T')[0],
-            time: new Date(newEvent.datetime).toTimeString().substring(0,5),
+            date: newEvent.datetime ? newEvent.datetime.split('T')[0] : '',
+            time: newEvent.datetime ? new Date(newEvent.datetime).toTimeString().substring(0,5) : '',
             category: newEvent.category,
             isIndefinite: newEvent.is_indefinite,
             user_email: newEvent.user_email
@@ -140,7 +140,7 @@ export const EventProvider = ({ children }: { children: ReactNode }) => {
     const updatedRecord = {
       title: eventData.title,
       details: eventData.details || '',
-      datetime: eventData.isIndefinite ? new Date(8640000000000000).toISOString() : new Date(`${eventData.date}T${eventData.time}`).toISOString(),
+      datetime: eventData.isIndefinite ? null : new Date(`${eventData.date}T${eventData.time}`).toISOString(),
       category: eventData.category,
       isIndefinite: !!eventData.isIndefinite,
     };

@@ -16,7 +16,7 @@ import { getCategoryByName } from '@/lib/categories';
 function DayContentWithDots(props: DayContentProps) {
   const { events } = useEvents();
   const eventsOnDate = events.filter(event => 
-    !event.isIndefinite && isSameDay(parseISO(event.datetime), props.date)
+    !event.isIndefinite && event.datetime && isSameDay(parseISO(event.datetime), props.date)
   );
 
   return (
@@ -46,7 +46,7 @@ export default function CalendarPage() {
   const [date, setDate] = useState<Date | undefined>(new Date());
 
   const eventsOnSelectedDate = events.filter(event =>
-    date && !event.isIndefinite && isSameDay(parseISO(event.datetime), date)
+    date && !event.isIndefinite && event.datetime && isSameDay(parseISO(event.datetime), date)
   );
 
   if (isAuthLoading || areEventsLoading) {

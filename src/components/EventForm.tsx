@@ -53,8 +53,8 @@ export function EventForm({ event, onEventCreated, onEventUpdated }: EventFormPr
     defaultValues: {
       title: event?.title || "",
       details: event?.details || "",
-      date: event && !event.isIndefinite ? parseISO(event.datetime) : new Date(),
-      time: event && !event.isIndefinite ? format(parseISO(event.datetime), 'HH:mm') : format(new Date(), 'HH:mm'),
+      date: event && !event.isIndefinite && event.datetime ? parseISO(event.datetime) : new Date(),
+      time: event && !event.isIndefinite && event.datetime ? format(parseISO(event.datetime), 'HH:mm') : format(new Date(), 'HH:mm'),
       category: event?.category || "Personal",
       isIndefinite: event?.isIndefinite || false,
     },
@@ -67,8 +67,8 @@ export function EventForm({ event, onEventCreated, onEventUpdated }: EventFormPr
         form.reset({
             title: event.title,
             details: event.details,
-            date: event.isIndefinite ? undefined : parseISO(event.datetime),
-            time: event.isIndefinite ? undefined : format(parseISO(event.datetime), 'HH:mm'),
+            date: event.isIndefinite || !event.datetime ? undefined : parseISO(event.datetime),
+            time: event.isIndefinite || !event.datetime ? undefined : format(parseISO(event.datetime), 'HH:mm'),
             category: event.category,
             isIndefinite: event.isIndefinite,
         });

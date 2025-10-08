@@ -7,7 +7,7 @@ export interface Event {
   date: string;
   time: string;
   category: string;
-  datetime: string;
+  datetime: string | null;
   isIndefinite?: boolean;
   user_email: string;
 }

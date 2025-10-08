@@ -104,7 +104,7 @@ export function EventCard({ event, onEdit }: EventCardProps) {
         )}
       </CardContent>
       <CardFooter className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-muted-foreground p-4 pt-0 pl-11">
-        {event.isIndefinite ? (
+        {event.isIndefinite || !event.datetime ? (
             <div className="flex items-center gap-2">
                 <Infinity className="h-4 w-4" />
                 <span>Lasts forever</span>

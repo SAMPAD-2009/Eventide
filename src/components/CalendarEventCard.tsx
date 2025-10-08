@@ -21,10 +21,12 @@ export function CalendarEventCard({ event }: CalendarEventCardProps) {
         <CardTitle className="text-md leading-tight">{event.title}</CardTitle>
       </CardHeader>
       <CardContent className="p-4 pt-0 flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-muted-foreground">
-        <div className="flex items-center gap-2">
-            <Clock className="h-4 w-4" />
-            <span>{format(parseISO(event.datetime), 'p')}</span>
-        </div>
+        {event.datetime && (
+          <div className="flex items-center gap-2">
+              <Clock className="h-4 w-4" />
+              <span>{format(parseISO(event.datetime), 'p')}</span>
+          </div>
+        )}
         <div className="flex items-center gap-2">
             <Tag className="h-4 w-4" />
              <Badge 
