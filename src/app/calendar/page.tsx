@@ -153,24 +153,22 @@ export default function CalendarPage() {
                     {date ? `Events on ${date.toLocaleDateString()}` : 'Select a date'}
                 </h2>
                 {date ? (
-                    <Droppable droppableId={`event-list-${date.toISOString().split('T')[0]}`} isDropDisabled={true}>
-                         {(provided) => (
-                             <div 
-                                ref={provided.innerRef}
-                                {...provided.droppableProps}
-                                className="space-y-4"
-                             >
-                                {eventsOnSelectedDate.length > 0 ? (
-                                    eventsOnSelectedDate.map((event, index) => (
-                                        <DraggableEventCard key={event.event_id} event={event} index={index} />
-                                    ))
-                                ) : (
-                                    <p className="text-muted-foreground">No events for this day. Drag events from other days to schedule them here.</p>
+                    <div className="space-y-4">
+                        {eventsOnSelectedDate.length > 0 ? (
+                            <Droppable droppableId={`event-list-${date.toISOString().split('T')[0]}`}>
+                                {(provided) => (
+                                    <div ref={provided.innerRef} {...provided.droppableProps}>
+                                        {eventsOnSelectedDate.map((event, index) => (
+                                            <DraggableEventCard key={event.event_id} event={event} index={index} />
+                                        ))}
+                                        {provided.placeholder}
+                                    </div>
                                 )}
-                                {provided.placeholder}
-                            </div>
-                         )}
-                    </Droppable>
+                            </Droppable>
+                        ) : (
+                            <p className="text-muted-foreground">No events for this day. Drag events from other days to schedule them here.</p>
+                        )}
+                    </div>
                 ) : (
                     <p className="text-muted-foreground">Select a day on the calendar to see events.</p>
                 )}
