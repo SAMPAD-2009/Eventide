@@ -30,10 +30,10 @@ export function CalendarEventCard({ event }: CalendarEventCardProps) {
         <div className="flex items-center gap-2">
             <Tag className="h-4 w-4" />
              <Badge 
-              variant="default"
+              variant="outline"
               style={{
-                backgroundColor: `hsl(var(${categoryInfo?.cssVars.bg}))`,
                 color: `hsl(var(${categoryInfo?.cssVars.fg}))`,
+                borderColor: `hsl(var(${categoryInfo?.cssVars.fg}))`,
               }}
             >
                 {event.category}
