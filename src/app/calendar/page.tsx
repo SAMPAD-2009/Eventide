@@ -2,181 +2,152 @@
 "use client";
 
 import { useState } from 'react';
-import type { DayContentProps } from 'react-day-picker';
 import { useEvents } from '@/context/EventContext';
-import { Calendar } from '@/components/ui/calendar';
-import { Card, CardContent } from '@/components/ui/card';
-import { isSameDay, parseISO, startOfDay, set } from 'date-fns';
-import { EventListSkeleton } from '@/components/EventListSkeleton';
 import { useAuth } from '@/context/AuthContext';
-import { DraggableEventCard } from '@/components/DraggableEventCard';
+import { isSameDay, parseISO, set, startOfMonth, endOfMonth, eachDayOfInterval, format, addMonths, subMonths, getDay, isToday } from 'date-fns';
 import type { Event } from '@/lib/types';
 import { getCategoryByName } from '@/lib/categories';
-import { DragDropContext, Droppable, OnDragEndResponder, DropResult } from 'react-beautiful-dnd';
+import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
+import type { DropResult } from 'react-beautiful-dnd';
 import { cn } from '@/lib/utils';
+import { Button } from '@/components/ui/button';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { EventListSkeleton } from '@/components/EventListSkeleton';
+import { CalendarEventCard } from '@/components/CalendarEventCard';
+
+const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
 export default function CalendarPage() {
   const { events, updateEvent, isLoading: areEventsLoading } = useEvents();
   const { user, isLoading: isAuthLoading } = useAuth();
-  const [date, setDate] = useState<Date | undefined>(new Date());
+  const [currentDate, setCurrentDate] = useState(new Date());
 
-  const eventsOnSelectedDate = events.filter(event =>
-    date && !event.isIndefinite && event.datetime && isSameDay(parseISO(event.datetime), date)
-  ).sort((a,b) => parseISO(a.datetime!).getTime() - parseISO(b.datetime!).getTime());
+  const firstDayOfMonth = startOfMonth(currentDate);
+  const lastDayOfMonth = endOfMonth(currentDate);
+  const daysInMonth = eachDayOfInterval({ start: firstDayOfMonth, end: lastDayOfMonth });
+
+  // Create padding days for the start of the calendar grid
+  const startingDayIndex = getDay(firstDayOfMonth);
+  const paddingDays = Array.from({ length: startingDayIndex }, (_, i) => null);
 
   const handleDragEnd = (result: DropResult) => {
     const { destination, source, draggableId } = result;
 
-    if (!destination) {
-      return;
-    }
-    
-    // Check if the drop target is a calendar day
-    const destinationDateStr = destination.droppableId.replace('calendar-day-', '');
-    const isCalendarDrop = destination.droppableId.startsWith('calendar-day-');
+    if (!destination) return; // Dropped outside a valid target
+    if (destination.droppableId === source.droppableId) return; // No change
 
-    if (isCalendarDrop) {
-        const eventToMove = events.find(e => e.event_id === draggableId);
-        if (!eventToMove || !eventToMove.datetime) return;
+    const eventToMove = events.find(e => e.event_id === draggableId);
+    if (!eventToMove) return;
 
-        const sourceDate = parseISO(eventToMove.datetime);
-        const newDate = parseISO(destinationDateStr);
+    const destinationDate = parseISO(destination.droppableId);
+    const sourceDate = eventToMove.datetime ? parseISO(eventToMove.datetime) : new Date();
 
-        if (isSameDay(sourceDate, newDate)) return; // No change if dropped on the same day
+    const newDateTime = set(destinationDate, {
+      hours: sourceDate.getHours(),
+      minutes: sourceDate.getMinutes(),
+      seconds: sourceDate.getSeconds(),
+    });
 
-        const updatedDateTime = set(newDate, {
-            hours: sourceDate.getHours(),
-            minutes: sourceDate.getMinutes(),
-            seconds: sourceDate.getSeconds(),
-        });
+    const eventData = {
+      title: eventToMove.title,
+      details: eventToMove.details,
+      date: newDateTime.toISOString().split('T')[0],
+      time: newDateTime.toTimeString().substring(0, 5),
+      category: eventToMove.category,
+      isIndefinite: eventToMove.isIndefinite,
+    };
 
-        const eventData = {
-            title: eventToMove.title,
-            details: eventToMove.details,
-            date: updatedDateTime.toISOString().split('T')[0],
-            time: updatedDateTime.toTimeString().substring(0,5),
-            category: eventToMove.category,
-            isIndefinite: eventToMove.isIndefinite,
-        };
-        
-        updateEvent(eventToMove.event_id, eventData);
-    }
+    updateEvent(eventToMove.event_id, eventData);
   };
 
-  function DayContentWithDrop(props: DayContentProps) {
-    const eventsOnDate = events.filter(event => 
-      !event.isIndefinite && event.datetime && isSameDay(parseISO(event.datetime), props.date)
-    );
-    const droppableId = `calendar-day-${props.date.toISOString().split('T')[0]}`;
-  
-    return (
-      <Droppable droppableId={droppableId} isDropDisabled={false}>
-        {(provided, snapshot) => (
-            <div
-                ref={provided.innerRef}
-                {...provided.droppableProps}
-                className={cn(
-                    "relative h-full w-full flex flex-col items-center justify-center rounded-md p-1",
-                    snapshot.isDraggingOver && "bg-primary/20 ring-2 ring-primary"
-                )}
-            >
-                <span>{props.date.getDate()}</span>
-                {eventsOnDate.length > 0 && (
-                    <div className="absolute bottom-1 flex space-x-0.5">
-                    {eventsOnDate.slice(0, 4).map((event, index) => {
-                        const categoryInfo = getCategoryByName(event.category);
-                        return (
-                        <div
-                            key={index}
-                            className="h-1.5 w-1.5 rounded-full"
-                            style={{ backgroundColor: categoryInfo ? `hsl(var(${categoryInfo.cssVars.fg}))` : 'gray' }}
-                        />
-                        );
-                    })}
-                    </div>
-                )}
-                {/* This placeholder is crucial for the Droppable area */}
-                <div style={{display: 'none'}}>{provided.placeholder}</div>
-            </div>
-        )}
-      </Droppable>
-    );
-  }
-
+  const handleNextMonth = () => setCurrentDate(addMonths(currentDate, 1));
+  const handlePrevMonth = () => setCurrentDate(subMonths(currentDate, 1));
+  const handleToday = () => setCurrentDate(new Date());
 
   if (isAuthLoading || areEventsLoading) {
     return (
       <div className="w-full mx-auto p-4 md:p-8">
-        <div className="max-w-5xl mx-auto">
-          <h1 className="text-3xl font-bold tracking-tight mb-6">Event Calendar</h1>
-           <div className="flex flex-col md:flex-row gap-8">
-            <Card className="flex-grow md:w-1/2">
-              <CardContent className="p-0">
-                 <Calendar
-                    mode="single"
-                    selected={date}
-                    onSelect={setDate}
-                    className="p-3 w-full"
-                    disabled
-                  />
-              </CardContent>
-            </Card>
-             <div className="md:w-1/2">
-                <h2 className="text-xl font-semibold mb-4">Events on Selected Date</h2>
-                <EventListSkeleton count={1} />
-            </div>
+          <div className="flex justify-between items-center mb-6">
+            <h1 className="text-3xl font-bold tracking-tight">Calendar</h1>
           </div>
-        </div>
+          <div className="border rounded-lg p-4">
+              <EventListSkeleton count={10} />
+          </div>
       </div>
     );
   }
 
   return (
-    <DragDropContext onDragEnd={handleDragEnd}>
-        <div className="w-full mx-auto p-4 md:p-8">
-        <div className="max-w-5xl mx-auto">
-            <h1 className="text-3xl font-bold tracking-tight mb-6">Event Calendar</h1>
-            <div className="flex flex-col md:flex-row gap-8">
-                <Card className="flex-grow flex">
-                    <CardContent className="p-0 flex flex-1">
-                    <Calendar
-                        mode="single"
-                        selected={date}
-                        onSelect={setDate}
-                        className="p-3 w-full h-full"
-                        components={{
-                            DayContent: DayContentWithDrop
-                        }}
-                    />
-                    </CardContent>
-                </Card>
-
-                <div className="md:w-1/2">
-                    <h2 className="text-xl font-semibold mb-4">
-                        {date ? `Events on ${date.toLocaleDateString()}` : 'Select a date'}
-                    </h2>
-                    {date ? (
-                         <Droppable droppableId={`event-list-${date.toISOString().split('T')[0]}`}>
-                            {(provided) => (
-                                <div ref={provided.innerRef} {...provided.droppableProps} className="space-y-4">
-                                    {eventsOnSelectedDate.length > 0 ? (
-                                        eventsOnSelectedDate.map((event, index) => (
-                                            <DraggableEventCard key={event.event_id} event={event} index={index} />
-                                        ))
-                                    ) : (
-                                        <p className="text-muted-foreground">No events for this day. Drag events to schedule them here.</p>
-                                    )}
-                                    {provided.placeholder}
-                                </div>
-                            )}
-                        </Droppable>
-                    ) : (
-                        <p className="text-muted-foreground">Select a day on the calendar to see events.</p>
-                    )}
+    <div className="w-full mx-auto p-4 md:p-8">
+       <div className="flex flex-col sm:flex-row justify-between items-center mb-6 gap-4">
+            <div className="flex items-center gap-4">
+                <h1 className="text-2xl font-bold tracking-tight">{format(currentDate, 'MMMM yyyy')}</h1>
+                <div className="flex items-center gap-2">
+                    <Button variant="outline" size="icon" onClick={handlePrevMonth}><ChevronLeft className="h-4 w-4" /></Button>
+                    <Button variant="outline" onClick={handleToday}>Today</Button>
+                    <Button variant="outline" size="icon" onClick={handleNextMonth}><ChevronRight className="h-4 w-4" /></Button>
                 </div>
             </div>
+            <p className="text-sm text-muted-foreground">Drag and drop events to reschedule them.</p>
         </div>
+      <DragDropContext onDragEnd={handleDragEnd}>
+        <div className="grid grid-cols-7 border-t border-l rounded-lg overflow-hidden">
+          {dayNames.map(day => (
+            <div key={day} className="text-center font-semibold p-2 border-b border-r bg-muted/50 text-muted-foreground text-sm">
+              {day}
+            </div>
+          ))}
+
+          {paddingDays.map((_, index) => (
+            <div key={`padding-${index}`} className="border-b border-r bg-muted/20"></div>
+          ))}
+
+          {daysInMonth.map((day) => {
+            const eventsOnDay = events.filter(event => event.datetime && isSameDay(parseISO(event.datetime), day));
+            const droppableId = day.toISOString();
+
+            return (
+              <Droppable key={day.toString()} droppableId={droppableId}>
+                {(provided, snapshot) => (
+                  <div
+                    ref={provided.innerRef}
+                    {...provided.droppableProps}
+                    className={cn(
+                      "h-48 min-w-[100px] border-b border-r p-2 flex flex-col gap-1 overflow-y-auto",
+                      snapshot.isDraggingOver ? "bg-primary/20" : "bg-background",
+                    )}
+                  >
+                    <span className={cn(
+                        "font-semibold text-sm",
+                        isToday(day) && "bg-primary text-primary-foreground rounded-full w-6 h-6 flex items-center justify-center"
+                    )}>
+                      {format(day, 'd')}
+                    </span>
+                    <div className="flex-grow">
+                        {eventsOnDay.map((event, index) => (
+                          <Draggable key={event.event_id} draggableId={event.event_id} index={index}>
+                            {(provided, snapshot) => (
+                               <div
+                                 ref={provided.innerRef}
+                                 {...provided.draggableProps}
+                                 {...provided.dragHandleProps}
+                                 className="mb-1"
+                               >
+                                  <CalendarEventCard event={event} isDragging={snapshot.isDragging} />
+                               </div>
+                            )}
+                          </Draggable>
+                        ))}
+                    </div>
+                    {provided.placeholder}
+                  </div>
+                )}
+              </Droppable>
+            );
+          })}
         </div>
-    </DragDropContext>
+      </DragDropContext>
+    </div>
   );
 }
+

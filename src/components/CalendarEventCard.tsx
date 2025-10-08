@@ -2,44 +2,39 @@
 "use client";
 
 import { format, parseISO } from 'date-fns';
-import { Clock, Tag } from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Clock } from 'lucide-react';
 import type { Event } from '@/lib/types';
 import { getCategoryByName } from '@/lib/categories';
-import { Badge } from '@/components/ui/badge';
+import { cn } from '@/lib/utils';
 
 interface CalendarEventCardProps {
   event: Event;
+  isDragging: boolean;
 }
 
-export function CalendarEventCard({ event }: CalendarEventCardProps) {
+export function CalendarEventCard({ event, isDragging }: CalendarEventCardProps) {
   const categoryInfo = getCategoryByName(event.category);
 
   return (
-    <Card className="border-l-4" style={{ borderColor: categoryInfo ? `hsl(var(${categoryInfo?.cssVars.fg}))` : undefined }}>
-      <CardHeader className="p-4 pb-2">
-        <CardTitle className="text-md leading-tight">{event.title}</CardTitle>
-      </CardHeader>
-      <CardContent className="p-4 pt-0 flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-muted-foreground">
+    <div
+      className={cn(
+        "w-full rounded-md p-2 text-sm cursor-pointer border-l-4",
+        "transition-all duration-200 ease-in-out",
+        isDragging ? "shadow-lg scale-105" : "shadow-sm",
+      )}
+      style={{
+          backgroundColor: categoryInfo ? `hsl(var(${categoryInfo.cssVars.bg}))` : 'hsl(var(--muted))',
+          borderColor: categoryInfo ? `hsl(var(${categoryInfo.cssVars.fg}))` : 'hsl(var(--muted-foreground))',
+          color: categoryInfo ? `hsl(var(${categoryInfo.cssVars.fg}))` : 'hsl(var(--muted-foreground))'
+      }}
+    >
+        <p className="font-bold truncate">{event.title}</p>
         {event.datetime && (
-          <div className="flex items-center gap-2">
-              <Clock className="h-4 w-4" />
-              <span>{format(parseISO(event.datetime), 'p')}</span>
-          </div>
+             <div className="flex items-center gap-1 text-xs">
+                <Clock className="h-3 w-3" />
+                <span>{format(parseISO(event.datetime), 'p')}</span>
+            </div>
         )}
-        <div className="flex items-center gap-2">
-            <Tag className="h-4 w-4" />
-             <Badge 
-              variant="outline"
-              style={{
-                color: `hsl(var(${categoryInfo?.cssVars.fg}))`,
-                borderColor: `hsl(var(${categoryInfo?.cssVars.fg}))`,
-              }}
-            >
-                {event.category}
-            </Badge>
-        </div>
-      </CardContent>
-    </Card>
+    </div>
   );
 }
