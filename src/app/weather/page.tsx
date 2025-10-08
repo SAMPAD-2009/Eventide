@@ -24,7 +24,7 @@ export default function WeatherPage() {
     const [city, setCity] = useState('');
     const [tempUnit, setTempUnit] = useState<'c' | 'f'>('c');
 
-    const fetchWeatherData = async (latitude: number, longitude: number) => {
+    const fetchWeatherData = async (latitude: number, longitude: number, locationName?: string) => {
         try {
             const weatherResponse = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&daily=temperature_2m_max,temperature_2m_min,sunrise,sunset&hourly=temperature_2m,visibility&current=temperature_2m,relative_humidity_2m,apparent_temperature,surface_pressure&temperature_unit=celsius&wind_speed_unit=ms&precipitation_unit=inch&timezone=auto`);
             if (!weatherResponse.ok) throw new Error("Failed to fetch weather forecast.");
@@ -34,28 +34,20 @@ export default function WeatherPage() {
             if (!airQualityResponse.ok) throw new Error("Failed to fetch air quality data.");
             const airQualityData = await airQualityResponse.json();
             
-            // For search, get the location name from the forward geocoding response
-            if (city) {
-                 const locationResponse = await fetch(`https://geocode.maps.co/search?q=${city}&api_key=${process.env.NEXT_PUBLIC_GEOCODE_API_KEY}`);
-                 if (!locationResponse.ok) throw new Error("Failed to fetch location name.");
-                 const locationData = await locationResponse.json();
-                 if (locationData && locationData.length > 0) {
-                    return { 
-                        ...weatherData, 
-                        air_quality: airQualityData.current,
-                         location: {
-                            name: locationData[0].display_name.split(',')[0],
-                            country: ''
-                        }
-                    };
-                 }
+            const combinedData = { 
+                ...weatherData, 
+                air_quality: airQualityData.current,
+            };
+
+            if (locationName) {
+                combinedData.location = {
+                    name: locationName.split(',')[0],
+                    country: ''
+                };
             }
 
+            return combinedData;
 
-            return { 
-                ...weatherData, 
-                air_quality: airQualityData.current
-            };
         } catch (err: any) {
             let errorMessage = err.message;
             if (err.message.includes('Unexpected token')) {
@@ -65,10 +57,10 @@ export default function WeatherPage() {
         }
     }
 
-    const fetchWeatherForCoords = (lat: number, lon: number) => {
+    const fetchWeatherForCoords = (lat: number, lon: number, locationName?: string) => {
         setLoading(true);
         setError(null);
-        fetchWeatherData(lat, lon)
+        fetchWeatherData(lat, lon, locationName)
             .then(data => {
                 setWeather(data);
             })
@@ -89,12 +81,12 @@ export default function WeatherPage() {
                 },
                 (err) => {
                     setError(`Could not get location: ${err.message}. Please enable location services or search for a city.`);
-                    fetchWeatherForCoords(51.5074, -0.1278);
+                    fetchWeatherForCoords(51.5074, -0.1278, "London");
                 }
             );
         } else {
              setError("Geolocation is not supported by this browser.");
-             fetchWeatherForCoords(51.5074, -0.1278);
+             fetchWeatherForCoords(51.5074, -0.1278, "London");
         }
     };
     
@@ -111,8 +103,8 @@ export default function WeatherPage() {
             }
             const data = await response.json();
             if (data && data.length > 0) {
-                const { lat, lon } = data[0];
-                fetchWeatherForCoords(parseFloat(lat), parseFloat(lon));
+                const { lat, lon, display_name } = data[0];
+                fetchWeatherForCoords(parseFloat(lat), parseFloat(lon), display_name);
             } else {
                 throw new Error("Could not find location. Please try another city name.");
             }
