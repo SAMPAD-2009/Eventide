@@ -5,7 +5,7 @@ import Image from 'next/image';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import type { WeatherData } from '@/lib/types';
 import { format } from 'date-fns';
-import { Calendar, MapPin } from 'lucide-react';
+import { Calendar, MapPin, Thermometer } from 'lucide-react';
 import { Separator } from '../ui/separator';
 import { cn } from '@/lib/utils';
 
@@ -29,10 +29,14 @@ const getBackgroundImage = (condition: string) => {
 }
 
 export function CurrentWeatherCard({ weather, tempUnit }: CurrentWeatherCardProps) {
-  const { current, location } = weather;
+  const { current, location, forecast } = weather;
   const backgroundImage = getBackgroundImage(current.condition.text);
 
   const displayTemp = tempUnit === 'c' ? Math.round(current.temp_c) : Math.round(current.temp_f);
+
+  const todayForecast = forecast.forecastday[0].day;
+  const maxTemp = tempUnit === 'c' ? Math.round(todayForecast.maxtemp_c) : Math.round(todayForecast.maxtemp_f);
+  const minTemp = tempUnit === 'c' ? Math.round(todayForecast.mintemp_c) : Math.round(todayForecast.mintemp_f);
 
   return (
     <Card 
@@ -60,6 +64,10 @@ export function CurrentWeatherCard({ weather, tempUnit }: CurrentWeatherCardProp
                 }
             </CardContent>
             <CardDescription className="text-base mt-2 text-white/90">{current.condition.text}</CardDescription>
+            <div className="flex items-center gap-2 mt-2 text-white/80 text-sm">
+                <Thermometer className="h-4 w-4" />
+                <span>Max: {maxTemp}° / Min: {minTemp}°</span>
+            </div>
             <Separator className="my-6 bg-white/20" />
             <CardFooter className="p-0 flex flex-col items-start gap-3">
                  <div className="flex items-center gap-2 text-white/80">

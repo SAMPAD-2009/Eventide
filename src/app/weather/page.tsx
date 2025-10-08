@@ -38,7 +38,7 @@ export default function WeatherPage() {
         setLoading(true);
         setError(null);
         
-        fetch(`https://api.weatherapi.com/v1/forecast.json?key=${apiKey}&q=${locationQuery}&days=5&aqi=yes&alerts=no`)
+        fetch(`https://api.weatherapi.com/v1/forecast.json?key=${apiKey}&q=${locationQuery}&days=3&aqi=yes&alerts=no`)
             .then(res => {
                 if (!res.ok) {
                     throw new Error('Failed to fetch weather data. Please check the city name and your network connection.');
@@ -116,7 +116,7 @@ export default function WeatherPage() {
                     {/* Left Sidebar */}
                     <div className="lg:col-span-1 xl:col-span-1 space-y-6">
                         <CurrentWeatherCard weather={weather} tempUnit={tempUnit} />
-                        <ForecastCard forecast={weather.forecast.forecastday.slice(1)} tempUnit={tempUnit} />
+                        <ForecastCard forecast={weather.forecast.forecastday.slice(1, 3)} tempUnit={tempUnit} />
                     </div>
 
                     {/* Main Content */}
