@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useForm } from 'react-hook-form';
@@ -159,7 +160,7 @@ export function EventForm({ event, onEventCreated, onEventUpdated, selectedDate 
                                     mode="single"
                                     selected={field.value}
                                     onSelect={field.onChange}
-                                    disabled={(date) => date < new Date(new Date().setHours(0,0,0,0)) || !!isIndefinite}
+                                    disabled={!!isIndefinite}
                                     initialFocus
                                 />
                                 </PopoverContent>
