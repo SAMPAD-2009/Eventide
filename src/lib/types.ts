@@ -29,7 +29,7 @@ export interface WeatherData {
   timezone: string;
   timezone_abbreviation: string;
   elevation: number;
-  location?: { // Optional now
+  location?: { 
     name: string;
     country: string;
   };
@@ -40,6 +40,7 @@ export interface WeatherData {
     relative_humidity_2m: string;
     apparent_temperature: string;
     surface_pressure: string;
+    precipitation: string;
   };
   current: {
     time: string;
@@ -48,6 +49,7 @@ export interface WeatherData {
     relative_humidity_2m: number;
     apparent_temperature: number;
     surface_pressure: number;
+    precipitation: number;
   };
   hourly_units: {
     time: string;

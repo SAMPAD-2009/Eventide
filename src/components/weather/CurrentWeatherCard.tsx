@@ -13,16 +13,17 @@ interface CurrentWeatherCardProps {
   tempUnit: 'c' | 'f';
 }
 
-const getBackgroundImage = (temp: number) => {
-    // Expects temp in Celsius
-    if (temp > 25) {
-        return 'https://i.ibb.co/mrCFXPkD/sunny.jpg'; // Sunny
+const getBackgroundImage = (temp: number, precipitation: number) => {
+    // Expects temp in Celsius and precipitation in mm or inches
+    if (precipitation > 0) {
+        return 'https://i.ibb.co/9mgLNXpP/rainy.jpg'; // Rainy
     }
-    if (temp < 10) {
-        return 'https://i.ibb.co/9mgLNXpP/rainy.jpg'; // Rainy/cool
+    if (temp > 25) {
+        return 'https://i.ibb.co/mrCFXPkD/sunny.jpg'; // Sunny/Hot
     }
     return 'https://i.ibb.co/3Yy2PTqd/cloudy.jpg'; // Default to cloudy/mild
 }
+
 
 export function CurrentWeatherCard({ weather, tempUnit }: CurrentWeatherCardProps) {
   const { current, location, daily, timezone } = weather;
@@ -30,7 +31,7 @@ export function CurrentWeatherCard({ weather, tempUnit }: CurrentWeatherCardProp
   const tempInC = current.temperature_2m;
   const displayTemp = Math.round(tempUnit === 'c' ? tempInC : (tempInC * 9/5) + 32);
   
-  const backgroundImage = getBackgroundImage(tempInC);
+  const backgroundImage = getBackgroundImage(tempInC, current.precipitation);
 
   const todayForecast = daily;
   const maxTempC = todayForecast.temperature_2m_max[0];

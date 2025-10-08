@@ -26,7 +26,7 @@ export default function WeatherPage() {
 
     const fetchWeatherData = async (latitude: number, longitude: number, locationName?: string) => {
         try {
-            const weatherResponse = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&daily=temperature_2m_max,temperature_2m_min,sunrise,sunset&hourly=temperature_2m,visibility&current=temperature_2m,relative_humidity_2m,apparent_temperature,surface_pressure&temperature_unit=celsius&wind_speed_unit=ms&precipitation_unit=inch&timezone=auto`);
+            const weatherResponse = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&daily=temperature_2m_max,temperature_2m_min,sunrise,sunset&hourly=temperature_2m,visibility&current=temperature_2m,relative_humidity_2m,apparent_temperature,surface_pressure,precipitation&temperature_unit=celsius&wind_speed_unit=ms&precipitation_unit=inch&timezone=auto`);
             if (!weatherResponse.ok) throw new Error("Failed to fetch weather forecast.");
             const weatherData = await weatherResponse.json();
 
@@ -81,11 +81,13 @@ export default function WeatherPage() {
                 },
                 (err) => {
                     setError(`Could not get location: ${err.message}. Please enable location services or search for a city.`);
+                    // Default to a fallback location if geolocation fails
                     fetchWeatherForCoords(51.5074, -0.1278, "London");
                 }
             );
         } else {
              setError("Geolocation is not supported by this browser.");
+             // Default to a fallback location if geolocation is not supported
              fetchWeatherForCoords(51.5074, -0.1278, "London");
         }
     };
