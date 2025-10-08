@@ -23,6 +23,7 @@ export default function WeatherPage() {
     const [error, setError] = useState<string | null>(null);
     const [city, setCity] = useState('');
     const [query, setQuery] = useState('');
+    const [tempUnit, setTempUnit] = useState<'c' | 'f'>('c');
 
 
     const apiKey = process.env.NEXT_PUBLIC_WEATHER_API_KEY;
@@ -114,8 +115,8 @@ export default function WeatherPage() {
                 <div className="grid grid-cols-1 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                     {/* Left Sidebar */}
                     <div className="lg:col-span-1 xl:col-span-1 space-y-6">
-                        <CurrentWeatherCard weather={weather} />
-                        <ForecastCard forecast={weather.forecast.forecastday.slice(1)} />
+                        <CurrentWeatherCard weather={weather} tempUnit={tempUnit} />
+                        <ForecastCard forecast={weather.forecast.forecastday.slice(1)} tempUnit={tempUnit} />
                     </div>
 
                     {/* Main Content */}
@@ -129,9 +130,13 @@ export default function WeatherPage() {
                              <HighlightCard title="Humidity" icon={<Droplets />} value={`${weather.current.humidity}%`} />
                             <HighlightCard title="Pressure" icon={<Wind />} value={`${Math.round(weather.current.pressure_mb)}hPa`} />
                             <HighlightCard title="Visibility" icon={<Eye />} value={`${weather.current.vis_km}km`} />
-                            <HighlightCard title="Feels Like" icon={<Thermometer />} value={`${Math.round(weather.current.feelslike_c)}°c`} />
+                            <HighlightCard 
+                                title="Feels Like" 
+                                icon={<Thermometer />} 
+                                value={`${tempUnit === 'c' ? Math.round(weather.current.feelslike_c) : Math.round(weather.current.feelslike_f)}°${tempUnit}`} 
+                            />
                         </div>
-                        <HourlyForecastCard hourlyData={weather.forecast.forecastday[0].hour} timezone={weather.location.tz_id} />
+                        <HourlyForecastCard hourlyData={weather.forecast.forecastday[0].hour} timezone={weather.location.tz_id} tempUnit={tempUnit} />
                     </div>
                 </div>
             );
@@ -144,17 +149,22 @@ export default function WeatherPage() {
         <div className="p-4 md:p-6 lg:p-8 bg-background min-h-screen text-foreground">
             <header className="flex flex-wrap items-center justify-between gap-4 mb-8">
                  <div className="flex items-center gap-2">
-                    <svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M16 4C9.37258 4 4 9.37258 4 16C4 22.6274 9.37258 28 16 28C22.6274 28 28 22.6274 28 16C28 9.37258 22.6274 4 16 4Z" fill="url(#paint0_linear_134_4)"/>
-                        <path d="M21 13C21 12.4696 20.7893 11.9609 20.4142 11.5858C20.0391 11.2107 19.5304 11 19 11H14.26C14.004 9.941 13.065 9.167 12 9.05V9C12 8.46957 11.7893 7.96086 11.4142 7.58579C11.0391 7.21071 10.5304 7 10 7C9.46957 7 8.96086 7.21071 8.58579 7.58579C8.21071 7.96086 8 8.46957 8 9V9.05C6.935 9.167 5.996 9.941 5.74 11H5C4.46957 11 3.96086 11.2107 3.58579 11.5858C3.21071 11.9609 3 12.4696 3 13C3 13.5304 3.21071 14.0391 3.58579 14.4142C3.96086 14.7893 4.46957 15 5 15H5.74C5.996 16.059 6.935 16.833 8 16.95V17C8 17.5304 8.21071 18.0391 8.58579 18.4142C8.96086 18.7893 9.46957 19 10 19C10.5304 19 11.0391 18.7893 11.4142 18.4142C11.7893 18.0391 12 17.5304 12 17V16.95C13.065 16.833 14.004 16.059 14.26 15H19C19.5304 15 20.0391 14.7893 20.4142 14.4142C20.7893 14.0391 21 13.5304 21 13Z" fill="white" fillOpacity="0.8"/>
-                        <defs>
-                        <linearGradient id="paint0_linear_134_4" x1="16" y1="4" x2="16" y2="28" gradientUnits="userSpaceOnUse">
-                        <stop stopColor="#4F4F4F"/>
-                        <stop offset="1" stopColor="#333333"/>
-                        </linearGradient>
-                        </defs>
-                    </svg>
-                    <span className="text-xl font-bold">weatherio</span>
+                    <Button 
+                        size="sm"
+                        variant={tempUnit === 'c' ? 'default' : 'outline'}
+                        onClick={() => setTempUnit('c')}
+                        className="rounded-full"
+                    >
+                        °C
+                    </Button>
+                    <Button 
+                        size="sm"
+                        variant={tempUnit === 'f' ? 'default' : 'outline'}
+                        onClick={() => setTempUnit('f')}
+                        className="rounded-full"
+                    >
+                        °F
+                    </Button>
                 </div>
                 <form onSubmit={handleSearch} className="flex-1 max-w-xl mx-auto">
                     <div className="relative">

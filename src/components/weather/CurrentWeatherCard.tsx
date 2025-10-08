@@ -11,6 +11,7 @@ import { cn } from '@/lib/utils';
 
 interface CurrentWeatherCardProps {
   weather: WeatherData;
+  tempUnit: 'c' | 'f';
 }
 
 const getBackgroundImage = (condition: string) => {
@@ -27,9 +28,11 @@ const getBackgroundImage = (condition: string) => {
     return 'https://i.ibb.co/3Yy2PTqd/cloudy.jpg'; // Default to cloudy
 }
 
-export function CurrentWeatherCard({ weather }: CurrentWeatherCardProps) {
+export function CurrentWeatherCard({ weather, tempUnit }: CurrentWeatherCardProps) {
   const { current, location } = weather;
   const backgroundImage = getBackgroundImage(current.condition.text);
+
+  const displayTemp = tempUnit === 'c' ? Math.round(current.temp_c) : Math.round(current.temp_f);
 
   return (
     <Card 
@@ -43,8 +46,8 @@ export function CurrentWeatherCard({ weather }: CurrentWeatherCardProps) {
             </CardHeader>
             <CardContent className="p-0 flex items-center justify-between">
                 <div className="flex items-center">
-                    <h2 className="text-6xl font-bold">{Math.round(current.temp_c)}°</h2>
-                    <span className="text-4xl font-medium -translate-y-2">c</span>
+                    <h2 className="text-6xl font-bold">{displayTemp}°</h2>
+                    <span className="text-4xl font-medium -translate-y-2">{tempUnit}</span>
                 </div>
                 {current.condition.icon &&
                     <Image 
