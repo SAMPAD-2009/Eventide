@@ -16,6 +16,7 @@ import { HighlightCard } from '@/components/weather/HighlightCard';
 import { Thermometer, Eye, Wind, Droplets } from 'lucide-react';
 import { HourlyForecastCard } from '@/components/weather/HourlyForecastCard';
 
+export const dynamic = 'force-dynamic';
 
 export default function WeatherPage() {
     const [weather, setWeather] = useState<WeatherData | null>(null);
@@ -25,6 +26,8 @@ export default function WeatherPage() {
     const [tempUnit, setTempUnit] = useState<'c' | 'f'>('c');
 
     const fetchWeatherData = async (latitude: number, longitude: number, locationName?: string) => {
+        setLoading(true);
+        setError(null);
         try {
             const weatherResponse = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&daily=temperature_2m_max,temperature_2m_min,sunrise,sunset&hourly=temperature_2m,visibility&current=temperature_2m,relative_humidity_2m,apparent_temperature,surface_pressure,precipitation&temperature_unit=celsius&wind_speed_unit=ms&precipitation_unit=inch&timezone=auto`);
             if (!weatherResponse.ok) throw new Error("Failed to fetch weather forecast.");
@@ -46,49 +49,38 @@ export default function WeatherPage() {
                 };
             }
 
-            return combinedData;
+            setWeather(combinedData);
 
         } catch (err: any) {
             let errorMessage = err.message;
-            if (err.message.includes('Unexpected token')) {
+             if (err.message.includes('Unexpected token')) {
                 errorMessage = "An API error occurred. This might be due to an invalid API key or network issue.";
             }
-            throw new Error(errorMessage);
+            setError(errorMessage);
+            console.error(err);
+        } finally {
+            setLoading(false);
         }
     }
 
-    const fetchWeatherForCoords = (lat: number, lon: number, locationName?: string) => {
-        setLoading(true);
-        setError(null);
-        fetchWeatherData(lat, lon, locationName)
-            .then(data => {
-                setWeather(data);
-            })
-            .catch(err => {
-                setError(err.message);
-                console.error(err);
-            })
-            .finally(() => setLoading(false));
-    };
-
     const getLocation = () => {
         setLoading(true);
-        setCity(''); // Clear city on current location fetch
+        setCity('');
         if (navigator.geolocation) {
             navigator.geolocation.getCurrentPosition(
                 (position) => {
-                    fetchWeatherForCoords(position.coords.latitude, position.coords.longitude);
+                    fetchWeatherData(position.coords.latitude, position.coords.longitude);
                 },
                 (err) => {
                     setError(`Could not get location: ${err.message}. Please enable location services or search for a city.`);
                     // Default to a fallback location if geolocation fails
-                    fetchWeatherForCoords(51.5074, -0.1278, "London");
+                    fetchWeatherData(51.5074, -0.1278, "London");
                 }
             );
         } else {
              setError("Geolocation is not supported by this browser.");
              // Default to a fallback location if geolocation is not supported
-             fetchWeatherForCoords(51.5074, -0.1278, "London");
+             fetchWeatherData(51.5074, -0.1278, "London");
         }
     };
     
@@ -106,7 +98,7 @@ export default function WeatherPage() {
             const data = await response.json();
             if (data && data.length > 0) {
                 const { lat, lon, display_name } = data[0];
-                fetchWeatherForCoords(parseFloat(lat), parseFloat(lon), display_name);
+                fetchWeatherData(parseFloat(lat), parseFloat(lon), display_name);
             } else {
                 throw new Error("Could not find location. Please try another city name.");
             }
@@ -218,5 +210,3 @@ export default function WeatherPage() {
         </div>
     );
 }
-
-    
