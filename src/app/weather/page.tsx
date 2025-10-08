@@ -37,7 +37,7 @@ export default function WeatherPage() {
         setLoading(true);
         setError(null);
         
-        fetch(`https://api.weatherapi.com/v1/forecast.json?key=${apiKey}&q=${locationQuery}&days=6&aqi=yes&alerts=no`)
+        fetch(`https://api.weatherapi.com/v1/forecast.json?key=${apiKey}&q=${locationQuery}&days=5&aqi=yes&alerts=no`)
             .then(res => {
                 if (!res.ok) {
                     throw new Error('Failed to fetch weather data. Please check the city name and your network connection.');
