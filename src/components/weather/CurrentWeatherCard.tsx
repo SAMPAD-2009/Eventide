@@ -16,7 +16,7 @@ interface CurrentWeatherCardProps {
 const getBackgroundImage = (condition: string) => {
     const lowerCaseCondition = condition.toLowerCase();
     if (lowerCaseCondition.includes('rain')) {
-        return 'https://i.ibb.co/9mgLNXp/rainy.jpg';
+        return 'https://i.ibb.co/9mgLNXpP/rainy.jpg';
     }
     if (lowerCaseCondition.includes('sun') || lowerCaseCondition.includes('clear')) {
         return 'https://i.ibb.co/mrCFXPkD/sunny.jpg';

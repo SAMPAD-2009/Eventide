@@ -22,13 +22,13 @@ export function ForecastCard({ forecast }: ForecastCardProps) {
           {forecast.map((day) => (
             <div key={day.date_epoch} className="flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <p className="font-semibold w-8">{Math.round(day.day.maxtemp_c)}°</p>
-                <Image 
+                 <Image 
                   src={`https:${day.day.condition.icon}`} 
                   alt={day.day.condition.text}
                   width={32}
                   height={32}
                 />
+                <p className="font-semibold w-24 text-sm">mx-{Math.round(day.day.maxtemp_c)}°/mn-{Math.round(day.day.mintemp_c)}°</p>
               </div>
               <p className="text-muted-foreground">{format(new Date(day.date), 'd MMM')}</p>
               <p className="text-muted-foreground w-20 text-right">{format(new Date(day.date), 'EEEE')}</p>
