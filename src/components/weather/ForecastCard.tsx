@@ -21,19 +21,21 @@ export function ForecastCard({ forecast, tempUnit }: ForecastCardProps) {
       <CardContent className="p-0">
         <div className="space-y-4">
           {forecast.map((day) => {
+            const displayMaxTemp = tempUnit === 'c' ? Math.round(day.day.maxtemp_c) : Math.round(day.day.maxtemp_f);
+            const displayMinTemp = tempUnit === 'c' ? Math.round(day.day.mintemp_c) : Math.round(day.day.mintemp_f);
             return (
               <div key={day.date_epoch} className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-3 w-[45%]">
                    <Image 
                     src={`https:${day.day.condition.icon}`} 
                     alt={day.day.condition.text}
                     width={32}
                     height={32}
                   />
-                  <p className="font-semibold text-sm">{day.day.condition.text}</p>
+                  <p className="font-semibold text-sm truncate">{day.day.condition.text}</p>
                 </div>
-                <p className="text-muted-foreground">{format(new Date(day.date), 'd MMM')}</p>
-                <p className="text-muted-foreground w-20 text-right">{format(new Date(day.date), 'EEEE')}</p>
+                <p className="text-muted-foreground w-[25%] text-center">{format(new Date(day.date), 'd MMM')}</p>
+                <p className="text-muted-foreground w-[30%] text-right">{format(new Date(day.date), 'EEEE')}</p>
               </div>
             )
           })}
