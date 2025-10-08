@@ -15,7 +15,7 @@ export function ForecastCard({ forecast }: ForecastCardProps) {
   return (
     <Card className="bg-card text-card-foreground shadow-sm rounded-2xl p-6">
       <CardHeader className="p-0 pb-4">
-        <CardTitle className="text-lg font-medium">5 Days Forecast</CardTitle>
+        <CardTitle className="text-lg font-medium">Next 2 Days</CardTitle>
       </CardHeader>
       <CardContent className="p-0">
         <div className="space-y-4">
