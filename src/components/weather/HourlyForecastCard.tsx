@@ -21,12 +21,11 @@ export function HourlyForecastCard({ hourlyData, timezone, tempUnit }: HourlyFor
 
     if (currentHourIndex === -1) return null; // No future hours available
 
-    // Get the next 8 available hourly forecasts, skipping every other one for spacing (e.g., 2-hour intervals)
     const relevantHours = hourlyData.time
         .slice(currentHourIndex)
         .map((time, index) => ({
             time,
-            temp: hourlyData.temperature_2m[currentHourIndex + index]
+            temp_c: hourlyData.temperature_2m[currentHourIndex + index]
         }))
         .filter((_, index) => index % 2 === 0)
         .slice(0, 8);
@@ -40,13 +39,12 @@ export function HourlyForecastCard({ hourlyData, timezone, tempUnit }: HourlyFor
             <CardContent className="p-0">
                 <div className="flex justify-between overflow-x-auto gap-4">
                     {relevantHours.map((hour, index) => {
-                        const displayTemp = Math.round(hour.temp);
+                        const displayTemp = Math.round(tempUnit === 'c' ? hour.temp_c : (hour.temp_c * 9/5) + 32);
                         return (
                             <div key={index} className="flex flex-col items-center justify-center gap-2 flex-shrink-0">
                                 <p className="text-sm text-muted-foreground">
                                     {format(parseISO(hour.time), 'ha', { timeZone: timezone })}
                                 </p>
-                                {/* No icon with this API */}
                                 <p className="font-bold text-lg">{displayTemp}°</p>
                             </div>
                         )

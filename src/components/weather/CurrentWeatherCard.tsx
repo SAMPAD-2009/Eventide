@@ -13,14 +13,12 @@ interface CurrentWeatherCardProps {
   tempUnit: 'c' | 'f';
 }
 
-// OpenMeteo doesn't give a condition string, so we'll have to simplify the background logic.
-// We can expand this later if we add more data like cloud cover or precipitation.
-const getBackgroundImage = (temp: number, unit: 'c' | 'f') => {
-    const tempInC = unit === 'f' ? (temp - 32) * 5/9 : temp;
-    if (tempInC > 25) {
+const getBackgroundImage = (temp: number) => {
+    // Expects temp in Celsius
+    if (temp > 25) {
         return 'https://i.ibb.co/mrCFXPkD/sunny.jpg'; // Sunny
     }
-    if (tempInC < 10) {
+    if (temp < 10) {
         return 'https://i.ibb.co/9mgLNXpP/rainy.jpg'; // Rainy/cool
     }
     return 'https://i.ibb.co/3Yy2PTqd/cloudy.jpg'; // Default to cloudy/mild
@@ -28,13 +26,18 @@ const getBackgroundImage = (temp: number, unit: 'c' | 'f') => {
 
 export function CurrentWeatherCard({ weather, tempUnit }: CurrentWeatherCardProps) {
   const { current, location, daily } = weather;
-  const displayTemp = Math.round(current.temperature_2m);
   
-  const backgroundImage = getBackgroundImage(displayTemp, tempUnit);
+  const tempInC = current.temperature_2m;
+  const displayTemp = Math.round(tempUnit === 'c' ? tempInC : (tempInC * 9/5) + 32);
+  
+  const backgroundImage = getBackgroundImage(tempInC);
 
   const todayForecast = daily;
-  const maxTemp = Math.round(todayForecast.temperature_2m_max[0]);
-  const minTemp = Math.round(todayForecast.temperature_2m_min[0]);
+  const maxTempC = todayForecast.temperature_2m_max[0];
+  const minTempC = todayForecast.temperature_2m_min[0];
+
+  const maxTemp = Math.round(tempUnit === 'c' ? maxTempC : (maxTempC * 9/5) + 32);
+  const minTemp = Math.round(tempUnit === 'c' ? minTempC : (minTempC * 9/5) + 32);
 
   return (
     <Card 
@@ -51,7 +54,6 @@ export function CurrentWeatherCard({ weather, tempUnit }: CurrentWeatherCardProp
                     <h2 className="text-6xl font-bold">{displayTemp}°</h2>
                     <span className="text-4xl font-medium -translate-y-2">{tempUnit}</span>
                 </div>
-                {/* Icons are not provided by Open-Meteo */}
             </CardContent>
              <CardDescription className="text-base mt-2 text-white/90 capitalize">
                 {weather.timezone.split('/')[1].replace('_', ' ')}

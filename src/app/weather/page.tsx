@@ -26,7 +26,7 @@ export default function WeatherPage() {
 
     const fetchWeatherData = async (latitude: number, longitude: number) => {
         try {
-            const weatherResponse = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&daily=temperature_2m_max,temperature_2m_min,sunrise,sunset&hourly=temperature_2m,visibility&current=temperature_2m,relative_humidity_2m,apparent_temperature,surface_pressure&temperature_unit=${tempUnit === 'f' ? 'fahrenheit' : 'celsius'}&wind_speed_unit=ms&precipitation_unit=inch&timezone=auto`);
+            const weatherResponse = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&daily=temperature_2m_max,temperature_2m_min,sunrise,sunset&hourly=temperature_2m,visibility&current=temperature_2m,relative_humidity_2m,apparent_temperature,surface_pressure&temperature_unit=celsius&wind_speed_unit=ms&precipitation_unit=inch&timezone=auto`);
             if (!weatherResponse.ok) throw new Error("Failed to fetch weather forecast.");
             const weatherData = await weatherResponse.json();
 
@@ -34,7 +34,6 @@ export default function WeatherPage() {
             if (!airQualityResponse.ok) throw new Error("Failed to fetch air quality data.");
             const airQualityData = await airQualityResponse.json();
 
-            // Reverse geocoding with geocode.maps.co
             const locationResponse = await fetch(`https://geocode.maps.co/reverse?lat=${latitude}&lon=${longitude}&api_key=${process.env.NEXT_PUBLIC_GEOCODE_API_KEY}`);
             if (!locationResponse.ok) throw new Error("Failed to fetch location name.");
             const locationData = await locationResponse.json();
@@ -48,7 +47,11 @@ export default function WeatherPage() {
                 }
             };
         } catch (err: any) {
-            throw new Error(err.message);
+            let errorMessage = err.message;
+            if (err.message.includes('Unexpected token')) {
+                errorMessage = "An API error occurred. This might be due to an invalid API key or network issue.";
+            }
+            throw new Error(errorMessage);
         }
     }
 
@@ -75,13 +78,11 @@ export default function WeatherPage() {
                 },
                 (err) => {
                     setError(`Could not get location: ${err.message}. Please enable location services or search for a city.`);
-                    // Fallback to a default location (e.g., London)
                     fetchWeatherForCoords(51.5074, -0.1278);
                 }
             );
         } else {
              setError("Geolocation is not supported by this browser.");
-             // Fallback to a default location
              fetchWeatherForCoords(51.5074, -0.1278);
         }
     };
@@ -93,6 +94,10 @@ export default function WeatherPage() {
         setError(null);
         try {
             const response = await fetch(`https://geocode.maps.co/search?q=${city}&api_key=${process.env.NEXT_PUBLIC_GEOCODE_API_KEY}`);
+            if (!response.ok) {
+                 const errorText = await response.text();
+                 throw new Error(`Geocoding API error: ${response.status} ${errorText}`);
+            }
             const data = await response.json();
             if (data && data.length > 0) {
                 const { lat, lon } = data[0];
@@ -110,12 +115,6 @@ export default function WeatherPage() {
         getLocation();
     }, []);
 
-    // Refetch data when temp unit changes
-     useEffect(() => {
-        if (weather) {
-            fetchWeatherForCoords(weather.latitude, weather.longitude);
-        }
-    }, [tempUnit]);
 
     const renderContent = () => {
         if (loading) {
@@ -159,7 +158,7 @@ export default function WeatherPage() {
                             <HighlightCard 
                                 title="Feels Like" 
                                 icon={<Thermometer />} 
-                                value={`${Math.round(weather.current.apparent_temperature)}°`} 
+                                value={`${Math.round(tempUnit === 'c' ? weather.current.apparent_temperature : (weather.current.apparent_temperature * 9/5) + 32)}°`} 
                             />
                         </div>
                         <HourlyForecastCard hourlyData={weather.hourly} timezone={weather.timezone} tempUnit={tempUnit} />
