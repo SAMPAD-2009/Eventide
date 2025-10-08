@@ -41,9 +41,10 @@ interface EventFormProps {
     event?: Event | null;
     onEventCreated?: () => void;
     onEventUpdated?: () => void;
+    selectedDate?: Date;
 }
 
-export function EventForm({ event, onEventCreated, onEventUpdated }: EventFormProps) {
+export function EventForm({ event, onEventCreated, onEventUpdated, selectedDate }: EventFormProps) {
   const { addEvent, updateEvent, isLoading } = useEvents();
   const { user } = useAuth();
   const { toast } = useToast();
@@ -51,12 +52,12 @@ export function EventForm({ event, onEventCreated, onEventUpdated }: EventFormPr
   const form = useForm<EventFormValues>({
     resolver: zodResolver(eventFormSchema),
     defaultValues: {
-      title: event?.title || "",
-      details: event?.details || "",
-      date: event && !event.isIndefinite && event.datetime ? parseISO(event.datetime) : new Date(),
-      time: event && !event.isIndefinite && event.datetime ? format(parseISO(event.datetime), 'HH:mm') : format(new Date(), 'HH:mm'),
-      category: event?.category || "Personal",
-      isIndefinite: event?.isIndefinite || false,
+      title: "",
+      details: "",
+      date: selectedDate || new Date(),
+      time: format(new Date(), 'HH:mm'),
+      category: "Personal",
+      isIndefinite: false,
     },
   });
 
@@ -76,13 +77,13 @@ export function EventForm({ event, onEventCreated, onEventUpdated }: EventFormPr
          form.reset({
             title: "",
             details: "",
-            date: new Date(),
+            date: selectedDate || new Date(),
             time: format(new Date(), 'HH:mm'),
             category: "Personal",
             isIndefinite: false,
         });
     }
-  }, [event, form]);
+  }, [event, form, selectedDate]);
 
 
   const onSubmit = async (data: EventFormValues) => {
