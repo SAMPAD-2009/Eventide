@@ -1,3 +1,4 @@
+
 import { Suspense } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -5,6 +6,8 @@ import { Users } from 'lucide-react';
 import { getUserCount } from '@/services/baserow';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { AlertCircle } from 'lucide-react';
+
+export const dynamic = 'force-dynamic';
 
 async function UserCountCard() {
   let userCount;
