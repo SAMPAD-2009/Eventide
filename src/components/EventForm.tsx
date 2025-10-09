@@ -56,7 +56,7 @@ export function EventForm({ event, onEventCreated, onEventUpdated, selectedDate 
       details: "",
       date: selectedDate || new Date(),
       time: format(new Date(), 'HH:mm'),
-      category: "",
+      category: "Personal",
       isIndefinite: false,
     },
   });
@@ -89,8 +89,8 @@ export function EventForm({ event, onEventCreated, onEventUpdated, selectedDate 
   const onSubmit = async (data: EventFormValues) => {
     const eventData = {
       ...data,
-      date: data.isIndefinite ? '' : format(data.date!, 'yyyy-MM-dd'),
-      time: data.isIndefinite ? '' : data.time!,
+      date: data.isIndefinite ? undefined : format(data.date!, 'yyyy-MM-dd'),
+      time: data.isIndefinite ? undefined : data.time!,
     };
 
     if (event) {
@@ -176,7 +176,7 @@ export function EventForm({ event, onEventCreated, onEventUpdated, selectedDate 
                             <FormItem className="flex flex-col">
                                 <FormLabel>Time</FormLabel>
                                 <FormControl>
-                                    <Input type="time" className="w-full" {...field} disabled={isIndefinite} />
+                                    <Input type="time" className="w-full" {...field} disabled={isIndefinite} value={field.value ?? ''} />
                                 </FormControl>
                                 <FormMessage />
                             </FormItem>
