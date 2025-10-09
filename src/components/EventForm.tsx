@@ -55,7 +55,7 @@ export function EventForm({ event, onEventCreated, onEventUpdated, selectedDate 
       title: "",
       details: "",
       date: undefined,
-      time: format(new Date(), 'HH:mm'),
+      time: "",
       category: "",
       isIndefinite: false,
     },
@@ -78,7 +78,7 @@ export function EventForm({ event, onEventCreated, onEventUpdated, selectedDate 
             title: "",
             details: "",
             date: selectedDate || new Date(),
-            time: format(selectedDate || new Date(), 'HH:mm'),
+            time: selectedDate ? '' : format(new Date(), 'HH:mm'),
             category: "Personal",
             isIndefinite: false,
         });
