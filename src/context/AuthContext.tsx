@@ -2,7 +2,7 @@
 "use client";
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signOut, updateProfile, User as FirebaseUser, updatePassword, GoogleAuthProvider, signInWithPopup, updateEmail, deleteUser } from "firebase/auth";
+import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signOut, updateProfile, User as FirebaseUser, updatePassword, GoogleAuthProvider, signInWithPopup, updateEmail, deleteUser, linkWithPopup } from "firebase/auth";
 import { app } from '@/lib/firebase';
 import { useToast } from "@/hooks/use-toast";
 import { usePathname, useRouter } from 'next/navigation';
@@ -27,6 +27,7 @@ interface AuthContextType {
   updateUserPassword: (password: string) => Promise<boolean>;
   updateUserEmail: (newEmail: string) => Promise<void>;
   deleteUserAccount: () => Promise<void>;
+  linkWithGoogle: () => Promise<void>;
   isLoading: boolean;
 }
 
@@ -296,6 +297,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       toast({ variant: 'destructive', title: "Not Authenticated", description: "No user is currently logged in." });
       return;
     }
+    if (user.email === newEmail) {
+        return; // No change needed
+    }
     setIsLoading(true);
     const oldEmail = user.email;
 
@@ -306,6 +310,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       // 2. Update email in Supabase tables
       const { error } = await updateUserEmailInDb(oldEmail, newEmail);
       if (error) {
+        // If Supabase update fails, we should ideally try to revert Firebase auth email.
+        // This is complex, so for now we'll log the error and notify the user.
         throw new Error(error);
       }
 
@@ -318,9 +324,39 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       router.push('/login');
 
     } catch (e: any) {
-      toast({ variant: 'destructive', title: "Email Update Failed", description: e.message || "An unexpected error occurred." });
+      toast({ variant: 'destructive', title: "Email Update Failed", description: e.message || "An unexpected error occurred. You may need to log out and log back in." });
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const linkWithGoogle = async () => {
+    if (!auth.currentUser) {
+        toast({ variant: 'destructive', title: "Not Authenticated", description: "No user is currently logged in." });
+        return;
+    }
+    setIsLoading(true);
+    try {
+        const result = await linkWithPopup(auth.currentUser, googleProvider);
+        const newEmail = result.user.email;
+
+        if (newEmail && newEmail !== user?.email) {
+            await updateUserEmail(newEmail);
+        } else {
+             toast({ title: "Account Linked", description: "Your Google account has been successfully linked." });
+        }
+    } catch (error: any) {
+        let description = error.message;
+        if (error.code === 'auth/credential-already-in-use') {
+            description = 'This Google account is already associated with another user. Please use a different one.';
+        }
+        toast({
+            variant: 'destructive',
+            title: 'Failed to Link Account',
+            description: description
+        });
+    } finally {
+        setIsLoading(false);
     }
   };
 
@@ -352,7 +388,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   }
 
 
-  const contextValue = { user, login, signup, signInWithGoogle, logout, updateUserProfile, updateUserUsername, updateUserPassword, updateUserEmail, deleteUserAccount, isLoading };
+  const contextValue = { user, login, signup, signInWithGoogle, logout, updateUserProfile, updateUserUsername, updateUserPassword, updateUserEmail, deleteUserAccount, linkWithGoogle, isLoading };
 
   return (
     <AuthContext.Provider value={contextValue}>
@@ -368,3 +404,5 @@ export const useAuth = () => {
   }
   return context;
 };
+
+    
