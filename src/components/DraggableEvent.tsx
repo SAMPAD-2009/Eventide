@@ -35,7 +35,7 @@ export function DraggableEvent({ event, onEditClick }: DraggableEventProps) {
             )}
             style={{ 
                 backgroundColor: categoryInfo ? `hsl(var(${categoryInfo.cssVars.bg}))` : undefined,
-                borderColor: categoryInfo ? `hsl(var(${categoryinfo.cssVars.fg}))` : undefined,
+                borderColor: categoryInfo ? `hsl(var(${categoryInfo.cssVars.fg}))` : undefined,
             }}
              onClick={(e) => {
                 // Prevent card click from triggering anything else, but allow edit button
