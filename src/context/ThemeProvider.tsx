@@ -45,6 +45,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   const setTheme = async (newTheme: string) => {
     setAndApplyTheme(newTheme);
     if (user?.email) {
+      // Silently update the theme in the background without showing a toast.
       await updateUserTheme(user.email, newTheme);
     }
   }
