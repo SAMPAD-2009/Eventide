@@ -96,11 +96,12 @@ export default function CalendarPage() {
       const overId = over.id.toString();
       
       // Dragging within Month View
-      if (overId.includes('-')) { // Date string 'yyyy-MM-dd'
+      if (overId.includes('-') && overId.length === 10) { // Date string 'yyyy-MM-dd'
         const targetDateStr = overId;
         if (activeEvent.datetime) {
           const originalDate = parseISO(activeEvent.datetime);
-          const newDate = parseISO(targetDateStr);
+          // parseISO is strict, so we need to provide a time component.
+          const newDate = parseISO(`${targetDateStr}T00:00:00`);
           
           const updatedDateTime = set(newDate, {
             hours: originalDate.getHours(),
