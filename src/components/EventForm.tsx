@@ -12,7 +12,6 @@ import { Calendar } from '@/components/ui/calendar';
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { useEvents } from '@/context/EventContext';
 import { CATEGORIES, getCategoryByName } from '@/lib/categories';
@@ -211,13 +210,78 @@ export function EventForm({ event, onEventCreated, onEventUpdated, selectedDate 
                     <FormField
                       control={form.control}
                       name="isIndefinite"
-                      render={({ field })...
+                      render={({ field }) => (
+                        <FormItem className="flex flex-row items-center space-x-2 space-y-0 pt-2">
+                          <FormControl>
+                            <Checkbox
+                              checked={field.value}
+                              onCheckedChange={field.onChange}
+                            />
+                          </FormControl>
+                          <div className="space-y-1 leading-none">
+                            <FormLabel>
+                              Indefinite Event
+                            </FormLabel>
+                             <FormDescription>
+                                This event has no specific date or time.
+                            </FormDescription>
+                          </div>
+                        </FormItem>
+                      )}
+                    />
 
-                                {CATEGORIES.map(category => (
-                                    <SelectItem key={category.name} value={category.name}>{category.name}</SelectItem>
-                                ))}
-                            </SelectContent>
-                            </Select>
+                    <FormField
+                        control={form.control}
+                        name="category"
+                        render={({ field }) => (
+                        <FormItem>
+                            <FormLabel>Category</FormLabel>
+                                <Popover open={isCategoryPopoverOpen} onOpenChange={setCategoryPopoverOpen}>
+                                    <PopoverTrigger asChild>
+                                        <FormControl>
+                                            <Button
+                                                variant="outline"
+                                                role="combobox"
+                                                className={cn("w-full justify-between", !field.value && "text-muted-foreground")}
+                                            >
+                                                {field.value ? (
+                                                     <Badge
+                                                        style={{
+                                                            backgroundColor: `hsl(var(${selectedCategoryInfo?.cssVars.bg}))`,
+                                                            color: `hsl(var(${selectedCategoryInfo?.cssVars.fg}))`,
+                                                            border: `1px solid hsl(var(${selectedCategoryInfo?.cssVars.fg}))`,
+                                                        }}
+                                                     >
+                                                        {field.value}
+                                                    </Badge>
+                                                ) : (
+                                                    "Select a category"
+                                                )}
+                                                <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                                            </Button>
+                                        </FormControl>
+                                    </PopoverTrigger>
+                                    <PopoverContent className="w-[--radix-popover-trigger-width] p-0">
+                                       <Command>
+                                            <CommandInput placeholder="Search category..." />
+                                            <CommandEmpty>No category found.</CommandEmpty>
+                                            <CommandGroup>
+                                                {CATEGORIES.map((category) => (
+                                                    <CommandItem
+                                                        value={category.name}
+                                                        key={category.name}
+                                                        onSelect={() => {
+                                                            form.setValue("category", category.name);
+                                                            setCategoryPopoverOpen(false);
+                                                        }}
+                                                    >
+                                                        {category.name}
+                                                    </CommandItem>
+                                                ))}
+                                            </CommandGroup>
+                                       </Command>
+                                    </PopoverContent>
+                                </Popover>
                             <FormMessage />
                         </FormItem>
                         )}
