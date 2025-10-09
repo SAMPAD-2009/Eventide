@@ -49,8 +49,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser: FirebaseUser | null) => {
-      if (firebaseUser) {
-        const userProfile = await getUserProfile(firebaseUser.uid);
+      if (firebaseUser && firebaseUser.email) {
+        const userProfile = await getUserProfile(firebaseUser.email);
         setUser({
           uid: firebaseUser.uid,
           email: firebaseUser.email,
@@ -155,7 +155,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       const userCredential = await signInWithPopup(auth, googleProvider);
       const firebaseUser = userCredential.user;
 
-      const existingProfile = await getUserProfile(firebaseUser.uid);
+      if (!firebaseUser.email) {
+        throw new Error("Google sign-in did not provide an email address.");
+      }
+
+      const existingProfile = await getUserProfile(firebaseUser.email);
 
       if (!existingProfile) {
         const profileResult = await createUserProfile({
@@ -202,8 +206,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const updateUserProfile = async (photo: File): Promise<boolean> => {
-    if (!auth.currentUser) return false;
+    if (!auth.currentUser || !auth.currentUser.email) return false;
     setIsLoading(true);
+
+    const currentUserEmail = auth.currentUser.email;
 
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
@@ -212,7 +218,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         try {
           const base64Photo = reader.result as string;
 
-          const { error } = await updateUserProfilePhoto(auth.currentUser!.uid, base64Photo);
+          const { error } = await updateUserProfilePhoto(currentUserEmail, base64Photo);
 
           if (error) {
             throw new Error(error.message || 'Failed to update user photo in Supabase');
@@ -243,12 +249,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   }
   
   const updateUserUsername = async (username: string): Promise<boolean> => {
-    if (!auth.currentUser) return false;
+    if (!auth.currentUser || !auth.currentUser.email) return false;
     setIsLoading(true);
     try {
         await updateProfile(auth.currentUser, { displayName: username });
 
-        const { error } = await updateUserProfileUsername(auth.currentUser.uid, username);
+        const { error } = await updateUserProfileUsername(auth.currentUser.email, username);
 
         if (error) {
             throw new Error(error.message || 'Failed to update username in Supabase');
@@ -302,5 +308,3 @@ export const useAuth = () => {
   }
   return context;
 };
-
-    

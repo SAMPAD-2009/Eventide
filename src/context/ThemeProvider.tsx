@@ -18,8 +18,8 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     const applyTheme = async () => {
-        if (user?.uid) {
-            const userProfile = await getUserProfile(user.uid);
+        if (user?.email) {
+            const userProfile = await getUserProfile(user.email);
             if (userProfile?.theme) {
                 setAndApplyTheme(userProfile.theme);
             } else {
@@ -44,8 +44,8 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
 
   const setTheme = async (newTheme: string) => {
     setAndApplyTheme(newTheme);
-    if (user?.uid) {
-      await updateUserTheme(user.uid, newTheme);
+    if (user?.email) {
+      await updateUserTheme(user.email, newTheme);
     }
   }
 
@@ -68,5 +68,3 @@ export const useTheme = () => {
   }
   return context;
 };
-
-    

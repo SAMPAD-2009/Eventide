@@ -25,12 +25,12 @@ export async function createUserProfile(profileData: UserProfile) {
     return { data, error };
 }
 
-export async function getUserProfile(userId: string) {
+export async function getUserProfile(email: string) {
     const supabase = createClient();
     const { data, error } = await supabase
         .from('user_profiles')
         .select('*')
-        .eq('id', userId)
+        .eq('email', email)
         .single();
 
     if (error && error.code !== 'PGRST116') { // Ignore 'exact one row' error for non-existent profiles
@@ -40,34 +40,32 @@ export async function getUserProfile(userId: string) {
     return data;
 }
 
-export async function updateUserTheme(userId: string, theme: string) {
+export async function updateUserTheme(email: string, theme: string) {
     const supabase = createClient();
     const { data, error } = await supabase
         .from('user_profiles')
         .update({ theme })
-        .eq('id', userId);
+        .eq('email', email);
     
     return { data, error };
 }
 
-export async function updateUserProfilePhoto(userId: string, photoURL: string) {
+export async function updateUserProfilePhoto(email: string, photoURL: string) {
     const supabase = createClient();
     const { data, error } = await supabase
         .from('user_profiles')
         .update({ photo_url: photoURL })
-        .eq('id', userId);
+        .eq('email', email);
 
     return { data, error };
 }
 
-export async function updateUserProfileUsername(userId: string, username: string) {
+export async function updateUserProfileUsername(email: string, username: string) {
     const supabase = createClient();
     const { data, error } = await supabase
         .from('user_profiles')
         .update({ username })
-        .eq('id', userId);
+        .eq('email', email);
 
     return { data, error };
 }
-
-    
