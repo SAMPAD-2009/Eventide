@@ -81,6 +81,12 @@ export default function CalendarPage() {
     setFormOpen(true);
   };
 
+  const handleTimeSlotDoubleClick = (date: Date) => {
+    setEditingEvent(null);
+    setSelectedDateForForm(date);
+    setFormOpen(true);
+  };
+
   const handleDayClick = (day: Date) => {
     setSelectedDayForView(day);
   }
@@ -199,6 +205,7 @@ export default function CalendarPage() {
                     events={eventsByDate.get(format(selectedDayForView, 'yyyy-MM-dd')) || []}
                     onBack={() => setSelectedDayForView(null)}
                     onEditEvent={handleEditClick}
+                    onTimeSlotDoubleClick={handleTimeSlotDoubleClick}
                  />
             ) : (
                 <div className="grid grid-cols-7 flex-1 border-t border-l">

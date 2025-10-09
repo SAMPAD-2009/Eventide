@@ -73,12 +73,22 @@ export function EventForm({ event, onEventCreated, onEventUpdated, selectedDate 
             category: event.category,
             isIndefinite: event.isIndefinite,
         });
+    } else if (selectedDate) {
+        const hasTime = selectedDate.getHours() !== 0 || selectedDate.getMinutes() !== 0;
+        form.reset({
+            title: "",
+            details: "",
+            date: selectedDate,
+            time: hasTime ? format(selectedDate, 'HH:mm') : '',
+            category: "Personal",
+            isIndefinite: false,
+        });
     } else {
          form.reset({
             title: "",
             details: "",
-            date: selectedDate || new Date(),
-            time: selectedDate ? '' : format(new Date(), 'HH:mm'),
+            date: new Date(),
+            time: format(new Date(), 'HH:mm'),
             category: "Personal",
             isIndefinite: false,
         });

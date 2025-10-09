@@ -6,7 +6,7 @@ import type { Event } from '@/lib/types';
 import { Button } from '../ui/button';
 import { ArrowLeft, Edit } from 'lucide-react';
 import { DraggableDayEvent } from './DraggableDayEvent';
-import { format, parseISO } from 'date-fns';
+import { format, parseISO, set } from 'date-fns';
 import { useMemo } from 'react';
 import { cn } from '@/lib/utils';
 
@@ -15,11 +15,12 @@ interface DayViewProps {
   events: Event[];
   onBack: () => void;
   onEditEvent: (event: Event) => void;
+  onTimeSlotDoubleClick: (date: Date) => void;
 }
 
 const hours = Array.from({ length: 24 }, (_, i) => i);
 
-export function DayView({ selectedDay, events, onBack, onEditEvent }: DayViewProps) {
+export function DayView({ selectedDay, events, onBack, onEditEvent, onTimeSlotDoubleClick }: DayViewProps) {
   const eventsByHour = useMemo(() => {
     const map = new Map<number, Event[]>();
     events.forEach(event => {
@@ -38,6 +39,11 @@ export function DayView({ selectedDay, events, onBack, onEditEvent }: DayViewPro
     const { setNodeRef, isOver } = useDroppable({ id: `time-slot-${hour}` });
     const hourEvents = eventsByHour.get(hour) || [];
 
+    const handleDoubleClick = () => {
+        const newEventDate = set(selectedDay, { hours: hour, minutes: 0, seconds: 0, milliseconds: 0 });
+        onTimeSlotDoubleClick(newEventDate);
+    };
+
     return (
       <div
         ref={setNodeRef}
@@ -45,6 +51,7 @@ export function DayView({ selectedDay, events, onBack, onEditEvent }: DayViewPro
             "relative flex border-t border-r border-border min-h-[60px]",
             isOver && "bg-accent"
         )}
+        onDoubleClick={handleDoubleClick}
       >
         <div className="w-20 text-center text-sm text-muted-foreground pt-1 border-r">
           {format(new Date(2000, 0, 1, hour), 'ha')}
