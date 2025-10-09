@@ -2,11 +2,11 @@
 "use client";
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signOut, updateProfile, User as FirebaseUser, updatePassword, GoogleAuthProvider, signInWithPopup } from "firebase/auth";
+import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signOut, updateProfile, User as FirebaseUser, updatePassword, GoogleAuthProvider, signInWithPopup, updateEmail, deleteUser } from "firebase/auth";
 import { app } from '@/lib/firebase';
 import { useToast } from "@/hooks/use-toast";
 import { usePathname, useRouter } from 'next/navigation';
-import { createUserProfile, getUserProfile, updateUserProfilePhoto, updateUserProfileUsername } from '@/services/supabase';
+import { createUserProfile, getUserProfile, updateUserProfilePhoto, updateUserProfileUsername, updateUserEmailInDb, deleteUserData } from '@/services/supabase';
 
 
 interface User {
@@ -23,8 +23,10 @@ interface AuthContextType {
   signInWithGoogle: () => Promise<boolean>;
   logout: () => void;
   updateUserProfile: (photo: File) => Promise<boolean>;
-  updateUserUsername: (username: string) => Promise<boolean>;
+  updateUserUsername: (username: string) => Promise<void>;
   updateUserPassword: (password: string) => Promise<boolean>;
+  updateUserEmail: (newEmail: string) => Promise<void>;
+  deleteUserAccount: () => Promise<void>;
   isLoading: boolean;
 }
 
@@ -248,8 +250,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     });
   }
   
-  const updateUserUsername = async (username: string): Promise<boolean> => {
-    if (!auth.currentUser || !auth.currentUser.email) return false;
+  const updateUserUsername = async (username: string) => {
+    if (!auth.currentUser || !auth.currentUser.email) return;
     setIsLoading(true);
     try {
         await updateProfile(auth.currentUser, { displayName: username });
@@ -262,12 +264,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         
         setUser(prevUser => prevUser ? { ...prevUser, displayName: username } : null);
         toast({ title: "Profile Updated", description: "Your username has been changed." });
-        return true;
 
     } catch (e: any) {
         console.error("Username update error:", e);
         toast({ variant: 'destructive', title: "Update Failed", description: e.message || "Could not update username." });
-        return false;
     } finally {
         setIsLoading(false);
     }
@@ -291,8 +291,68 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       }
   };
 
+    const updateUserEmail = async (newEmail: string) => {
+    if (!auth.currentUser || !user?.email) {
+      toast({ variant: 'destructive', title: "Not Authenticated", description: "No user is currently logged in." });
+      return;
+    }
+    setIsLoading(true);
+    const oldEmail = user.email;
 
-  const contextValue = { user, login, signup, signInWithGoogle, logout, updateUserProfile, updateUserUsername, updateUserPassword, isLoading };
+    try {
+      // 1. Update email in Firebase Auth
+      await updateEmail(auth.currentUser, newEmail);
+      
+      // 2. Update email in Supabase tables
+      const { error } = await updateUserEmailInDb(oldEmail, newEmail);
+      if (error) {
+        throw new Error(error);
+      }
+
+      // 3. Update local user state
+      setUser(prev => prev ? { ...prev, email: newEmail } : null);
+
+      toast({ title: "Email Updated", description: `Your email has been changed to ${newEmail}. Please log in again.` });
+      // Force logout to re-authenticate with the new email
+      await signOut(auth);
+      router.push('/login');
+
+    } catch (e: any) {
+      toast({ variant: 'destructive', title: "Email Update Failed", description: e.message || "An unexpected error occurred." });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const deleteUserAccount = async () => {
+    if (!auth.currentUser || !user?.email) {
+      toast({ variant: 'destructive', title: "Not Authenticated", description: "No user is currently logged in." });
+      return;
+    }
+    setIsLoading(true);
+    const userEmail = user.email;
+
+    try {
+      // 1. Delete user data from Supabase
+      const { error: dbError } = await deleteUserData(userEmail);
+      if (dbError) {
+        throw new Error(dbError);
+      }
+      
+      // 2. Delete user from Firebase Auth
+      await deleteUser(auth.currentUser);
+
+      toast({ title: "Account Deleted", description: "Your account and all associated data have been permanently deleted." });
+      // The onAuthStateChanged listener will automatically handle redirecting to /login
+    } catch (e: any) {
+       toast({ variant: 'destructive', title: "Deletion Failed", description: e.message || "An unexpected error occurred." });
+    } finally {
+       setIsLoading(false);
+    }
+  }
+
+
+  const contextValue = { user, login, signup, signInWithGoogle, logout, updateUserProfile, updateUserUsername, updateUserPassword, updateUserEmail, deleteUserAccount, isLoading };
 
   return (
     <AuthContext.Provider value={contextValue}>

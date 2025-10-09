@@ -14,8 +14,10 @@ import { Label } from '@/components/ui/label';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { useToast } from '@/hooks/use-toast';
 import { generateAvatar, resizeImage } from '@/lib/utils';
-import { Loader2, Save } from 'lucide-react';
+import { Loader2, Save, AlertTriangle } from 'lucide-react';
 import { ProfilePageSkeleton } from '@/components/ProfilePageSkeleton';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
+
 
 const passwordFormSchema = z.object({
   password: z.string().min(8, { message: "Password must be at least 8 characters long." }),
@@ -27,9 +29,15 @@ const passwordFormSchema = z.object({
 
 type PasswordFormValues = z.infer<typeof passwordFormSchema>;
 
+const emailFormSchema = z.object({
+  email: z.string().email({ message: "Please enter a valid email." }),
+});
+
+type EmailFormValues = z.infer<typeof emailFormSchema>;
+
 
 export default function ProfilePage() {
-    const { user, updateUserProfile, updateUserUsername, updateUserPassword, isLoading: isAuthLoading } = useAuth();
+    const { user, updateUserProfile, updateUserUsername, updateUserPassword, updateUserEmail, deleteUserAccount, isLoading: isAuthLoading } = useAuth();
     const { toast } = useToast();
     const [newUsername, setNewUsername] = useState('');
     const [newPhoto, setNewPhoto] = useState<File | null>(null);
@@ -37,6 +45,9 @@ export default function ProfilePage() {
     const [isSavingPhoto, setIsSavingPhoto] = useState(false);
     const [isSavingUsername, setIsSavingUsername] = useState(false);
     const [isSavingPassword, setIsSavingPassword] = useState(false);
+    const [isSavingEmail, setIsSavingEmail] = useState(false);
+    const [isDeleting, setIsDeleting] = useState(false);
+
     const fileInputRef = useRef<HTMLInputElement>(null);
 
     const passwordForm = useForm<PasswordFormValues>({
@@ -47,11 +58,19 @@ export default function ProfilePage() {
         },
     });
 
+    const emailForm = useForm<EmailFormValues>({
+        resolver: zodResolver(emailFormSchema),
+        defaultValues: {
+            email: "",
+        },
+    });
+
     useEffect(() => {
-        if (user?.displayName) {
-            setNewUsername(user.displayName);
+        if (user) {
+            setNewUsername(user.displayName ?? '');
+            emailForm.setValue('email', user.email ?? '');
         }
-    }, [user]);
+    }, [user, emailForm]);
 
     const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
         if (e.target.files && e.target.files[0]) {
@@ -92,10 +111,7 @@ export default function ProfilePage() {
     const handleUsernameUpdate = async () => {
         if (!newUsername || newUsername === user?.displayName) return;
         setIsSavingUsername(true);
-        const success = await updateUserUsername(newUsername);
-        if (success) {
-            // Toast is handled in the context now
-        }
+        await updateUserUsername(newUsername);
         setIsSavingUsername(false);
     }
 
@@ -108,6 +124,24 @@ export default function ProfilePage() {
         }
         setIsSavingPassword(false);
     };
+
+    const handleEmailUpdate = async (data: EmailFormValues) => {
+        if (data.email === user?.email) {
+            toast({ variant: 'destructive', title: "No Change", description: "The new email is the same as your current email." });
+            return;
+        }
+        setIsSavingEmail(true);
+        await updateUserEmail(data.email);
+        setIsSavingEmail(false);
+    }
+
+    const handleDeleteAccount = async () => {
+        setIsDeleting(true);
+        await deleteUserAccount();
+        // The AuthProvider will handle redirecting the user upon successful deletion.
+        setIsDeleting(false);
+    }
+
 
     const triggerFileSelect = () => fileInputRef.current?.click();
 
@@ -163,6 +197,37 @@ export default function ProfilePage() {
             </CardContent>
         </Card>
 
+         <Card>
+            <CardHeader>
+                <CardTitle>Change Email</CardTitle>
+                <CardDescription>Update your login email. You will need to re-verify your email after changing it.</CardDescription>
+            </CardHeader>
+            <CardContent>
+                <Form {...emailForm}>
+                    <form onSubmit={emailForm.handleSubmit(handleEmailUpdate)} className="space-y-6">
+                        <FormField
+                            control={emailForm.control}
+                            name="email"
+                            render={({ field }) => (
+                            <FormItem>
+                                <FormLabel>New Email</FormLabel>
+                                <FormControl>
+                                <Input type="email" placeholder="you@example.com" {...field} />
+                                </FormControl>
+                                <FormMessage />
+                            </FormItem>
+                            )}
+                        />
+                        <Button type="submit" disabled={isSavingEmail}>
+                            {isSavingEmail ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
+                            Save New Email
+                        </Button>
+                    </form>
+                </Form>
+            </CardContent>
+        </Card>
+
+
         <Card>
             <CardHeader>
                 <CardTitle>Change Password</CardTitle>
@@ -205,9 +270,46 @@ export default function ProfilePage() {
                 </Form>
             </CardContent>
         </Card>
+
+         <Card className="border-destructive">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-destructive">
+              <AlertTriangle />
+              Danger Zone
+            </CardTitle>
+            <CardDescription>
+              These actions are permanent and cannot be undone.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button variant="destructive">Delete Account</Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    This action cannot be undone. This will permanently delete
+                    your account and remove all of your data from our servers.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                  <AlertDialogAction
+                    onClick={handleDeleteAccount}
+                    disabled={isDeleting}
+                    className="bg-red-600 text-white hover:bg-red-700"
+                  >
+                    {isDeleting ? <Loader2 className="animate-spin" /> : "Yes, delete my account"}
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+          </CardContent>
+        </Card>
+
       </div>
     </div>
   );
 }
-
-    

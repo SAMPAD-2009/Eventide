@@ -69,3 +69,61 @@ export async function updateUserProfileUsername(email: string, username: string)
 
     return { data, error };
 }
+
+export async function updateUserEmailInDb(oldEmail: string, newEmail: string) {
+    const supabase = createClient();
+
+    // 1. Update user_profiles table
+    const { error: profileError } = await supabase
+        .from('user_profiles')
+        .update({ email: newEmail })
+        .eq('email', oldEmail);
+
+    if (profileError) {
+        console.error("Error updating user_profiles table:", profileError);
+        return { error: `Failed to update profile: ${profileError.message}` };
+    }
+    
+    // 2. Update events table
+    const { error: eventsError } = await supabase
+        .from('events')
+        .update({ user_email: newEmail })
+        .eq('user_email', oldEmail);
+
+    if (eventsError) {
+        console.error("Error updating events table:", eventsError);
+        // Attempt to revert the profile email change
+        await supabase.from('user_profiles').update({ email: oldEmail }).eq('email', newEmail);
+        return { error: `Failed to update events: ${eventsError.message}. Profile change was reverted.` };
+    }
+
+    return { error: null };
+}
+
+export async function deleteUserData(email: string) {
+    const supabase = createClient();
+
+    // 1. Delete events
+    const { error: eventsError } = await supabase
+        .from('events')
+        .delete()
+        .eq('user_email', email);
+
+    if (eventsError) {
+        console.error("Error deleting user events:", eventsError);
+        return { error: `Failed to delete events: ${eventsError.message}` };
+    }
+
+    // 2. Delete user profile
+    const { error: profileError } = await supabase
+        .from('user_profiles')
+        .delete()
+        .eq('email', email);
+    
+    if (profileError) {
+        console.error("Error deleting user profile:", profileError);
+        return { error: `Failed to delete profile: ${profileError.message}` };
+    }
+
+    return { error: null };
+}
