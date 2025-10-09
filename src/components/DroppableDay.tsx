@@ -10,9 +10,10 @@ interface DroppableDayProps {
     isCurrentMonth: boolean;
     isToday: boolean;
     children: React.ReactNode;
+    onDoubleClick: (date: Date) => void;
 }
 
-export function DroppableDay({ date, isCurrentMonth, isToday, children }: DroppableDayProps) {
+export function DroppableDay({ date, isCurrentMonth, isToday, children, onDoubleClick }: DroppableDayProps) {
     const dateKey = format(date, 'yyyy-MM-dd');
     const { isOver, setNodeRef } = useDroppable({
         id: dateKey,
@@ -21,8 +22,9 @@ export function DroppableDay({ date, isCurrentMonth, isToday, children }: Droppa
     return (
         <div
             ref={setNodeRef}
+            onDoubleClick={() => onDoubleClick(date)}
             className={cn(
-                "border-b border-r p-2 flex flex-col min-h-[120px] transition-colors duration-200",
+                "border-b border-r p-2 flex flex-col min-h-[120px] transition-colors duration-200 cursor-pointer",
                 isCurrentMonth ? 'bg-background' : 'bg-muted/50',
                 isToday && 'bg-blue-100 dark:bg-blue-900/30',
                 isOver && 'bg-accent'

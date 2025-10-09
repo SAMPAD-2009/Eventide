@@ -26,6 +26,7 @@ export default function CalendarPage() {
   const [currentMonth, setCurrentMonth] = useState(startOfMonth(new Date()));
   const [isFormOpen, setFormOpen] = useState(false);
   const [editingEvent, setEditingEvent] = useState<Event | null>(null);
+  const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -61,12 +62,20 @@ export default function CalendarPage() {
 
   const handleEditClick = (event: Event) => {
     setEditingEvent(event);
+    setSelectedDate(undefined);
     setFormOpen(true);
   };
-  
+
   const handleFormSubmit = () => {
     setFormOpen(false);
     setEditingEvent(null);
+    setSelectedDate(undefined);
+  };
+  
+  const handleDayDoubleClick = (day: Date) => {
+    setEditingEvent(null);
+    setSelectedDate(day);
+    setFormOpen(true);
   };
 
   const handleDragEnd = useCallback((event: DragEndEvent) => {
@@ -120,6 +129,7 @@ export default function CalendarPage() {
                 <div className="flex-grow overflow-y-auto px-1 py-2">
                     <EventForm 
                         event={editingEvent}
+                        selectedDate={selectedDate}
                         onEventCreated={handleFormSubmit}
                         onEventUpdated={handleFormSubmit}
                     />
@@ -140,7 +150,7 @@ export default function CalendarPage() {
                     </Button>
                 </div>
                 </div>
-                 <Button onClick={() => { setEditingEvent(null); setFormOpen(true); }}>Create Event</Button>
+                 <Button onClick={() => { setEditingEvent(null); setSelectedDate(new Date()); setFormOpen(true); }}>Create Event</Button>
             </header>
 
             <div className="grid grid-cols-7 flex-1 border-t border-l">
@@ -160,6 +170,7 @@ export default function CalendarPage() {
                             date={day}
                             isCurrentMonth={isSameMonth(day, currentMonth)}
                             isToday={isToday(day)}
+                            onDoubleClick={handleDayDoubleClick}
                         >
                             {dayEvents.map(event => (
                                 <DraggableEvent key={event.event_id} event={event} onEditClick={handleEditClick} />
