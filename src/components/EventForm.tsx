@@ -87,9 +87,18 @@ export function EventForm({ event, onEventCreated, onEventUpdated, selectedDate 
 
 
   const onSubmit = async (data: EventFormValues) => {
+    if (!user) {
+        toast({
+            variant: "destructive",
+            title: "Not Logged In",
+            description: "You must be logged in to create or update events."
+        });
+        return;
+    }
+
     const eventData = {
       ...data,
-      date: data.isIndefinite ? undefined : format(data.date!, 'yyyy-MM-dd'),
+      date: data.isIndefinite || !data.date ? undefined : format(data.date, 'yyyy-MM-dd'),
       time: data.isIndefinite ? undefined : data.time!,
     };
 
@@ -160,7 +169,7 @@ export function EventForm({ event, onEventCreated, onEventUpdated, selectedDate 
                                     mode="single"
                                     selected={field.value}
                                     onSelect={field.onChange}
-                                    disabled={(date) => date < new Date(new Date().setHours(0,0,0,0)) || !!isIndefinite}
+                                    disabled={!!isIndefinite}
                                     initialFocus
                                 />
                                 </PopoverContent>
@@ -199,7 +208,7 @@ export function EventForm({ event, onEventCreated, onEventUpdated, selectedDate 
                               Keep event forever
                             </FormLabel>
                             <FormDescription>
-                              This event won't be auto-deleted.
+                              This event doesn't have a specific date/time.
                             </FormDescription>
                           </div>
                         </FormItem>

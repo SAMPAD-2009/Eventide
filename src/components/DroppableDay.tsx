@@ -11,9 +11,10 @@ interface DroppableDayProps {
     isToday: boolean;
     children: React.ReactNode;
     onDoubleClick: (date: Date) => void;
+    onClick: (date: Date) => void;
 }
 
-export function DroppableDay({ date, isCurrentMonth, isToday, children, onDoubleClick }: DroppableDayProps) {
+export function DroppableDay({ date, isCurrentMonth, isToday, children, onDoubleClick, onClick }: DroppableDayProps) {
     const dateKey = format(date, 'yyyy-MM-dd');
     const { isOver, setNodeRef } = useDroppable({
         id: dateKey,
@@ -24,16 +25,23 @@ export function DroppableDay({ date, isCurrentMonth, isToday, children, onDouble
             ref={setNodeRef}
             onDoubleClick={() => onDoubleClick(date)}
             className={cn(
-                "border-b border-r p-2 flex flex-col min-h-[120px] transition-colors duration-200 cursor-pointer",
+                "border-b border-r p-1 flex flex-col min-h-[120px] transition-colors duration-200",
                 isCurrentMonth ? 'bg-background' : 'bg-muted/50',
                 isToday && 'bg-blue-100 dark:bg-blue-900/30',
                 isOver && 'bg-accent'
             )}
         >
-            <span className={cn(
-                "font-medium mb-2",
-                isCurrentMonth ? 'text-foreground' : 'text-muted-foreground/50'
-            )}>
+            <span
+              className={cn(
+                  "font-medium mb-1 text-sm text-center w-6 h-6 flex items-center justify-center rounded-full cursor-pointer hover:bg-accent transition-colors",
+                  isToday && "bg-primary text-primary-foreground",
+                  isCurrentMonth ? 'text-foreground' : 'text-muted-foreground/50'
+              )}
+              onClick={(e) => {
+                e.stopPropagation(); // prevent double click from firing
+                onClick(date)
+              }}
+            >
                 {format(date, 'd')}
             </span>
             <div className="flex-1 space-y-1">

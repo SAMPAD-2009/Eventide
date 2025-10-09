@@ -6,7 +6,7 @@ import { useEvents } from '@/context/EventContext';
 import { addMonths, subMonths, startOfMonth, endOfMonth, eachDayOfInterval, format, startOfWeek, endOfWeek, isSameMonth, isToday, parseISO, set } from 'date-fns';
 import type { Event } from '@/lib/types';
 import { Button } from '@/components/ui/button';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { ChevronLeft, ChevronRight, PlusCircle } from 'lucide-react';
 import { EventListSkeleton } from '@/components/EventListSkeleton';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { EventForm } from '@/components/EventForm';
@@ -20,13 +20,16 @@ import {
 } from '@dnd-kit/core';
 import { DroppableDay } from '@/components/DroppableDay';
 import { DraggableEvent } from '@/components/DraggableEvent';
+import { DayView } from '@/components/calendar/DayView';
 
 export default function CalendarPage() {
   const { events, updateEvent, isLoading: areEventsLoading } = useEvents();
   const [currentMonth, setCurrentMonth] = useState(startOfMonth(new Date()));
   const [isFormOpen, setFormOpen] = useState(false);
   const [editingEvent, setEditingEvent] = useState<Event | null>(null);
-  const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
+  const [selectedDateForForm, setSelectedDateForForm] = useState<Date | undefined>(undefined);
+  const [selectedDayForView, setSelectedDayForView] = useState<Date | null>(null);
+
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -62,46 +65,75 @@ export default function CalendarPage() {
 
   const handleEditClick = (event: Event) => {
     setEditingEvent(event);
-    setSelectedDate(undefined);
+    setSelectedDateForForm(undefined);
     setFormOpen(true);
   };
 
   const handleFormSubmit = () => {
     setFormOpen(false);
     setEditingEvent(null);
-    setSelectedDate(undefined);
+    setSelectedDateForForm(undefined);
   };
   
   const handleDayDoubleClick = (day: Date) => {
     setEditingEvent(null);
-    setSelectedDate(day);
+    setSelectedDateForForm(day);
     setFormOpen(true);
   };
+
+  const handleDayClick = (day: Date) => {
+    setSelectedDayForView(day);
+  }
 
   const handleDragEnd = useCallback((event: DragEndEvent) => {
     const { active, over } = event;
 
     if (over && active.id !== over.id) {
       const activeEvent = events.find(e => e.event_id === active.id);
-      const targetDateStr = over.id as string;
+      
+      if (!activeEvent) return;
 
-      if (activeEvent && activeEvent.datetime) {
-        const originalDate = parseISO(activeEvent.datetime);
-        const newDate = parseISO(targetDateStr);
-        
-        const updatedDateTime = set(newDate, {
-          hours: originalDate.getHours(),
-          minutes: originalDate.getMinutes(),
-          seconds: originalDate.getSeconds(),
-        });
-        
-        const eventDataForUpdate = {
-          ...activeEvent,
-          date: format(updatedDateTime, 'yyyy-MM-dd'),
-          time: format(updatedDateTime, 'HH:mm'),
-        };
-        
-        updateEvent(activeEvent.event_id, eventDataForUpdate);
+      const overId = over.id.toString();
+      
+      // Dragging within Month View
+      if (overId.includes('-')) { // Date string 'yyyy-MM-dd'
+        const targetDateStr = overId;
+        if (activeEvent.datetime) {
+          const originalDate = parseISO(activeEvent.datetime);
+          const newDate = parseISO(targetDateStr);
+          
+          const updatedDateTime = set(newDate, {
+            hours: originalDate.getHours(),
+            minutes: originalDate.getMinutes(),
+            seconds: originalDate.getSeconds(),
+          });
+          
+          const eventDataForUpdate = {
+            ...activeEvent,
+            date: format(updatedDateTime, 'yyyy-MM-dd'),
+            time: format(updatedDateTime, 'HH:mm'),
+          };
+          
+          updateEvent(activeEvent.event_id, eventDataForUpdate);
+        }
+      }
+      // Dragging within Day View
+      else if (overId.startsWith('time-slot-')) {
+        const hour = parseInt(overId.replace('time-slot-', ''), 10);
+        if (activeEvent.datetime) {
+            const originalDate = parseISO(activeEvent.datetime);
+            const updatedDateTime = set(originalDate, {
+                hours: hour,
+                minutes: 0, // Snap to the beginning of the hour
+                seconds: 0
+            });
+             const eventDataForUpdate = {
+                ...activeEvent,
+                date: format(updatedDateTime, 'yyyy-MM-dd'),
+                time: format(updatedDateTime, 'HH:mm'),
+            };
+            updateEvent(activeEvent.event_id, eventDataForUpdate);
+        }
       }
     }
   }, [events, updateEvent]);
@@ -117,19 +149,19 @@ export default function CalendarPage() {
 
   return (
     <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-        <div className="flex h-[calc(100vh-4rem)] flex-col p-4 md:p-6">
+        <div className="flex h-[calc(100vh-4rem)] flex-col">
             <Dialog open={isFormOpen} onOpenChange={setFormOpen}>
                 <DialogContent className="sm:max-w-3xl">
                 <DialogHeader>
                   <DialogTitle>{editingEvent ? 'Edit Event' : 'Create New Event'}</DialogTitle>
                   <DialogDescription>
-                    {editingEvent ? 'Update the details for your event below.' : `Adding a new event.`}
+                    {editingEvent ? 'Update the details for your event below.' : 'Fill in the details to add a new event.'}
                   </DialogDescription>
                 </DialogHeader>
                 <div className="flex-grow overflow-y-auto px-1 py-2">
                     <EventForm 
                         event={editingEvent}
-                        selectedDate={selectedDate}
+                        selectedDate={selectedDateForForm}
                         onEventCreated={handleFormSubmit}
                         onEventUpdated={handleFormSubmit}
                     />
@@ -137,48 +169,65 @@ export default function CalendarPage() {
                 </DialogContent>
             </Dialog>
 
-            <header className="flex items-center justify-between border-b pb-4 mb-4">
+            <header className="flex items-center justify-between border-b p-4">
                 <div className="flex items-center gap-4">
-                <h1 className="text-2xl font-semibold">{format(currentMonth, 'MMMM yyyy')}</h1>
-                <div className="flex items-center gap-2">
-                    <Button variant="outline" size="icon" onClick={prevMonth}>
-                    <ChevronLeft className="h-4 w-4" />
-                    </Button>
-                    <Button variant="outline" onClick={goToToday}>Today</Button>
-                    <Button variant="outline" size="icon" onClick={nextMonth}>
-                    <ChevronRight className="h-4 w-4" />
-                    </Button>
+                <h1 className="text-2xl font-semibold">
+                    {selectedDayForView ? format(selectedDayForView, 'MMMM d, yyyy') : format(currentMonth, 'MMMM yyyy')}
+                </h1>
+                {!selectedDayForView && (
+                    <div className="flex items-center gap-2">
+                        <Button variant="outline" size="icon" onClick={prevMonth}>
+                            <ChevronLeft className="h-4 w-4" />
+                        </Button>
+                        <Button variant="outline" onClick={goToToday}>Today</Button>
+                        <Button variant="outline" size="icon" onClick={nextMonth}>
+                            <ChevronRight className="h-4 w-4" />
+                        </Button>
+                    </div>
+                )}
                 </div>
-                </div>
-                 <Button onClick={() => { setEditingEvent(null); setSelectedDate(new Date()); setFormOpen(true); }}>Create Event</Button>
+                 <Button onClick={() => { setEditingEvent(null); setSelectedDateForForm(selectedDayForView || new Date()); setFormOpen(true); }}>
+                    <PlusCircle className="mr-2 h-4 w-4" />
+                    Create Event
+                 </Button>
             </header>
 
-            <div className="grid grid-cols-7 flex-1 border-t border-l">
-                {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => (
-                    <div key={day} className="border-b border-r text-center font-medium text-muted-foreground p-2 text-sm">
-                        {day}
-                    </div>
-                ))}
-            
-                {daysInMonth.map(day => {
-                    const dateKey = format(day, 'yyyy-MM-dd');
-                    const dayEvents = eventsByDate.get(dateKey) || [];
-                    
-                    return (
-                        <DroppableDay
-                            key={day.toString()}
-                            date={day}
-                            isCurrentMonth={isSameMonth(day, currentMonth)}
-                            isToday={isToday(day)}
-                            onDoubleClick={handleDayDoubleClick}
-                        >
-                            {dayEvents.map(event => (
-                                <DraggableEvent key={event.event_id} event={event} onEditClick={handleEditClick} />
-                            ))}
-                        </DroppableDay>
-                    );
-                })}
-            </div>
+            {selectedDayForView ? (
+                 <DayView
+                    selectedDay={selectedDayForView}
+                    events={eventsByDate.get(format(selectedDayForView, 'yyyy-MM-dd')) || []}
+                    onBack={() => setSelectedDayForView(null)}
+                    onEditEvent={handleEditClick}
+                 />
+            ) : (
+                <div className="grid grid-cols-7 flex-1 border-t border-l">
+                    {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => (
+                        <div key={day} className="border-b border-r text-center font-medium text-muted-foreground p-2 text-sm bg-background">
+                            {day}
+                        </div>
+                    ))}
+                
+                    {daysInMonth.map(day => {
+                        const dateKey = format(day, 'yyyy-MMdd');
+                        const dayEvents = eventsByDate.get(format(day, 'yyyy-MM-dd')) || [];
+                        
+                        return (
+                            <DroppableDay
+                                key={day.toString()}
+                                date={day}
+                                isCurrentMonth={isSameMonth(day, currentMonth)}
+                                isToday={isToday(day)}
+                                onDoubleClick={handleDayDoubleClick}
+                                onClick={handleDayClick}
+                            >
+                                {dayEvents.map(event => (
+                                    <DraggableEvent key={event.event_id} event={event} onEditClick={handleEditClick} />
+                                ))}
+                            </DroppableDay>
+                        );
+                    })}
+                </div>
+            )}
         </div>
     </DndContext>
   );
