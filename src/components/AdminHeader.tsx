@@ -3,16 +3,19 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Calendar, LogOut, ShieldCheck, Home } from 'lucide-react';
+import { LogOut, Home } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { Button } from './ui/button';
 import { ThemeToggle } from './ThemeToggle';
+import { ShieldCheck } from 'lucide-react';
 
 export function AdminHeader() {
   const pathname = usePathname();
   const { user, logout } = useAuth();
 
-  if (!pathname.startsWith('/admin') || !user || user.email !== 'sampad81@admin.com') {
+  // This component is now effectively disabled by removing its content,
+  // but kept in case admin functionality is restored later.
+  if (true) {
     return null;
   }
 
@@ -42,3 +45,5 @@ export function AdminHeader() {
     </header>
   );
 }
+
+    

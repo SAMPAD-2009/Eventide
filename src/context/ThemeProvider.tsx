@@ -3,7 +3,7 @@
 
 import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import { useAuth } from './AuthContext';
-import { updateUserThemeInBaserow, getUserFromBaserow } from '@/services/baserow';
+import { updateUserTheme, getUserProfile } from '@/services/supabase';
 
 interface ThemeProviderState {
   theme: string;
@@ -18,10 +18,10 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     const applyTheme = async () => {
-        if (user?.email) {
-            const userData = await getUserFromBaserow(user.email);
-            if (userData?.Theme) {
-                setAndApplyTheme(userData.Theme);
+        if (user?.uid) {
+            const userProfile = await getUserProfile(user.uid);
+            if (userProfile?.theme) {
+                setAndApplyTheme(userProfile.theme);
             } else {
                  setAndApplyTheme(window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
             }
@@ -44,8 +44,8 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
 
   const setTheme = async (newTheme: string) => {
     setAndApplyTheme(newTheme);
-    if (user?.email) {
-      await updateUserThemeInBaserow({ email: user.email, theme: newTheme });
+    if (user?.uid) {
+      await updateUserTheme(user.uid, newTheme);
     }
   }
 
@@ -68,3 +68,5 @@ export const useTheme = () => {
   }
   return context;
 };
+
+    

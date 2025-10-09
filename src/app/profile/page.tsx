@@ -82,7 +82,7 @@ export default function ProfilePage() {
         setIsSavingPhoto(true);
         const success = await updateUserProfile(newPhoto);
         if (success) {
-            toast({ title: "Profile Updated", description: "Your profile picture has been changed." });
+            // Toast is handled in the context now
             setNewPhoto(null);
             setPreviewPhoto(null);
         }
@@ -94,7 +94,7 @@ export default function ProfilePage() {
         setIsSavingUsername(true);
         const success = await updateUserUsername(newUsername);
         if (success) {
-            toast({ title: "Profile Updated", description: "Your username has been changed." });
+            // Toast is handled in the context now
         }
         setIsSavingUsername(false);
     }
@@ -209,3 +209,5 @@ export default function ProfilePage() {
     </div>
   );
 }
+
+    

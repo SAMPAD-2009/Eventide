@@ -6,7 +6,7 @@ import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, on
 import { app } from '@/lib/firebase';
 import { useToast } from "@/hooks/use-toast";
 import { usePathname, useRouter } from 'next/navigation';
-import { createUserInBaserow, getUserFromBaserow, updateUserPhotoInBaserow, updateUserUsernameInBaserow } from '@/services/baserow';
+import { createUserProfile, getUserProfile, updateUserProfilePhoto, updateUserProfileUsername } from '@/services/supabase';
 
 
 interface User {
@@ -14,7 +14,6 @@ interface User {
   email: string | null;
   photoURL: string | null;
   displayName: string | null;
-  baserowUserId?: number;
 }
 
 interface AuthContextType {
@@ -51,13 +50,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser: FirebaseUser | null) => {
       if (firebaseUser) {
-        const baserowUser = await getUserFromBaserow(firebaseUser.email!);
+        const userProfile = await getUserProfile(firebaseUser.uid);
         setUser({
           uid: firebaseUser.uid,
           email: firebaseUser.email,
-          photoURL: baserowUser?.['Photo URL'] || firebaseUser.photoURL,
-          displayName: firebaseUser.displayName,
-          baserowUserId: baserowUser?.id
+          photoURL: userProfile?.photo_url || firebaseUser.photoURL,
+          displayName: userProfile?.username || firebaseUser.displayName,
         });
       } else {
         setUser(null);
@@ -74,16 +72,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
 
     const isPublicPath = PUBLIC_PATHS.includes(pathname);
-    const isAdminPath = pathname.startsWith('/admin');
     
     // Determine if the current path is one from which a logged-in user should be redirected.
     const isAuthRedirectPath = AUTH_REDIRECT_PATHS.includes(pathname);
-
-    // Allow admin user to access admin path
-    if (user?.email === 'sampad81@admin.com' && isAdminPath) {
-       setIsLoading(false);
-       return;
-    }
 
     if (user && isAuthRedirectPath) {
       router.push('/');
@@ -97,23 +88,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const login = async (email: string, pass: string) => {
     setIsLoading(true);
-
-    // Admin user check before Firebase authentication
-    if (email === 'sampad81@admin.com' && pass === 'sam@2009') {
-        try {
-            // We still sign in the admin user to firebase to get a user session
-            await signInWithEmailAndPassword(auth, email, pass);
-            toast({ title: "Admin Login Successful", description: "Welcome, Admin!" });
-            router.push('/admin');
-            return true;
-        } catch (error: any) {
-             // If admin doesn't exist in Firebase, we can create it here or just show an error.
-             // For now, we'll assume the admin must exist in firebase auth as well.
-             toast({ variant: 'destructive', title: "Admin Login Failed", description: "Admin user not found in Firebase. Please sign up first." });
-             setIsLoading(false);
-             return false;
-        }
-    }
 
     try {
       await signInWithEmailAndPassword(auth, email, pass);
@@ -138,21 +112,23 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
       await updateProfile(firebaseUser, {
         displayName: username,
+        photoURL: defaultAvatar,
       });
 
-      const baserowResult = await createUserInBaserow({ 
+      const profileResult = await createUserProfile({ 
+        id: firebaseUser.uid,
         email, 
         username,
         theme: 'light', 
-        photoURL: defaultAvatar 
+        photo_url: defaultAvatar 
       });
       
-      if (!baserowResult.success || !baserowResult.data) {
-        console.error("Failed to create user in Baserow:", baserowResult.error);
+      if (profileResult.error) {
+        console.error("Failed to create user profile in Supabase:", profileResult.error);
         toast({
           variant: 'destructive',
           title: "Signup Warning",
-          description: "Your account was created, but we failed to sync with our database. Please contact support.",
+          description: "Your account was created, but we failed to sync your profile. Please contact support.",
         });
       }
 
@@ -161,7 +137,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           email: firebaseUser.email,
           photoURL: defaultAvatar,
           displayName: username,
-          baserowUserId: baserowResult.data?.id
         });
 
       toast({ title: "Signup Successful", description: "Your account has been created." });
@@ -180,22 +155,23 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       const userCredential = await signInWithPopup(auth, googleProvider);
       const firebaseUser = userCredential.user;
 
-      const existingBaserowUser = await getUserFromBaserow(firebaseUser.email!);
+      const existingProfile = await getUserProfile(firebaseUser.uid);
 
-      if (!existingBaserowUser) {
-        const baserowResult = await createUserInBaserow({
+      if (!existingProfile) {
+        const profileResult = await createUserProfile({
+          id: firebaseUser.uid,
           email: firebaseUser.email!,
           username: firebaseUser.displayName!,
           theme: 'light',
-          photoURL: firebaseUser.photoURL!,
+          photo_url: firebaseUser.photoURL!,
         });
 
-        if (!baserowResult.success) {
-           console.error("Failed to create user in Baserow after Google sign-in:", baserowResult.error);
+        if (profileResult.error) {
+           console.error("Failed to create user profile in Supabase after Google sign-in:", profileResult.error);
            toast({
               variant: 'destructive',
               title: "Signup Warning",
-              description: "Your account was created, but we failed to sync with our database. Please contact support.",
+              description: "Your account was created, but we failed to sync your profile. Please contact support.",
            });
         }
       }
@@ -226,7 +202,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const updateUserProfile = async (photo: File): Promise<boolean> => {
-    if (!auth.currentUser || !user?.email) return false;
+    if (!auth.currentUser) return false;
     setIsLoading(true);
 
     return new Promise((resolve, reject) => {
@@ -236,14 +212,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         try {
           const base64Photo = reader.result as string;
 
-          const updateResult = await updateUserPhotoInBaserow({
-            email: user.email!,
-            photoURL: base64Photo,
-          });
+          const { error } = await updateUserProfilePhoto(auth.currentUser!.uid, base64Photo);
 
-          if (!updateResult.success || !updateResult.data) {
-            throw new Error(updateResult.error || 'Failed to update user photo in Baserow');
+          if (error) {
+            throw new Error(error.message || 'Failed to update user photo in Supabase');
           }
+
+          // Also update Firebase auth profile photo if you want it there too, though not strictly necessary
+          await updateProfile(auth.currentUser!, { photoURL: base64Photo });
 
           setUser(prevUser => prevUser ? { ...prevUser, photoURL: base64Photo } : null);
 
@@ -267,21 +243,19 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   }
   
   const updateUserUsername = async (username: string): Promise<boolean> => {
-    if (!auth.currentUser || !user?.email) return false;
+    if (!auth.currentUser) return false;
     setIsLoading(true);
     try {
         await updateProfile(auth.currentUser, { displayName: username });
 
-        const updateResult = await updateUserUsernameInBaserow({
-            email: user.email,
-            username: username
-        });
+        const { error } = await updateUserProfileUsername(auth.currentUser.uid, username);
 
-        if (!updateResult.success) {
-            throw new Error(updateResult.error || 'Failed to update username in Baserow');
+        if (error) {
+            throw new Error(error.message || 'Failed to update username in Supabase');
         }
         
         setUser(prevUser => prevUser ? { ...prevUser, displayName: username } : null);
+        toast({ title: "Profile Updated", description: "Your username has been changed." });
         return true;
 
     } catch (e: any) {
@@ -328,3 +302,5 @@ export const useAuth = () => {
   }
   return context;
 };
+
+    
