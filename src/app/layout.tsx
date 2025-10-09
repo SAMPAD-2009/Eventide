@@ -11,6 +11,7 @@ import Link from 'next/link';
 import { SiteAlert } from '@/components/SiteAlert';
 import { Suspense } from 'react';
 import { AdminHeader } from '@/components/AdminHeader';
+import { ConditionalFooter } from '@/components/ConditionalFooter';
 
 const inter = Inter({
   subsets: ['latin'],
@@ -49,17 +50,7 @@ export default function RootLayout({
                 <ConditionalHeader />
                 <AdminHeader />
                 <main className="flex-1">{children}</main>
-                <footer className="py-4 px-4 md:px-8">
-                  <div className="max-w-7xl mx-auto text-center text-sm text-muted-foreground flex justify-center items-center gap-4 flex-wrap">
-                    <p>created by His Royal Highness Lord-Samp2009</p>
-                    <Link href="/terms" className="underline hover:text-primary">
-                      Terms & Conditions
-                    </Link>
-                    <Link href="/privacy" className="underline hover:text-primary">
-                      Privacy Policy
-                    </Link>
-                  </div>
-                </footer>
+                <ConditionalFooter />
               </div>
               <Toaster />
             </EventProvider>
