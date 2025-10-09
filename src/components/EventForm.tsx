@@ -69,7 +69,7 @@ export function EventForm({ event, onEventCreated, onEventUpdated, selectedDate 
             title: event.title,
             details: event.details,
             date: event.isIndefinite || !event.datetime ? undefined : parseISO(event.datetime),
-            time: event.isIndefinite || !event.datetime ? undefined : format(parseISO(event.datetime), 'HH:mm'),
+            time: event.isIndefinite || !event.datetime ? '' : format(parseISO(event.datetime), 'HH:mm'),
             category: event.category,
             isIndefinite: event.isIndefinite,
         });
