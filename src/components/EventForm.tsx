@@ -5,7 +5,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { format, parseISO } from 'date-fns';
-import { Calendar as CalendarIcon, Loader2 } from 'lucide-react';
+import { Calendar as CalendarIcon, Loader2, ChevronsUpDown } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
@@ -15,12 +15,14 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { useEvents } from '@/context/EventContext';
-import { CATEGORIES } from '@/lib/categories';
-import { useEffect } from 'react';
+import { CATEGORIES, getCategoryByName } from '@/lib/categories';
+import { useEffect, useState } from 'react';
 import { Checkbox } from './ui/checkbox';
 import type { Event } from '@/lib/types';
 import { useAuth } from '@/context/AuthContext';
 import { useToast } from '@/hooks/use-toast';
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem } from '@/components/ui/command';
+import { Badge } from './ui/badge';
 
 const eventFormSchema = z.object({
   title: z.string().min(2, { message: "Title must be at least 2 characters long." }),
@@ -48,6 +50,7 @@ export function EventForm({ event, onEventCreated, onEventUpdated, selectedDate 
   const { addEvent, updateEvent, isLoading } = useEvents();
   const { user } = useAuth();
   const { toast } = useToast();
+  const [isCategoryPopoverOpen, setCategoryPopoverOpen] = useState(false);
 
   const form = useForm<EventFormValues>({
     resolver: zodResolver(eventFormSchema),
@@ -120,6 +123,9 @@ export function EventForm({ event, onEventCreated, onEventUpdated, selectedDate 
         onEventCreated?.();
     }
   };
+
+  const currentCategoryValue = form.watch('category');
+  const selectedCategoryInfo = getCategoryByName(currentCategoryValue);
 
   return (
     <Form {...form}>
@@ -205,38 +211,8 @@ export function EventForm({ event, onEventCreated, onEventUpdated, selectedDate 
                     <FormField
                       control={form.control}
                       name="isIndefinite"
-                      render={({ field }) => (
-                        <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
-                          <FormControl>
-                            <Checkbox
-                              checked={field.value}
-                              onCheckedChange={field.onChange}
-                            />
-                          </FormControl>
-                          <div className="space-y-1 leading-none">
-                            <FormLabel>
-                              Keep event forever
-                            </FormLabel>
-                            <FormDescription>
-                              This event doesn't have a specific date/time.
-                            </FormDescription>
-                          </div>
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                        control={form.control}
-                        name="category"
-                        render={({ field }) => (
-                        <FormItem>
-                            <FormLabel>Category</FormLabel>
-                            <Select onValueChange={field.onChange} value={field.value}>
-                            <FormControl>
-                                <SelectTrigger>
-                                <SelectValue placeholder="Select a category" />
-                                </SelectTrigger>
-                            </FormControl>
-                            <SelectContent>
+                      render={({ field })...
+
                                 {CATEGORIES.map(category => (
                                     <SelectItem key={category.name} value={category.name}>{category.name}</SelectItem>
                                 ))}
