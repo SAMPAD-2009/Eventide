@@ -12,6 +12,7 @@ import { SiteAlert } from '@/components/SiteAlert';
 import { Suspense } from 'react';
 import { AdminHeader } from '@/components/AdminHeader';
 import { ConditionalFooter } from '@/components/ConditionalFooter';
+import { TodoProvider } from '@/context/TodoContext';
 
 const inter = Inter({
   subsets: ['latin'],
@@ -43,16 +44,18 @@ export default function RootLayout({
         <AuthProvider>
           <ThemeProvider>
             <EventProvider>
-              <div className="relative flex min-h-screen flex-col">
-                <Suspense fallback={null}>
-                  <SiteAlert />
-                </Suspense>
-                <ConditionalHeader />
-                <AdminHeader />
-                <main className="flex-1">{children}</main>
-                <ConditionalFooter />
-              </div>
-              <Toaster />
+              <TodoProvider>
+                <div className="relative flex min-h-screen flex-col">
+                  <Suspense fallback={null}>
+                    <SiteAlert />
+                  </Suspense>
+                  <ConditionalHeader />
+                  <AdminHeader />
+                  <main className="flex-1">{children}</main>
+                  <ConditionalFooter />
+                </div>
+                <Toaster />
+              </TodoProvider>
             </EventProvider>
           </ThemeProvider>
         </AuthProvider>

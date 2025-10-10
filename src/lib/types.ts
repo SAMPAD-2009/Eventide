@@ -90,4 +90,22 @@ export interface HourData {
   temp: number;
 }
 
+export interface Project {
+  project_id: string;
+  user_email: string;
+  name: string;
+  created_at: string;
+}
+
+export interface Todo {
+  todo_id: string;
+  user_email: string;
+  project_id: string;
+  title: string;
+  description?: string;
+  due_date?: string;
+  completed: boolean;
+  created_at: string;
+}
+
     

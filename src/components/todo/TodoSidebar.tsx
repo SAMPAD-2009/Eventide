@@ -1,0 +1,118 @@
+
+"use client";
+
+import { useTodos } from "@/context/TodoContext";
+import { Project } from "@/lib/types";
+import { cn } from "@/lib/utils";
+import { Folder, Inbox, Calendar, ChevronRight, Plus, Trash2 } from "lucide-react";
+import { Button } from "../ui/button";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
+import { useState } from "react";
+import { AddProjectDialog } from "./AddProjectDialog";
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+    AlertDialogTrigger,
+} from "@/components/ui/alert-dialog"
+
+interface TodoSidebarProps {
+  selectedSection: string;
+  onSelectSection: (section: string) => void;
+}
+
+export function TodoSidebar({ selectedSection, onSelectSection }: TodoSidebarProps) {
+  const { projects, deleteProject } = useTodos();
+  const [isProjectsOpen, setProjectsOpen] = useState(true);
+  const [isAddProjectDialogOpen, setAddProjectDialogOpen] = useState(false);
+
+  const mainSections = [
+    { id: "inbox", name: "Inbox", icon: Inbox },
+    { id: "today", name: "Today", icon: Calendar },
+    { id: "upcoming", name: "Upcoming", icon: ChevronRight },
+  ];
+
+  return (
+    <>
+      <aside className="w-64 flex-shrink-0 border-r bg-background/50 p-4 hidden md:block">
+        <nav className="space-y-2">
+          {mainSections.map((section) => (
+            <Button
+              key={section.id}
+              variant={selectedSection === section.id ? "secondary" : "ghost"}
+              className="w-full justify-start"
+              onClick={() => onSelectSection(section.id)}
+            >
+              <section.icon className="mr-2 h-4 w-4" />
+              {section.name}
+            </Button>
+          ))}
+          <Collapsible open={isProjectsOpen} onOpenChange={setProjectsOpen}>
+            <div className="flex items-center justify-between">
+              <CollapsibleTrigger asChild>
+                 <Button variant="ghost" size="sm" className="w-full justify-start px-2">
+                    <ChevronRight className={cn("mr-2 h-4 w-4 transition-transform", isProjectsOpen && "rotate-90")} />
+                    <span className="font-semibold">Projects</span>
+                 </Button>
+              </CollapsibleTrigger>
+              <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setAddProjectDialogOpen(true)}>
+                  <Plus className="h-4 w-4"/>
+              </Button>
+            </div>
+            <CollapsibleContent className="space-y-1 pl-4 mt-1">
+                {projects.map(project => (
+                    <div key={project.project_id} className="flex items-center group">
+                        <Button
+                            variant={selectedSection === project.project_id ? "secondary" : "ghost"}
+                            className="w-full justify-start flex-1"
+                            onClick={() => onSelectSection(project.project_id)}
+                        >
+                            <Folder className="mr-2 h-4 w-4 text-muted-foreground" />
+                            <span className="truncate">{project.name}</span>
+                        </Button>
+                        {project.name !== 'Inbox' && (
+                            <AlertDialog>
+                                <AlertDialogTrigger asChild>
+                                    <Button variant="ghost" size="icon" className="h-7 w-7 opacity-0 group-hover:opacity-100">
+                                        <Trash2 className="h-4 w-4 text-destructive/70" />
+                                    </Button>
+                                </AlertDialogTrigger>
+                                <AlertDialogContent>
+                                    <AlertDialogHeader>
+                                        <AlertDialogTitle>Delete &quot;{project.name}&quot;?</AlertDialogTitle>
+                                        <AlertDialogDescription>
+                                            This will permanently delete the project and all its tasks. This action cannot be undone.
+                                        </AlertDialogDescription>
+                                    </AlertDialogHeader>
+                                    <AlertDialogFooter>
+                                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                        <AlertDialogAction
+                                            onClick={() => deleteProject(project.project_id)}
+                                            className="bg-red-600 text-destructive-foreground hover:bg-red-700"
+                                        >
+                                            Delete
+                                        </AlertDialogAction>
+                                    </AlertDialogFooter>
+                                </AlertDialogContent>
+                            </AlertDialog>
+                        )}
+                    </div>
+                ))}
+            </CollapsibleContent>
+          </Collapsible>
+        </nav>
+      </aside>
+      <AddProjectDialog isOpen={isAddProjectDialogOpen} onOpenChange={setAddProjectDialogOpen} />
+    </>
+  );
+}
+
