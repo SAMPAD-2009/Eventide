@@ -9,16 +9,35 @@ import { Button } from "../ui/button";
 import { Input } from "../ui/input";
 import { Textarea } from "../ui/textarea";
 import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
-import { CalendarIcon } from "lucide-react";
+import { CalendarIcon, Flag, MoreHorizontal, Inbox, FolderPlus, Folder } from "lucide-react";
 import { Calendar } from "../ui/calendar";
-import { format } from "date-fns";
+import { format, addDays, startOfWeek, endOfWeek } from "date-fns";
 import { cn } from "@/lib/utils";
-import { Todo } from "@/lib/types";
+import { Todo, Priority } from "@/lib/types";
+import { PRIORITIES, getPriorityInfo } from "@/lib/priorities";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
+  DropdownMenuSeparator,
+  DropdownMenuSub,
+  DropdownMenuSubContent,
+  DropdownMenuSubTrigger,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { useState } from "react";
+import { AddProjectDialog } from "./AddProjectDialog";
+
 
 const todoFormSchema = z.object({
   title: z.string().min(1, "Title is required"),
   description: z.string().optional(),
   due_date: z.date().optional(),
+  priority: z.string().default('Casual'),
+  project_id: z.string(),
 });
 
 type TodoFormValues = z.infer<typeof todoFormSchema>;
@@ -31,13 +50,17 @@ interface AddTodoFormProps {
 }
 
 export function AddTodoForm({ projectId, existingTodo, onCancel, onAdded }: AddTodoFormProps) {
-  const { addTodo, updateTodo } = useTodos();
+  const { addTodo, updateTodo, projects } = useTodos();
+  const [isAddProjectDialogOpen, setAddProjectDialogOpen] = useState(false);
+
   const form = useForm<TodoFormValues>({
     resolver: zodResolver(todoFormSchema),
     defaultValues: {
       title: existingTodo?.title || "",
       description: existingTodo?.description || "",
       due_date: existingTodo?.due_date ? new Date(existingTodo.due_date) : undefined,
+      priority: existingTodo?.priority || 'Casual',
+      project_id: existingTodo?.project_id || projectId,
     },
   });
   
@@ -47,62 +70,145 @@ export function AddTodoForm({ projectId, existingTodo, onCancel, onAdded }: AddT
     const data = {
         ...values,
         due_date: values.due_date ? format(values.due_date, 'yyyy-MM-dd') : undefined,
+        priority: values.priority as Priority,
     };
     
     if (isEditing) {
         await updateTodo(existingTodo.todo_id, data);
         onCancel?.();
     } else {
-        await addTodo({ ...data, project_id: projectId });
+        await addTodo(data);
         form.reset({ title: "", description: "", due_date: undefined });
         onAdded?.();
     }
   };
+  
+  const setDate = (date: Date | undefined) => {
+    form.setValue('due_date', date, { shouldDirty: true });
+  }
+
+  const currentProjectId = form.watch('project_id');
+  const currentProject = projects.find(p => p.project_id === currentProjectId);
+  const inboxProject = projects.find(p => p.name === 'Inbox');
+
+  const getProjectName = () => {
+    if (currentProjectId === inboxProject?.project_id) return 'Inbox';
+    return currentProject?.name;
+  }
+  
+  const priorityValue = form.watch('priority') as Priority;
+  const priorityInfo = getPriorityInfo(priorityValue);
+
 
   return (
-    <form onSubmit={form.handleSubmit(onSubmit)} className="p-3 border rounded-lg space-y-3">
-        <Input 
-            placeholder="Task name"
-            {...form.register("title")}
-            className="border-none text-base font-medium focus-visible:ring-0 !px-0"
-            autoFocus
-        />
-        <Textarea 
-            placeholder="Description"
-            {...form.register("description")}
-            className="border-none focus-visible:ring-0 resize-none !px-0"
-            rows={2}
-        />
-        <div className="flex justify-between items-center">
-            <Popover>
-                <PopoverTrigger asChild>
-                <Button variant="outline" size="sm" className={cn(!form.watch('due_date') && "text-muted-foreground")}>
-                    <CalendarIcon className="mr-2 h-4 w-4" />
-                    {form.watch('due_date') ? format(form.watch('due_date')!, 'MMM d') : "Due date"}
-                </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0">
-                <Calendar
-                    mode="single"
-                    selected={form.watch('due_date')}
-                    onSelect={(date) => form.setValue('due_date', date)}
-                    initialFocus
-                />
-                </PopoverContent>
-            </Popover>
+    <>
+      <AddProjectDialog isOpen={isAddProjectDialogOpen} onOpenChange={setAddProjectDialogOpen} />
+      <form onSubmit={form.handleSubmit(onSubmit)} className="p-3 border rounded-lg space-y-3">
+          <Input 
+              placeholder="Task name"
+              {...form.register("title")}
+              className="border-none text-base font-medium focus-visible:ring-0 !px-0"
+              autoFocus
+          />
+          <Textarea 
+              placeholder="Description"
+              {...form.register("description")}
+              className="border-none focus-visible:ring-0 resize-none !px-0"
+              rows={2}
+          />
+          <div className="flex justify-between items-center">
+              <div className="flex items-center gap-1">
+                  <Popover>
+                      <PopoverTrigger asChild>
+                      <Button variant="outline" size="sm" className={cn(!form.watch('due_date') && "text-muted-foreground")}>
+                          <CalendarIcon className="mr-2 h-4 w-4" />
+                          {form.watch('due_date') ? format(form.watch('due_date')!, 'MMM d') : "Due date"}
+                      </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0">
+                          <div className="p-2 space-y-1">
+                            <Button variant="ghost" size="sm" className="w-full justify-start" onClick={() => setDate(new Date())}>Today</Button>
+                            <Button variant="ghost" size="sm" className="w-full justify-start" onClick={() => setDate(addDays(new Date(), 1))}>Tomorrow</Button>
+                            <Button variant="ghost" size="sm" className="w-full justify-start" onClick={() => setDate(endOfWeek(new Date()))}>This weekend</Button>
+                          </div>
+                          <Calendar
+                              mode="single"
+                              selected={form.watch('due_date')}
+                              onSelect={(date) => setDate(date)}
+                              initialFocus
+                          />
+                      </PopoverContent>
+                  </Popover>
 
-             <div className="flex gap-2">
-                {onCancel && (
-                    <Button type="button" variant="ghost" size="sm" onClick={onCancel}>
-                      Cancel
-                    </Button>
-                )}
-                <Button type="submit" size="sm" disabled={!form.formState.isDirty && !isEditing}>
-                  {isEditing ? "Save" : "Add task"}
-                </Button>
-            </div>
-        </div>
-        {form.formState.errors.title && <p className="text-xs text-destructive">{form.formState.errors.title.message}</p>}
-    </form>
+                  <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                          <Button variant="outline" size="sm">
+                              <Flag className={cn("mr-2 h-4 w-4", priorityInfo.className)} />
+                              {priorityValue}
+                          </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent>
+                          <DropdownMenuLabel>Set Priority</DropdownMenuLabel>
+                          <DropdownMenuRadioGroup value={priorityValue} onValueChange={(value) => form.setValue('priority', value, { shouldDirty: true })}>
+                              {PRIORITIES.map(p => (
+                                <DropdownMenuRadioItem key={p.level} value={p.level}>
+                                    <Flag className={cn("mr-2 h-4 w-4", p.className)} />
+                                    {p.level}
+                                </DropdownMenuRadioItem>
+                              ))}
+                          </DropdownMenuRadioGroup>
+                      </DropdownMenuContent>
+                  </DropdownMenu>
+
+                  <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                           <Button variant="outline" size="icon" className="h-9 w-9">
+                              <MoreHorizontal className="h-4 w-4" />
+                           </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent>
+                          <DropdownMenuLabel>Project</DropdownMenuLabel>
+                           <DropdownMenuItem onClick={() => setAddProjectDialogOpen(true)}>
+                                <FolderPlus className="mr-2 h-4 w-4" />
+                                Create new project
+                           </DropdownMenuItem>
+                          <DropdownMenuSub>
+                              <DropdownMenuSubTrigger>
+                                  <Folder className="mr-2 h-4 w-4" />
+                                  Move to project
+                              </DropdownMenuSubTrigger>
+                              <DropdownMenuSubContent>
+                                   <DropdownMenuRadioGroup value={currentProjectId} onValueChange={(value) => form.setValue('project_id', value)}>
+                                      {projects.map(p => (
+                                        <DropdownMenuRadioItem key={p.project_id} value={p.project_id}>
+                                            {p.name}
+                                        </DropdownMenuRadioItem>
+                                      ))}
+                                  </DropdownMenuRadioGroup>
+                              </DropdownMenuSubContent>
+                          </DropdownMenuSub>
+                      </DropdownMenuContent>
+                  </DropdownMenu>
+              </div>
+
+              <Button variant="ghost" size="sm" disabled>
+                {getProjectName() === 'Inbox' ? <Inbox className="mr-2 h-4 w-4"/> : <Folder className="mr-2 h-4 w-4"/>}
+                {getProjectName()}
+              </Button>
+          </div>
+
+          <div className="flex justify-end gap-2 pt-2">
+              {onCancel && (
+                  <Button type="button" variant="ghost" onClick={onCancel}>
+                    Cancel
+                  </Button>
+              )}
+              <Button type="submit" size="default" disabled={!form.formState.isDirty && !isEditing}>
+                {isEditing ? "Save" : "Add task"}
+              </Button>
+          </div>
+          {form.formState.errors.title && <p className="text-xs text-destructive">{form.formState.errors.title.message}</p>}
+      </form>
+    </>
   );
 }

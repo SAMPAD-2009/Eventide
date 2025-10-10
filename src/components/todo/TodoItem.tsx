@@ -7,9 +7,10 @@ import { useTodos } from "@/context/TodoContext";
 import { Checkbox } from "../ui/checkbox";
 import { cn } from "@/lib/utils";
 import { Button } from "../ui/button";
-import { Trash2, Edit } from "lucide-react";
+import { Trash2, Edit, Flag } from "lucide-react";
 import { AddTodoForm } from "./AddTodoForm";
 import { format, parseISO, isToday, isPast } from 'date-fns';
+import { getPriorityInfo } from "@/lib/priorities";
 
 export function TodoItem({ todo }: { todo: Todo }) {
   const { updateTodo, deleteTodo } = useTodos();
@@ -34,13 +35,19 @@ export function TodoItem({ todo }: { todo: Todo }) {
         </span>
     );
   }
+  
+  const priorityInfo = getPriorityInfo(todo.priority);
+
 
   if (isEditing) {
-    return <AddTodoForm existingTodo={todo} onCancel={() => setIsEditing(false)} />;
+    return <AddTodoForm existingTodo={todo} onCancel={() => setIsEditing(false)} projectId={todo.project_id} />;
   }
 
   return (
-    <div className="flex items-start gap-3 p-3 rounded-lg border border-transparent hover:border-border transition-colors group">
+    <div className={cn(
+        "flex items-start gap-3 p-3 rounded-lg border border-transparent hover:border-border transition-colors group",
+        priorityInfo.borderClassName,
+        )}>
       <Checkbox
         id={`todo-${todo.todo_id}`}
         checked={todo.completed}
@@ -60,8 +67,11 @@ export function TodoItem({ todo }: { todo: Todo }) {
         {todo.description && (
           <p className="text-sm text-muted-foreground">{todo.description}</p>
         )}
-        <div className="mt-1">
+        <div className="mt-1 flex items-center gap-2">
             <DueDate />
+            {todo.priority !== 'Casual' && (
+                <Flag className={cn("h-3 w-3", priorityInfo.className)} />
+            )}
         </div>
       </div>
       <div className="opacity-0 group-hover:opacity-100 transition-opacity flex items-center">

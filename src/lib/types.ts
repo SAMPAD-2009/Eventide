@@ -97,6 +97,8 @@ export interface Project {
   created_at: string;
 }
 
+export type Priority = 'Very Important' | 'Important' | 'Not Important' | 'Casual';
+
 export interface Todo {
   todo_id: string;
   user_email: string;
@@ -104,6 +106,7 @@ export interface Todo {
   title: string;
   description?: string;
   due_date?: string;
+  priority: Priority;
   completed: boolean;
   created_at: string;
 }

@@ -41,6 +41,7 @@ export async function POST(request: NextRequest) {
         title: body.title,
         description: body.description,
         due_date: body.due_date,
+        priority: body.priority,
       })
       .select()
       .single();

@@ -30,58 +30,7 @@ export const TodoProvider = ({ children }: { children: ReactNode }) => {
   const [projects, setProjects] = useState<Project[]>([]);
   const [todos, setTodos] = useState<Todo[]>([]);
   
-  const fetchData = useCallback(async (userEmail: string) => {
-    setIsLoading(true);
-    try {
-        const [projectsRes, todosRes] = await Promise.all([
-            fetch(`/api/projects?user_email=${encodeURIComponent(userEmail)}`),
-            fetch(`/api/todos?user_email=${encodeURIComponent(userEmail)}`),
-        ]);
-
-        if (!projectsRes.ok || !todosRes.ok) {
-            throw new Error('Failed to fetch data');
-        }
-
-        const projectsData = await projectsRes.json();
-        const todosData = await todosRes.json();
-
-        // Ensure Inbox project exists
-        const inboxExists = projectsData.some((p: Project) => p.name === 'Inbox');
-        if (!inboxExists) {
-            const newInbox = await addProject({ name: 'Inbox' });
-            if (newInbox) {
-                projectsData.push(newInbox);
-            }
-        }
-
-        setProjects(projectsData);
-        setTodos(todosData);
-
-    } catch (error: any) {
-        toast({
-            variant: "destructive",
-            title: "Error",
-            description: `Could not fetch your projects and tasks: ${error.message}`,
-        });
-        setProjects([]);
-        setTodos([]);
-    } finally {
-        setIsLoading(false);
-    }
-  }, [toast, user?.email]);
-
-
-  useEffect(() => {
-    if (user?.email) {
-        fetchData(user.email);
-    } else {
-      setProjects([]);
-      setTodos([]);
-      setIsLoading(false);
-    }
-  }, [user, fetchData]);
-
-  const addProject = async (projectData: ProjectCreationData): Promise<Project | void> => {
+  const addProject = useCallback(async (projectData: ProjectCreationData): Promise<Project | void> => {
     if (!user?.email) return;
 
     try {
@@ -100,7 +49,59 @@ export const TodoProvider = ({ children }: { children: ReactNode }) => {
     } catch (e: any) {
         toast({ variant: 'destructive', title: "Error", description: e.message });
     }
-  };
+  }, [user?.email, toast]);
+
+  const fetchData = useCallback(async (userEmail: string) => {
+    setIsLoading(true);
+    try {
+        const [projectsRes, todosRes] = await Promise.all([
+            fetch(`/api/projects?user_email=${encodeURIComponent(userEmail)}`),
+            fetch(`/api/todos?user_email=${encodeURIComponent(userEmail)}`),
+        ]);
+
+        if (!projectsRes.ok || !todosRes.ok) {
+            throw new Error('Failed to fetch data');
+        }
+
+        let projectsData = await projectsRes.json();
+        const todosData = await todosRes.json();
+
+        // Ensure Inbox project exists
+        const inboxExists = projectsData.some((p: Project) => p.name === 'Inbox');
+        if (!inboxExists) {
+            const newInbox = await addProject({ name: 'Inbox' });
+            if (newInbox) {
+                projectsData = [...projectsData, newInbox];
+            }
+        }
+
+        setProjects(projectsData);
+        setTodos(todosData);
+
+    } catch (error: any) {
+        toast({
+            variant: "destructive",
+            title: "Error",
+            description: `Could not fetch your projects and tasks: ${error.message}`,
+        });
+        setProjects([]);
+        setTodos([]);
+    } finally {
+        setIsLoading(false);
+    }
+  }, [toast, addProject]);
+
+
+  useEffect(() => {
+    if (user?.email) {
+        fetchData(user.email);
+    } else {
+      setProjects([]);
+      setTodos([]);
+      setIsLoading(false);
+    }
+  }, [user, fetchData]);
+
   
   const deleteProject = async (projectId: string) => {
     const originalProjects = [...projects];
@@ -125,7 +126,6 @@ export const TodoProvider = ({ children }: { children: ReactNode }) => {
 
     let finalProjectId = todoData.project_id;
     
-    // If the projectId is "inbox", find the real Inbox project ID
     if (finalProjectId === 'inbox') {
         let inboxProject = projects.find(p => p.name === 'Inbox');
         if (!inboxProject) {
@@ -139,10 +139,8 @@ export const TodoProvider = ({ children }: { children: ReactNode }) => {
         }
         finalProjectId = inboxProject.project_id;
     } else {
-        // Check if the provided project_id exists.
         const projectExists = projects.some(p => p.project_id === finalProjectId);
 
-        // If it doesn't exist, treat it as a new project name to be created.
         if (!projectExists) {
             const newProject = await addProject({ name: finalProjectId });
             if (newProject) {
@@ -172,7 +170,7 @@ export const TodoProvider = ({ children }: { children: ReactNode }) => {
   const updateTodo = async (todoId: string, todoData: Partial<Omit<Todo, 'todo_id' | 'user_email' | 'created_at'>>) => {
     const originalTodos = [...todos];
     
-    setTodos(prev => prev.map(t => t.todo_id === todoId ? {...t, ...todoData} : t));
+    setTodos(prev => prev.map(t => t.todo_id === todoId ? {...t, ...todoData} as Todo : t));
 
     try {
         const response = await fetch(`/api/todos/${todoId}`, {
