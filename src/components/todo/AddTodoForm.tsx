@@ -136,7 +136,7 @@ export function AddTodoForm({ projectId, existingTodo, onCancel, onAdded, onUpda
                           {form.watch('due_date') ? format(form.watch('due_date')!, 'MMM d') : "Due date"}
                       </Button>
                       </PopoverTrigger>
-                      <PopoverContent className="w-auto p-0" container={typeof document !== 'undefined' ? document.body : undefined}>
+                      <PopoverContent className="w-auto p-0">
                           <div className="p-2 space-y-1">
                             <Button variant="ghost" size="sm" className="w-full justify-start" onClick={() => setDate(new Date())}>Today</Button>
                             <Button variant="ghost" size="sm" className="w-full justify-start" onClick={() => setDate(addDays(new Date(), 1))}>Tomorrow</Button>
