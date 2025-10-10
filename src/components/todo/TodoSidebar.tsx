@@ -4,7 +4,7 @@
 import { useTodos } from "@/context/TodoContext";
 import { Project } from "@/lib/types";
 import { cn } from "@/lib/utils";
-import { Folder, Inbox, Calendar, ChevronRight, Plus, Trash2 } from "lucide-react";
+import { Folder, Inbox, Calendar, ChevronRight, Plus, Trash2, LayoutGrid } from "lucide-react";
 import { Button } from "../ui/button";
 import {
   Collapsible,
@@ -24,6 +24,7 @@ import {
     AlertDialogTitle,
     AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
+import Link from 'next/link';
 
 interface TodoSidebarProps {
   selectedSection: string;
@@ -38,7 +39,6 @@ export function TodoSidebar({ selectedSection, onSelectSection }: TodoSidebarPro
   const mainSections = [
     { id: "inbox", name: "Inbox", icon: Inbox },
     { id: "today", name: "Today", icon: Calendar },
-    { id: "upcoming", name: "Upcoming", icon: ChevronRight },
   ];
 
   return (
@@ -56,6 +56,12 @@ export function TodoSidebar({ selectedSection, onSelectSection }: TodoSidebarPro
               {section.name}
             </Button>
           ))}
+           <Button asChild variant="ghost" className="w-full justify-start">
+             <Link href="/todo-calendar">
+                <LayoutGrid className="mr-2 h-4 w-4" />
+                Upcoming
+             </Link>
+           </Button>
           <Collapsible open={isProjectsOpen} onOpenChange={setProjectsOpen}>
             <div className="flex items-center justify-between">
               <CollapsibleTrigger asChild>

@@ -13,7 +13,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 
 export default function TodoPage() {
   const { projects, todos, isLoading } = useTodos();
-  const [selectedSection, setSelectedSection] = useState('inbox'); // 'inbox', 'today', 'upcoming', or a project_id
+  const [selectedSection, setSelectedSection] = useState('inbox'); // 'inbox', 'today', or a project_id
   const [showAddForm, setShowAddForm] = useState(false);
 
   const filteredTodos = useMemo(() => {
@@ -25,9 +25,6 @@ export default function TodoPage() {
     if (selectedSection === 'today') {
       return todos.filter(t => t.due_date && isToday(parseISO(t.due_date)) && !t.completed);
     }
-    if (selectedSection === 'upcoming') {
-      return todos.filter(t => t.due_date && isFuture(parseISO(t.due_date)) && !t.completed);
-    }
     // It's a project
     return todos.filter(t => t.project_id === selectedSection && !t.completed);
   }, [selectedSection, todos, projects, isLoading]);
@@ -37,7 +34,7 @@ export default function TodoPage() {
       if (selectedSection === 'inbox') {
         return todos.filter(t => t.project_id === inboxProject?.project_id && t.completed);
       }
-      if (['today', 'upcoming'].includes(selectedSection)) {
+      if (['today'].includes(selectedSection)) {
         return []; // Don't show completed in smart lists for now
       }
       // It's a project (and not inbox)
@@ -52,12 +49,11 @@ export default function TodoPage() {
   const sectionTitle = 
       selectedSection === 'inbox' ? 'Inbox' :
       selectedSection === 'today' ? 'Today' :
-      selectedSection === 'upcoming' ? 'Upcoming' :
       currentProject?.name || 'Tasks';
 
   const projectIdForNewTask = useMemo(() => {
     const inboxProject = projects.find(p => p.name === 'Inbox');
-    if (['today', 'upcoming'].includes(selectedSection)) {
+    if (['today'].includes(selectedSection)) {
         return inboxProject?.project_id || 'Inbox'; 
     }
     if (selectedSection === 'inbox') {
