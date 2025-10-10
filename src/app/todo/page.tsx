@@ -48,7 +48,6 @@ export default function TodoPage() {
 
   const projectIdForNewTask = useMemo(() => {
     // If we are not in a specific project view, new tasks go to the Inbox.
-    // The TodoContext will find the correct ID.
     if (['inbox', 'today', 'upcoming'].includes(selectedSection)) return "inbox";
     // Otherwise, we're in a project, so use its ID.
     return selectedSection;
@@ -83,7 +82,7 @@ export default function TodoPage() {
                 <AddTodoForm 
                   projectId={projectIdForNewTask} 
                   onCancel={() => setShowAddForm(false)} 
-                  onAdded={() => { if (!isEditing) setShowAddForm(false) }}
+                  onAdded={() => setShowAddForm(false)}
                 />
             ) : (
                 <Button variant="ghost" className="w-full justify-start mt-2" onClick={() => setShowAddForm(true)}>
