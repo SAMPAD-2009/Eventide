@@ -109,6 +109,7 @@ export interface Todo {
   priority: Priority;
   completed: boolean;
   created_at: string;
+  completed_at?: string | null;
 }
 
     

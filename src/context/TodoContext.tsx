@@ -170,13 +170,21 @@ export const TodoProvider = ({ children }: { children: ReactNode }) => {
   const updateTodo = async (todoId: string, todoData: Partial<Omit<Todo, 'todo_id' | 'user_email' | 'created_at'>>) => {
     const originalTodos = [...todos];
     
+    // Optimistic update
     setTodos(prev => prev.map(t => t.todo_id === todoId ? {...t, ...todoData} as Todo : t));
+
+    const payload = { ...todoData };
+    if (payload.completed === true) {
+        (payload as any).completed_at = new Date().toISOString();
+    } else if (payload.completed === false) {
+        (payload as any).completed_at = null;
+    }
 
     try {
         const response = await fetch(`/api/todos/${todoId}`, {
             method: 'PATCH',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(todoData),
+            body: JSON.stringify(payload),
         });
         if (!response.ok) throw new Error('Failed to update task');
     } catch (e: any) {

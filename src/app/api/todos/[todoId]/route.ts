@@ -13,7 +13,7 @@ export async function PATCH(
     const body = await request.json();
     const { data: updatedTodo, error } = await supabase
       .from('todos')
-      .update(body) // flexible update
+      .update(body) // flexible update, will accept 'completed_at'
       .eq('todo_id', todoId)
       .select()
       .single();
