@@ -28,7 +28,7 @@ import {
   DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { AddProjectDialog } from "./AddProjectDialog";
 
 
@@ -47,22 +47,33 @@ interface AddTodoFormProps {
   existingTodo?: Todo;
   onCancel?: () => void;
   onAdded?: () => void;
+  onUpdated?: () => void;
 }
 
-export function AddTodoForm({ projectId, existingTodo, onCancel, onAdded }: AddTodoFormProps) {
+export function AddTodoForm({ projectId, existingTodo, onCancel, onAdded, onUpdated }: AddTodoFormProps) {
   const { addTodo, updateTodo, projects } = useTodos();
   const [isAddProjectDialogOpen, setAddProjectDialogOpen] = useState(false);
 
   const form = useForm<TodoFormValues>({
     resolver: zodResolver(todoFormSchema),
     defaultValues: {
+      title: "",
+      description: "",
+      due_date: undefined,
+      priority: 'Casual',
+      project_id: projectId,
+    },
+  });
+
+  useEffect(() => {
+    form.reset({
       title: existingTodo?.title || "",
       description: existingTodo?.description || "",
       due_date: existingTodo?.due_date ? new Date(existingTodo.due_date) : undefined,
       priority: existingTodo?.priority || 'Casual',
       project_id: existingTodo?.project_id || projectId,
-    },
-  });
+    })
+  }, [existingTodo, projectId, form]);
   
   const isEditing = !!existingTodo;
 
@@ -75,7 +86,7 @@ export function AddTodoForm({ projectId, existingTodo, onCancel, onAdded }: AddT
     
     if (isEditing) {
         await updateTodo(existingTodo.todo_id, data);
-        onCancel?.();
+        onUpdated?.();
     } else {
         await addTodo(data);
         form.reset({ title: "", description: "", due_date: undefined });
@@ -103,7 +114,7 @@ export function AddTodoForm({ projectId, existingTodo, onCancel, onAdded }: AddT
   return (
     <>
       <AddProjectDialog isOpen={isAddProjectDialogOpen} onOpenChange={setAddProjectDialogOpen} />
-      <form onSubmit={form.handleSubmit(onSubmit)} className="p-3 border rounded-lg space-y-3">
+      <form onSubmit={form.handleSubmit(onSubmit)} className="p-1 space-y-3">
           <Input 
               placeholder="Task name"
               {...form.register("title")}
@@ -204,7 +215,7 @@ export function AddTodoForm({ projectId, existingTodo, onCancel, onAdded }: AddT
                   </Button>
               )}
               <Button type="submit" size="default" disabled={!form.formState.isDirty && !isEditing}>
-                {isEditing ? "Save" : "Add task"}
+                {isEditing ? "Save changes" : "Add task"}
               </Button>
           </div>
           {form.formState.errors.title && <p className="text-xs text-destructive">{form.formState.errors.title.message}</p>}

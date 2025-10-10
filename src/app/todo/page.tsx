@@ -10,11 +10,14 @@ import { isToday, isFuture, parseISO } from 'date-fns';
 import { Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
+import type { Todo } from '@/lib/types';
 
 export default function TodoPage() {
   const { projects, todos, isLoading } = useTodos();
   const [selectedSection, setSelectedSection] = useState('inbox'); // 'inbox', 'today', or a project_id
-  const [showAddForm, setShowAddForm] = useState(false);
+  const [isFormOpen, setFormOpen] = useState(false);
+  const [editingTodo, setEditingTodo] = useState<Todo | null>(null);
 
   const filteredTodos = useMemo(() => {
     if (isLoading) return [];
@@ -61,6 +64,21 @@ export default function TodoPage() {
     }
     return selectedSection;
   }, [selectedSection, projects]);
+  
+  const handleOpenCreateForm = () => {
+    setEditingTodo(null);
+    setFormOpen(true);
+  }
+
+  const handleOpenEditForm = (todo: Todo) => {
+    setEditingTodo(todo);
+    setFormOpen(true);
+  }
+
+  const handleFormClose = () => {
+    setFormOpen(false);
+    setEditingTodo(null);
+  }
 
 
   if (isLoading && projects.length === 0) {
@@ -85,27 +103,36 @@ export default function TodoPage() {
       <main className="flex-1 p-4 md:p-8 overflow-y-auto">
         <h1 className="text-3xl font-bold tracking-tight mb-6">{sectionTitle}</h1>
         <div className="max-w-3xl mx-auto">
-            <TaskList todos={filteredTodos} />
+            <TaskList todos={filteredTodos} onEdit={handleOpenEditForm} />
             
-            { showAddForm ? (
-                <AddTodoForm 
-                  projectId={projectIdForNewTask} 
-                  onCancel={() => setShowAddForm(false)} 
-                  onAdded={() => setShowAddForm(false)}
-                />
-            ) : (
-                <Button variant="ghost" className="w-full justify-start mt-2" onClick={() => setShowAddForm(true)}>
-                    <Plus className="mr-2 h-4 w-4" /> Add task
-                </Button>
-            )}
+            <Button variant="ghost" className="w-full justify-start mt-2" onClick={handleOpenCreateForm}>
+                <Plus className="mr-2 h-4 w-4" /> Add task
+            </Button>
 
             {completedTodos.length > 0 && (
                 <div className="mt-12">
                     <h2 className="text-lg font-semibold mb-4">Completed</h2>
-                    <TaskList todos={completedTodos} />
+                    <TaskList todos={completedTodos} onEdit={handleOpenEditForm} />
                 </div>
             )}
         </div>
+        <Dialog open={isFormOpen} onOpenChange={setFormOpen}>
+            <DialogContent>
+                 <DialogHeader>
+                    <DialogTitle>{editingTodo ? 'Edit task' : 'Add task'}</DialogTitle>
+                    <DialogDescription>
+                        {editingTodo ? 'Update the details of your task.' : 'Add a new task to your list.'}
+                    </DialogDescription>
+                </DialogHeader>
+                <AddTodoForm 
+                  projectId={projectIdForNewTask} 
+                  existingTodo={editingTodo || undefined}
+                  onCancel={handleFormClose}
+                  onAdded={handleFormClose}
+                  onUpdated={handleFormClose}
+                />
+            </DialogContent>
+        </Dialog>
       </main>
     </div>
   );

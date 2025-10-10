@@ -8,13 +8,16 @@ import { Checkbox } from "../ui/checkbox";
 import { cn } from "@/lib/utils";
 import { Button } from "../ui/button";
 import { Trash2, Edit, Flag } from "lucide-react";
-import { AddTodoForm } from "./AddTodoForm";
 import { format, parseISO, isToday, isPast } from 'date-fns';
 import { getPriorityInfo } from "@/lib/priorities";
 
-export function TodoItem({ todo }: { todo: Todo }) {
+interface TodoItemProps {
+  todo: Todo;
+  onEdit: (todo: Todo) => void;
+}
+
+export function TodoItem({ todo, onEdit }: TodoItemProps) {
   const { updateTodo, deleteTodo } = useTodos();
-  const [isEditing, setIsEditing] = useState(false);
 
   const handleComplete = (checked: boolean) => {
     updateTodo(todo.todo_id, { completed: checked });
@@ -37,11 +40,6 @@ export function TodoItem({ todo }: { todo: Todo }) {
   }
   
   const priorityInfo = getPriorityInfo(todo.priority);
-
-
-  if (isEditing) {
-    return <AddTodoForm existingTodo={todo} onCancel={() => setIsEditing(false)} projectId={todo.project_id} />;
-  }
 
   return (
     <div className={cn(
@@ -76,7 +74,7 @@ export function TodoItem({ todo }: { todo: Todo }) {
       </div>
       <div className="opacity-0 group-hover:opacity-100 transition-opacity flex items-center">
         {!todo.completed && (
-            <Button variant="ghost" size="icon" onClick={() => setIsEditing(true)}>
+            <Button variant="ghost" size="icon" onClick={() => onEdit(todo)}>
             <Edit className="h-4 w-4" />
             </Button>
         )}
