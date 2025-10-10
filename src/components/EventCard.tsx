@@ -68,12 +68,12 @@ export function EventCard({ event, onEdit }: EventCardProps) {
                 </div>
             </div>
             <div className="flex items-center -mr-2 -mt-2">
-                 <Button variant="ghost" size="icon" className="flex-shrink-0" onClick={() => onEdit(event)}>
+                 <Button variant="ghost" size="icon" className="flex-shrink-0" onClick={() => onEdit(event)} disabled={isDeleting}>
                     <Pencil className="h-4 w-4 text-muted-foreground" />
                 </Button>
                 <AlertDialog>
                     <AlertDialogTrigger asChild>
-                        <Button variant="ghost" size="icon" className="flex-shrink-0">
+                        <Button variant="ghost" size="icon" className="flex-shrink-0" disabled={isDeleting}>
                             <Trash2 className="h-4 w-4 text-muted-foreground" />
                         </Button>
                     </AlertDialogTrigger>

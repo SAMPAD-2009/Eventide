@@ -74,14 +74,16 @@ export function TodoItem({ todo }: { todo: Todo }) {
             )}
         </div>
       </div>
-      <div className="opacity-0 group-hover:opacity-100 transition-opacity flex items-center">
-        <Button variant="ghost" size="icon" onClick={() => setIsEditing(true)}>
-          <Edit className="h-4 w-4" />
-        </Button>
-        <Button variant="ghost" size="icon" onClick={() => deleteTodo(todo.todo_id)}>
-          <Trash2 className="h-4 w-4 text-destructive/80" />
-        </Button>
-      </div>
+      {!todo.completed && (
+        <div className="opacity-0 group-hover:opacity-100 transition-opacity flex items-center">
+            <Button variant="ghost" size="icon" onClick={() => setIsEditing(true)}>
+            <Edit className="h-4 w-4" />
+            </Button>
+            <Button variant="ghost" size="icon" onClick={() => deleteTodo(todo.todo_id)}>
+            <Trash2 className="h-4 w-4 text-destructive/80" />
+            </Button>
+        </div>
+      )}
     </div>
   );
 }
