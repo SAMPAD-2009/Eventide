@@ -33,11 +33,20 @@ export default function TodoPage() {
   }, [selectedSection, todos, projects, isLoading]);
 
   const completedTodos = useMemo(() => {
-      if (['inbox', 'today', 'upcoming'].includes(selectedSection)) {
+      const inboxProject = projects.find(p => p.name === 'Inbox');
+      if (selectedSection === 'inbox') {
+        return todos.filter(t => t.project_id === inboxProject?.project_id && t.completed);
+      }
+      if (['today', 'upcoming'].includes(selectedSection)) {
         return []; // Don't show completed in smart lists for now
       }
-      return todos.filter(t => t.project_id === selectedSection && t.completed);
-  }, [selectedSection, todos]);
+      // It's a project (and not inbox)
+      if(inboxProject?.project_id !== selectedSection) {
+        return todos.filter(t => t.project_id === selectedSection && t.completed);
+      }
+      return [];
+
+  }, [selectedSection, todos, projects]);
 
   const currentProject = projects.find(p => p.project_id === selectedSection);
   const sectionTitle = 
@@ -47,11 +56,15 @@ export default function TodoPage() {
       currentProject?.name || 'Tasks';
 
   const projectIdForNewTask = useMemo(() => {
-    // If we are not in a specific project view, new tasks go to the Inbox.
-    if (['inbox', 'today', 'upcoming'].includes(selectedSection)) return "inbox";
-    // Otherwise, we're in a project, so use its ID.
+    const inboxProject = projects.find(p => p.name === 'Inbox');
+    if (['today', 'upcoming'].includes(selectedSection)) {
+        return inboxProject?.project_id || 'Inbox'; 
+    }
+    if (selectedSection === 'inbox') {
+        return inboxProject?.project_id || 'Inbox';
+    }
     return selectedSection;
-  }, [selectedSection]);
+  }, [selectedSection, projects]);
 
 
   if (isLoading && projects.length === 0) {
