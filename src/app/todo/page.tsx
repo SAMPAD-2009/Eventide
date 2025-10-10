@@ -17,6 +17,7 @@ export default function TodoPage() {
   const [showAddForm, setShowAddForm] = useState(false);
 
   const filteredTodos = useMemo(() => {
+    if (isLoading) return [];
     if (selectedSection === 'inbox') {
       const inboxProject = projects.find(p => p.name === 'Inbox');
       return todos.filter(t => t.project_id === inboxProject?.project_id && !t.completed);
@@ -29,7 +30,7 @@ export default function TodoPage() {
     }
     // It's a project
     return todos.filter(t => t.project_id === selectedSection && !t.completed);
-  }, [selectedSection, todos, projects]);
+  }, [selectedSection, todos, projects, isLoading]);
 
   const completedTodos = useMemo(() => {
       if (['inbox', 'today', 'upcoming'].includes(selectedSection)) {
@@ -45,10 +46,13 @@ export default function TodoPage() {
       selectedSection === 'upcoming' ? 'Upcoming' :
       currentProject?.name || 'Tasks';
 
-  const projectIdForNewTask =
-      selectedSection === 'inbox' ? projects.find(p => p.name === 'Inbox')?.project_id :
-      !['today', 'upcoming'].includes(selectedSection) ? selectedSection
-      : projects.find(p => p.name === 'Inbox')?.project_id;
+  const projectIdForNewTask = useMemo(() => {
+    if (isLoading) return null;
+    const inboxProject = projects.find(p => p.name === 'Inbox');
+    if (selectedSection === 'inbox') return inboxProject?.project_id;
+    if (['today', 'upcoming'].includes(selectedSection)) return inboxProject?.project_id;
+    return selectedSection; // It's a project_id
+  }, [selectedSection, projects, isLoading]);
 
 
   if (isLoading) {
