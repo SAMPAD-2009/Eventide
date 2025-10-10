@@ -101,15 +101,3 @@ export default function TodoCalendarPage() {
     </div>
   );
 }
-
-// A simple groupBy utility if lodash is not available
-function groupBy<T>(array: T[], keyFn: (item: T) => string): Record<string, T[]> {
-    return array.reduce((result, currentItem) => {
-        const key = keyFn(currentItem);
-        if (!result[key]) {
-            result[key] = [];
-        }
-        result[key].push(currentItem);
-        return result;
-    }, {} as Record<string, T[]>);
-}
