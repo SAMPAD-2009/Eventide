@@ -13,7 +13,7 @@ type ProjectCreationData = Omit<Project, 'project_id' | 'user_email' | 'created_
 interface TodoContextType {
   projects: Project[];
   todos: Todo[];
-  addProject: (projectData: ProjectCreationData) => Promise<void>;
+  addProject: (projectData: ProjectCreationData) => Promise<Project | void>;
   deleteProject: (projectId: string) => Promise<void>;
   addTodo: (todoData: TodoCreationData) => Promise<void>;
   updateTodo: (todoId: string, todoData: Partial<Omit<Todo, 'todo_id' | 'user_email' | 'created_at'>>) => Promise<void>;
@@ -45,6 +45,15 @@ export const TodoProvider = ({ children }: { children: ReactNode }) => {
         const projectsData = await projectsRes.json();
         const todosData = await todosRes.json();
 
+        // Ensure Inbox project exists
+        const inboxExists = projectsData.some((p: Project) => p.name === 'Inbox');
+        if (!inboxExists) {
+            const newInbox = await addProject({ name: 'Inbox' });
+            if (newInbox) {
+                projectsData.push(newInbox);
+            }
+        }
+
         setProjects(projectsData);
         setTodos(todosData);
 
@@ -59,7 +68,7 @@ export const TodoProvider = ({ children }: { children: ReactNode }) => {
     } finally {
         setIsLoading(false);
     }
-  }, [toast]);
+  }, [toast, user?.email]);
 
 
   useEffect(() => {
@@ -72,7 +81,7 @@ export const TodoProvider = ({ children }: { children: ReactNode }) => {
     }
   }, [user, fetchData]);
 
-  const addProject = async (projectData: ProjectCreationData) => {
+  const addProject = async (projectData: ProjectCreationData): Promise<Project | void> => {
     if (!user?.email) return;
 
     try {
@@ -84,7 +93,9 @@ export const TodoProvider = ({ children }: { children: ReactNode }) => {
         if (!response.ok) throw new Error('Failed to create project');
         const newProject = await response.json();
         setProjects(prev => [...prev, newProject]);
-        toast({ title: "Project Created", description: `'${newProject.name}' has been added.` });
+        if (projectData.name !== 'Inbox') {
+          toast({ title: "Project Created", description: `'${newProject.name}' has been added.` });
+        }
         return newProject;
     } catch (e: any) {
         toast({ variant: 'destructive', title: "Error", description: e.message });
@@ -114,31 +125,35 @@ export const TodoProvider = ({ children }: { children: ReactNode }) => {
 
     let finalProjectId = todoData.project_id;
     
-    // Check if the provided project_id exists.
-    const projectExists = projects.some(p => p.project_id === finalProjectId);
-
-    // If it doesn't exist, and it's not the special "inbox" keyword,
-    // treat it as a new project name to be created.
-    if (!projectExists && finalProjectId !== 'inbox') {
-        const newProject = await addProject({ name: finalProjectId });
-        if (newProject) {
-            finalProjectId = newProject.project_id;
-        } else {
-            // Failed to create the project, so we bail out.
-            toast({ variant: 'destructive', title: "Error", description: "Could not create the new project for your task." });
-            return;
-        }
-    }
-
     // If the projectId is "inbox", find the real Inbox project ID
     if (finalProjectId === 'inbox') {
-        const inboxProject = projects.find(p => p.name === 'Inbox');
+        let inboxProject = projects.find(p => p.name === 'Inbox');
         if (!inboxProject) {
-            toast({ variant: 'destructive', title: "Error", description: "Could not find Inbox project." });
-            return;
+            const newInbox = await addProject({ name: 'Inbox' });
+            if (newInbox) {
+                inboxProject = newInbox;
+            } else {
+                 toast({ variant: 'destructive', title: "Error", description: "Could not find or create Inbox project." });
+                 return;
+            }
         }
         finalProjectId = inboxProject.project_id;
+    } else {
+        // Check if the provided project_id exists.
+        const projectExists = projects.some(p => p.project_id === finalProjectId);
+
+        // If it doesn't exist, treat it as a new project name to be created.
+        if (!projectExists) {
+            const newProject = await addProject({ name: finalProjectId });
+            if (newProject) {
+                finalProjectId = newProject.project_id;
+            } else {
+                toast({ variant: 'destructive', title: "Error", description: "Could not create the new project for your task." });
+                return;
+            }
+        }
     }
+
 
     try {
         const response = await fetch('/api/todos', {
