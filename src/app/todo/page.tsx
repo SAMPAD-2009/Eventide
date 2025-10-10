@@ -47,10 +47,9 @@ export default function TodoPage() {
       currentProject?.name || 'Tasks';
 
   const projectIdForNewTask = useMemo(() => {
-    if (isLoading) return null;
+    if (isLoading || projects.length === 0) return null;
     const inboxProject = projects.find(p => p.name === 'Inbox');
-    if (selectedSection === 'inbox') return inboxProject?.project_id;
-    if (['today', 'upcoming'].includes(selectedSection)) return inboxProject?.project_id;
+    if (['inbox', 'today', 'upcoming'].includes(selectedSection)) return inboxProject?.project_id;
     return selectedSection; // It's a project_id
   }, [selectedSection, projects, isLoading]);
 
