@@ -16,7 +16,7 @@ interface TodoContextType {
   addProject: (projectData: ProjectCreationData) => Promise<void>;
   deleteProject: (projectId: string) => Promise<void>;
   addTodo: (todoData: TodoCreationData) => Promise<void>;
-  updateTodo: (todoId: string, todoData: Partial<Todo>) => Promise<void>;
+  updateTodo: (todoId: string, todoData: Partial<Omit<Todo, 'todo_id' | 'user_email' | 'created_at'>>) => Promise<void>;
   deleteTodo: (todoId: string) => Promise<void>;
   isLoading: boolean;
 }
@@ -111,11 +111,22 @@ export const TodoProvider = ({ children }: { children: ReactNode }) => {
   const addTodo = async (todoData: TodoCreationData) => {
     if (!user?.email) return;
 
+    let finalProjectId = todoData.project_id;
+    // If the projectId is "inbox", find the real Inbox project ID
+    if (finalProjectId === 'inbox') {
+        const inboxProject = projects.find(p => p.name === 'Inbox');
+        if (!inboxProject) {
+            toast({ variant: 'destructive', title: "Error", description: "Could not find Inbox project." });
+            return;
+        }
+        finalProjectId = inboxProject.project_id;
+    }
+
     try {
         const response = await fetch('/api/todos', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ ...todoData, user_email: user.email }),
+            body: JSON.stringify({ ...todoData, project_id: finalProjectId, user_email: user.email }),
         });
         if (!response.ok) throw new Error('Failed to create task');
         const newTodo = await response.json();
@@ -125,7 +136,7 @@ export const TodoProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
-  const updateTodo = async (todoId: string, todoData: Partial<Todo>) => {
+  const updateTodo = async (todoId: string, todoData: Partial<Omit<Todo, 'todo_id' | 'user_email' | 'created_at'>>) => {
     const originalTodos = [...todos];
     
     setTodos(prev => prev.map(t => t.todo_id === todoId ? {...t, ...todoData} : t));

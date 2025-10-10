@@ -24,12 +24,13 @@ const todoFormSchema = z.object({
 type TodoFormValues = z.infer<typeof todoFormSchema>;
 
 interface AddTodoFormProps {
-  projectId: string;
+  projectId: string; // Can be a project_id or "inbox"
   existingTodo?: Todo;
   onCancel?: () => void;
+  onAdded?: () => void;
 }
 
-export function AddTodoForm({ projectId, existingTodo, onCancel }: AddTodoFormProps) {
+export function AddTodoForm({ projectId, existingTodo, onCancel, onAdded }: AddTodoFormProps) {
   const { addTodo, updateTodo } = useTodos();
   const form = useForm<TodoFormValues>({
     resolver: zodResolver(todoFormSchema),
@@ -54,6 +55,7 @@ export function AddTodoForm({ projectId, existingTodo, onCancel }: AddTodoFormPr
     } else {
         await addTodo({ ...data, project_id: projectId });
         form.reset({ title: "", description: "", due_date: undefined });
+        onAdded?.();
     }
   };
 
@@ -63,6 +65,7 @@ export function AddTodoForm({ projectId, existingTodo, onCancel }: AddTodoFormPr
             placeholder="Task name"
             {...form.register("title")}
             className="border-none text-base font-medium focus-visible:ring-0 !px-0"
+            autoFocus
         />
         <Textarea 
             placeholder="Description"
@@ -89,10 +92,12 @@ export function AddTodoForm({ projectId, existingTodo, onCancel }: AddTodoFormPr
             </Popover>
 
              <div className="flex gap-2">
-                <Button variant="ghost" size="sm" onClick={onCancel ?? (() => form.reset({ title: ""}))}>
-                  Cancel
-                </Button>
-                <Button type="submit" size="sm" disabled={!form.formState.isDirty}>
+                {onCancel && (
+                    <Button type="button" variant="ghost" size="sm" onClick={onCancel}>
+                      Cancel
+                    </Button>
+                )}
+                <Button type="submit" size="sm" disabled={!form.formState.isDirty && !isEditing}>
                   {isEditing ? "Save" : "Add task"}
                 </Button>
             </div>

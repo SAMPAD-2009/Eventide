@@ -47,14 +47,15 @@ export default function TodoPage() {
       currentProject?.name || 'Tasks';
 
   const projectIdForNewTask = useMemo(() => {
-    if (isLoading || projects.length === 0) return null;
-    const inboxProject = projects.find(p => p.name === 'Inbox');
-    if (['inbox', 'today', 'upcoming'].includes(selectedSection)) return inboxProject?.project_id;
-    return selectedSection; // It's a project_id
-  }, [selectedSection, projects, isLoading]);
+    // If we are not in a specific project view, new tasks go to the Inbox.
+    // The TodoContext will find the correct ID.
+    if (['inbox', 'today', 'upcoming'].includes(selectedSection)) return "inbox";
+    // Otherwise, we're in a project, so use its ID.
+    return selectedSection;
+  }, [selectedSection]);
 
 
-  if (isLoading) {
+  if (isLoading && projects.length === 0) {
     return (
         <div className="flex h-[calc(100vh-4rem)]">
             <Skeleton className="w-64 hidden md:block border-r" />
@@ -78,14 +79,16 @@ export default function TodoPage() {
         <div className="max-w-3xl mx-auto">
             <TaskList todos={filteredTodos} />
             
-            {projectIdForNewTask && (
-                 showAddForm ? (
-                    <AddTodoForm projectId={projectIdForNewTask} onCancel={() => setShowAddForm(false)} />
-                 ) : (
-                    <Button variant="ghost" className="w-full justify-start mt-2" onClick={() => setShowAddForm(true)}>
-                        <Plus className="mr-2 h-4 w-4" /> Add task
-                    </Button>
-                 )
+            { showAddForm ? (
+                <AddTodoForm 
+                  projectId={projectIdForNewTask} 
+                  onCancel={() => setShowAddForm(false)} 
+                  onAdded={() => { if (!isEditing) setShowAddForm(false) }}
+                />
+            ) : (
+                <Button variant="ghost" className="w-full justify-start mt-2" onClick={() => setShowAddForm(true)}>
+                    <Plus className="mr-2 h-4 w-4" /> Add task
+                </Button>
             )}
 
             {completedTodos.length > 0 && (
