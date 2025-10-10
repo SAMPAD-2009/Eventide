@@ -30,7 +30,7 @@ export function DraggableEvent({ event, onEditClick }: DraggableEventProps) {
     <div ref={setNodeRef} style={style} {...attributes}>
         <Card
             className={cn(
-                "p-2 text-sm rounded-md shadow-sm mb-1 flex items-center gap-1 cursor-grab",
+                "p-1 sm:p-2 text-xs sm:text-sm rounded-md shadow-sm mb-1 flex items-center gap-1 cursor-grab",
                 isDragging && "shadow-lg"
             )}
             style={{ 
@@ -44,7 +44,7 @@ export function DraggableEvent({ event, onEditClick }: DraggableEventProps) {
                 onEditClick(event);
             }}
         >
-            <div {...listeners} className="cursor-grab touch-none p-1 -ml-1">
+            <div {...listeners} className="cursor-grab touch-none p-1 -ml-1 hidden sm:block">
                 <GripVertical className="h-4 w-4 text-muted-foreground/50" />
             </div>
             <span 
