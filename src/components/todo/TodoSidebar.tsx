@@ -25,6 +25,7 @@ import {
     AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 
 interface TodoSidebarProps {
   selectedSection: string;
@@ -35,6 +36,7 @@ export function TodoSidebar({ selectedSection, onSelectSection }: TodoSidebarPro
   const { projects, deleteProject } = useTodos();
   const [isProjectsOpen, setProjectsOpen] = useState(true);
   const [isAddProjectDialogOpen, setAddProjectDialogOpen] = useState(false);
+  const pathname = usePathname();
 
   const mainSections = [
     { id: "inbox", name: "Inbox", icon: Inbox },
@@ -48,7 +50,7 @@ export function TodoSidebar({ selectedSection, onSelectSection }: TodoSidebarPro
           {mainSections.map((section) => (
             <Button
               key={section.id}
-              variant={selectedSection === section.id ? "secondary" : "ghost"}
+              variant={selectedSection === section.id && pathname === '/todo' ? "secondary" : "ghost"}
               className="w-full justify-start"
               onClick={() => onSelectSection(section.id)}
             >
@@ -56,7 +58,7 @@ export function TodoSidebar({ selectedSection, onSelectSection }: TodoSidebarPro
               {section.name}
             </Button>
           ))}
-           <Button asChild variant="ghost" className="w-full justify-start">
+           <Button asChild variant={pathname === '/todo-calendar' ? 'secondary' : 'ghost'} className="w-full justify-start">
              <Link href="/todo-calendar">
                 <LayoutGrid className="mr-2 h-4 w-4" />
                 Upcoming

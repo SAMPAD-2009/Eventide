@@ -178,7 +178,7 @@ export default function CalendarPage() {
 
             <header className="flex flex-col sm:flex-row items-center justify-between gap-4 border-b p-4">
                 <div className="flex flex-col sm:flex-row items-center gap-4">
-                    <h1 className="text-2xl font-semibold text-center sm:text-left">
+                    <h1 className="text-xl md:text-2xl font-semibold text-center sm:text-left">
                         {selectedDayForView ? format(selectedDayForView, 'MMMM d, yyyy') : format(currentMonth, 'MMMM yyyy')}
                     </h1>
                     {!selectedDayForView && (
@@ -210,7 +210,7 @@ export default function CalendarPage() {
             ) : (
                 <div className="grid grid-cols-7 flex-1 border-t border-l">
                     {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => (
-                        <div key={day} className="border-b border-r text-center font-medium text-muted-foreground p-2 text-sm bg-background">
+                        <div key={day} className="border-b border-r text-center font-medium text-muted-foreground p-2 text-xs sm:text-sm bg-background">
                             <span className="hidden sm:inline">{day}</span>
                             <span className="sm:hidden">{day.charAt(0)}</span>
                         </div>
