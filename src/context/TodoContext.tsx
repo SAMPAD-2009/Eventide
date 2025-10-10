@@ -85,6 +85,7 @@ export const TodoProvider = ({ children }: { children: ReactNode }) => {
         const newProject = await response.json();
         setProjects(prev => [...prev, newProject]);
         toast({ title: "Project Created", description: `'${newProject.name}' has been added.` });
+        return newProject;
     } catch (e: any) {
         toast({ variant: 'destructive', title: "Error", description: e.message });
     }
@@ -112,6 +113,23 @@ export const TodoProvider = ({ children }: { children: ReactNode }) => {
     if (!user?.email) return;
 
     let finalProjectId = todoData.project_id;
+    
+    // Check if the provided project_id exists.
+    const projectExists = projects.some(p => p.project_id === finalProjectId);
+
+    // If it doesn't exist, and it's not the special "inbox" keyword,
+    // treat it as a new project name to be created.
+    if (!projectExists && finalProjectId !== 'inbox') {
+        const newProject = await addProject({ name: finalProjectId });
+        if (newProject) {
+            finalProjectId = newProject.project_id;
+        } else {
+            // Failed to create the project, so we bail out.
+            toast({ variant: 'destructive', title: "Error", description: "Could not create the new project for your task." });
+            return;
+        }
+    }
+
     // If the projectId is "inbox", find the real Inbox project ID
     if (finalProjectId === 'inbox') {
         const inboxProject = projects.find(p => p.name === 'Inbox');
