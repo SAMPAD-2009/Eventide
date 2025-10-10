@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useForm } from "react-hook-form";
@@ -30,6 +29,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { useState, useEffect } from "react";
 import { AddProjectDialog } from "./AddProjectDialog";
+import { ScrollArea } from "../ui/scroll-area";
 
 
 const todoFormSchema = z.object({
@@ -137,6 +137,7 @@ export function AddTodoForm({ projectId, existingTodo, onCancel, onAdded, onUpda
                       </Button>
                       </PopoverTrigger>
                       <PopoverContent className="w-auto p-0">
+                        <ScrollArea className="h-auto max-h-[400px]">
                           <div className="p-2 space-y-1">
                             <Button variant="ghost" size="sm" className="w-full justify-start" onClick={() => setDate(new Date())}>Today</Button>
                             <Button variant="ghost" size="sm" className="w-full justify-start" onClick={() => setDate(addDays(new Date(), 1))}>Tomorrow</Button>
@@ -148,6 +149,7 @@ export function AddTodoForm({ projectId, existingTodo, onCancel, onAdded, onUpda
                               onSelect={(date) => setDate(date)}
                               initialFocus
                           />
+                        </ScrollArea>
                       </PopoverContent>
                   </Popover>
 
