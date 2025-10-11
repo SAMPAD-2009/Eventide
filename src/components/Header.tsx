@@ -1,3 +1,4 @@
+
 "use client";
 
 import Link from 'next/link';
@@ -120,7 +121,7 @@ export function Header() {
                 <nav className="grid gap-6 text-lg font-medium mt-8">
                   {navLinks.map(link => (
                     <Link 
-                      key={link.href} 
+                      key={`mobile-${link.href}`}
                       href={link.href} 
                       className={navLinkClasses(link.href)}
                       onClick={handleLinkClick}
@@ -129,9 +130,6 @@ export function Header() {
                       {link.textLabel || link.label}
                     </Link>
                   ))}
-                   <Link href="/todo-calendar" className={navLinkClasses("/todo-calendar")} onClick={handleLinkClick}>
-                    Todo Calendar
-                   </Link>
                   <DropdownMenuSeparator />
                   {!user && (
                     <>
