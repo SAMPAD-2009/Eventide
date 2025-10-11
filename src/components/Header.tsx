@@ -1,4 +1,3 @@
-
 "use client";
 
 import Link from 'next/link';
@@ -31,7 +30,6 @@ export function Header() {
   const navLinks = [
     { href: "/", label: "Upcoming" },
     { href: "/todo", label: "Todo" },
-    { href: "/todo-calendar", label: "Todo Calendar" },
     { href: "/history", label: "History" },
     { href: "/weather", label: <CloudSun className="h-5 w-5" />, textLabel: "Weather" },
     { href: "/calendar", label: <CalendarDays className="h-5 w-5" />, textLabel: "Calendar" },
@@ -131,6 +129,9 @@ export function Header() {
                       {link.textLabel || link.label}
                     </Link>
                   ))}
+                   <Link href="/todo-calendar" className={navLinkClasses("/todo-calendar")} onClick={handleLinkClick}>
+                    Todo Calendar
+                   </Link>
                   <DropdownMenuSeparator />
                   {!user && (
                     <>
