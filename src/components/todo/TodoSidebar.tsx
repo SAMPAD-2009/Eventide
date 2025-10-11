@@ -2,7 +2,6 @@
 "use client";
 
 import { useTodos } from "@/context/TodoContext";
-import { Project } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { Folder, Inbox, Calendar, ChevronRight, Plus, Trash2, LayoutGrid } from "lucide-react";
 import { Button } from "../ui/button";
@@ -22,7 +21,6 @@ import {
     AlertDialogFooter,
     AlertDialogHeader,
     AlertDialogTitle,
-    AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';

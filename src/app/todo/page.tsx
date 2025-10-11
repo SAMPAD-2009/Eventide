@@ -6,12 +6,14 @@ import { useTodos } from '@/context/TodoContext';
 import { TodoSidebar } from '@/components/todo/TodoSidebar';
 import { TaskList } from '@/components/todo/TaskList';
 import { AddTodoForm } from '@/components/todo/AddTodoForm';
-import { isToday, isFuture, parseISO } from 'date-fns';
+import { isToday } from 'date-fns';
+import { parseISO } from 'date-fns/fp';
 import { Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import type { Todo } from '@/lib/types';
+import { TodoBottomNav } from '@/components/todo/TodoBottomNav';
 
 export default function TodoPage() {
   const { projects, todos, isLoading } = useTodos();
@@ -100,7 +102,7 @@ export default function TodoPage() {
   return (
     <div className="flex h-[calc(100vh-4rem)]">
       <TodoSidebar selectedSection={selectedSection} onSelectSection={setSelectedSection} />
-      <main className="flex-1 p-4 md:p-8 overflow-y-auto">
+      <main className="flex-1 p-4 md:p-8 overflow-y-auto pb-24 md:pb-8">
         <h1 className="text-3xl font-bold tracking-tight mb-6">{sectionTitle}</h1>
         <div className="max-w-3xl mx-auto">
             <TaskList todos={filteredTodos} onEdit={handleOpenEditForm} />
@@ -134,6 +136,7 @@ export default function TodoPage() {
             </DialogContent>
         </Dialog>
       </main>
+      <TodoBottomNav selectedSection={selectedSection} onSelectSection={setSelectedSection} />
     </div>
   );
 }
