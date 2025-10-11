@@ -119,7 +119,7 @@ export default function TodoPage() {
             )}
         </div>
         <Dialog open={isFormOpen} onOpenChange={setFormOpen}>
-            <DialogContent>
+            <DialogContent className="sm:max-w-lg lg:max-w-3xl">
                  <DialogHeader>
                     <DialogTitle>{editingTodo ? 'Edit task' : 'Add task'}</DialogTitle>
                     <DialogDescription>

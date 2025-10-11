@@ -119,7 +119,7 @@ export function AddTodoForm({ projectId, existingTodo, onCancel, onAdded, onUpda
     <>
       <AddProjectDialog isOpen={isAddProjectDialogOpen} onOpenChange={setAddProjectDialogOpen} />
       <Collapsible open={isDateSelectorOpen} onOpenChange={setDateSelectorOpen} className="w-full">
-        <div className="flex flex-col lg:flex-row lg:gap-4">
+        <div className="flex flex-col lg:flex-row lg:items-start lg:gap-4">
             <form onSubmit={form.handleSubmit(onSubmit)} className="p-1 space-y-3 flex-1">
                 <Input 
                     placeholder="Task name"
@@ -213,7 +213,7 @@ export function AddTodoForm({ projectId, existingTodo, onCancel, onAdded, onUpda
                 {form.formState.errors.title && <p className="text-xs text-destructive">{form.formState.errors.title.message}</p>}
             </form>
 
-            <CollapsibleContent className="w-full lg:w-auto lg:min-w-[300px] mt-2 lg:mt-0">
+            <CollapsibleContent className="w-full lg:max-w-xs mt-2 lg:mt-0">
                 <div className="p-2 border rounded-md">
                     <div className="flex items-center justify-center gap-2 mb-2">
                         <Button variant="ghost" size="sm" className="flex-1" onClick={() => setDate(new Date())}>Today</Button>
@@ -234,5 +234,3 @@ export function AddTodoForm({ projectId, existingTodo, onCancel, onAdded, onUpda
     </>
   );
 }
-
-    
