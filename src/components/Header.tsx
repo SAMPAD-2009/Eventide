@@ -3,7 +3,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Calendar, LogOut, Menu, CalendarDays, CloudSun, CheckSquare, LayoutGrid } from 'lucide-react';
+import { Calendar, LogOut, Menu, CalendarDays, CloudSun, CheckSquare } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { ThemeToggle } from './ThemeToggle';
 import { useAuth } from '@/context/AuthContext';
@@ -26,7 +26,6 @@ export function Header() {
   const pathname = usePathname();
   const { user, logout } = useAuth();
   const [isSheetOpen, setSheetOpen] = React.useState(false);
-
 
   const navLinks = [
     { href: "/", label: "Upcoming" },
@@ -127,7 +126,7 @@ export function Header() {
                       onClick={handleLinkClick}
                       prefetch={true}
                     >
-                      {link.textLabel || link.label}
+                      {link.textLabel || (typeof link.label === 'string' ? link.label : link.href.substring(1))}
                     </Link>
                   ))}
                   <DropdownMenuSeparator />
@@ -145,4 +144,3 @@ export function Header() {
     </header>
   );
 }
-
