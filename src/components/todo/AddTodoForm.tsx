@@ -131,8 +131,8 @@ export function AddTodoForm({ projectId, existingTodo, onCancel, onAdded, onUpda
               className="border-none focus-visible:ring-0 resize-none !px-0"
               rows={2}
           />
-          <div className="flex flex-wrap items-center gap-1">
-              <Collapsible open={isDateSelectorOpen} onOpenChange={setDateSelectorOpen}>
+          <Collapsible open={isDateSelectorOpen} onOpenChange={setDateSelectorOpen}>
+            <div className="flex flex-wrap items-center gap-1">
                 <CollapsibleTrigger asChild>
                   <Button variant="outline" size="sm" className={cn(!form.watch('due_date') && "text-muted-foreground")}>
                       <CalendarIcon className="mr-2 h-4 w-4" />
@@ -196,24 +196,23 @@ export function AddTodoForm({ projectId, existingTodo, onCancel, onAdded, onUpda
                     {getProjectName() === 'Inbox' ? <Inbox className="mr-2 h-4 w-4"/> : <Folder className="mr-2 h-4 w-4"/>}
                     {getProjectName()}
                 </Button>
-
-                <CollapsibleContent className="w-full mt-2">
-                    <div className="p-2 border rounded-md">
-                        <div className="flex items-center justify-center gap-2 mb-2">
-                            <Button variant="ghost" size="sm" className="flex-1" onClick={() => setDate(new Date())}>Today</Button>
-                            <Button variant="ghost" size="sm" className="flex-1" onClick={() => setDate(addDays(new Date(), 1))}>Tomorrow</Button>
-                            <Button variant="ghost" size="sm" className="flex-1" onClick={() => setDate(endOfWeek(new Date()))}>This weekend</Button>
-                        </div>
-                        <Calendar
-                            mode="single"
-                            selected={form.watch('due_date')}
-                            onSelect={(date) => setDate(date)}
-                            initialFocus
-                        />
+            </div>
+            <CollapsibleContent className="w-full mt-2">
+                <div className="p-2 border rounded-md">
+                    <div className="flex items-center justify-center gap-2 mb-2">
+                        <Button variant="ghost" size="sm" className="flex-1" onClick={() => setDate(new Date())}>Today</Button>
+                        <Button variant="ghost" size="sm" className="flex-1" onClick={() => setDate(addDays(new Date(), 1))}>Tomorrow</Button>
+                        <Button variant="ghost" size="sm" className="flex-1" onClick={() => setDate(endOfWeek(new Date()))}>This weekend</Button>
                     </div>
-                </CollapsibleContent>
-              </Collapsible>
-          </div>
+                    <Calendar
+                        mode="single"
+                        selected={form.watch('due_date')}
+                        onSelect={(date) => setDate(date)}
+                        initialFocus
+                    />
+                </div>
+            </CollapsibleContent>
+          </Collapsible>
 
           <div className="flex justify-end gap-2 pt-2">
               {onCancel && (
