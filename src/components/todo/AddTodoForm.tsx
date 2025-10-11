@@ -131,10 +131,10 @@ export function AddTodoForm({ projectId, existingTodo, onCancel, onAdded, onUpda
               className="border-none focus-visible:ring-0 resize-none !px-0"
               rows={2}
           />
-          <Collapsible open={isDateSelectorOpen} onOpenChange={setDateSelectorOpen}>
+          <Collapsible open={isDateSelectorOpen} onOpenChange={setDateSelectorOpen} className="w-full">
             <div className="flex flex-wrap items-center gap-1">
                 <CollapsibleTrigger asChild>
-                  <Button variant="outline" size="sm" className={cn(!form.watch('due_date') && "text-muted-foreground")}>
+                  <Button variant="outline" size="sm" className={cn("text-sm", !form.watch('due_date') && "text-muted-foreground")}>
                       <CalendarIcon className="mr-2 h-4 w-4" />
                       {form.watch('due_date') ? format(form.watch('due_date')!, 'MMM d') : "Due date"}
                   </Button>
@@ -209,6 +209,7 @@ export function AddTodoForm({ projectId, existingTodo, onCancel, onAdded, onUpda
                         selected={form.watch('due_date')}
                         onSelect={(date) => setDate(date)}
                         initialFocus
+                        className="p-0 w-full"
                     />
                 </div>
             </CollapsibleContent>
