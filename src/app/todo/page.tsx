@@ -130,7 +130,6 @@ export default function TodoPage() {
                   projectId={projectIdForNewTask} 
                   existingTodo={editingTodo || undefined}
                   onCancel={handleFormClose}
-                  onAdded={handleFormClose}
                   onUpdated={handleFormClose}
                 />
             </DialogContent>
