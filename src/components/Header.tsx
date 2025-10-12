@@ -3,7 +3,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Calendar, LogOut, Menu, CalendarDays, CloudSun, CheckSquare } from 'lucide-react';
+import { Calendar, LogOut, Menu, CalendarDays, CloudSun, Settings } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { ThemeToggle } from './ThemeToggle';
 import { useAuth } from '@/context/AuthContext';
@@ -64,6 +64,15 @@ export function Header() {
         <div className="flex flex-1 items-center justify-end gap-2">
             <ThemeToggle />
 
+            {user && (
+                <Button asChild variant="ghost" size="icon">
+                    <Link href="/settings">
+                        <Settings />
+                        <span className="sr-only">Settings</span>
+                    </Link>
+                </Button>
+            )}
+
             {user ? (
                <DropdownMenu>
                   <DropdownMenuTrigger asChild>
@@ -86,9 +95,6 @@ export function Header() {
                     <DropdownMenuSeparator />
                     <DropdownMenuItem asChild>
                        <Link href="/profile">Profile</Link>
-                    </DropdownMenuItem>
-                    <DropdownMenuItem asChild>
-                       <Link href="/settings">Settings</Link>
                     </DropdownMenuItem>
                     <DropdownMenuSeparator />
                     <DropdownMenuItem onClick={logout}>
