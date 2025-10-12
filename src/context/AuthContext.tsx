@@ -52,6 +52,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [isLoading, setIsLoading] = useState(true);
   const [initialAuthCheck, setInitialAuthCheck] = useState(false);
   const [landingPage, setLandingPage] = useState('/');
+  const [initialRedirect, setInitialRedirect] = useState(false);
 
 
   useEffect(() => {
@@ -69,6 +70,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         setUser(null);
       }
       setInitialAuthCheck(true);
+      setInitialRedirect(false); // Reset redirect flag on auth state change
     });
 
     return () => unsubscribe();
@@ -83,11 +85,17 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const isAuthRedirectPath = AUTH_REDIRECT_PATHS.includes(pathname);
 
     if (user) {
-      // If the user is logged in and on a page like /login or /signup,
-      // redirect them to their chosen landing page.
-      if (isAuthRedirectPath) {
-        router.push(landingPage);
-      }
+        // Redirect from /login or /signup to landing page
+        if (isAuthRedirectPath) {
+            router.push(landingPage);
+            return;
+        }
+
+        // Perform initial redirect to landing page if necessary
+        if (pathname === '/' && landingPage !== '/' && !initialRedirect) {
+            router.push(landingPage);
+            setInitialRedirect(true); // Mark that initial redirect has happened
+        }
     } else {
       // If the user is not logged in and not on a public path,
       // redirect them to the login page.
@@ -100,22 +108,29 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     // The router will handle the view transition.
     setIsLoading(false);
 
-  }, [user, pathname, router, initialAuthCheck, landingPage]);
+  }, [user, pathname, router, initialAuthCheck, landingPage, initialRedirect]);
 
 
   const login = async (email: string, pass: string) => {
     setIsLoading(true);
 
     try {
-      await signInWithEmailAndPassword(auth, email, pass);
-      toast({ title: "Login Successful", description: "Welcome back!" });
-      // For regular users, onAuthStateChanged will handle redirect to '/' via useEffect
-      return true;
+      const userCredential = await signInWithEmailAndPassword(auth, email, pass);
+      const firebaseUser = userCredential.user;
+      if (firebaseUser.email) {
+          const profile = await getUserProfile(firebaseUser.email);
+          const targetLandingPage = profile?.landing_page || '/';
+          setLandingPage(targetLandingPage);
+          router.push(targetLandingPage);
+          toast({ title: "Login Successful", description: "Welcome back!" });
+          return true;
+      }
+      return false;
     } catch (error: any) {
       toast({ variant: 'destructive', title: "Login Failed", description: error.message });
       return false;
     } finally {
-       // Let onAuthStateChanged handle loading state to avoid flashes
+       setIsLoading(false);
     }
   };
 
@@ -177,6 +192,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       }
 
       const existingProfile = await getUserProfile(firebaseUser.email);
+      let targetLandingPage = '/';
 
       if (!existingProfile) {
         const profileResult = await createUserProfile({
@@ -196,11 +212,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
            });
         }
       } else {
-        setLandingPage(existingProfile.landing_page || '/');
+        targetLandingPage = existingProfile.landing_page || '/';
       }
-
+      
+      setLandingPage(targetLandingPage);
+      router.push(targetLandingPage);
       toast({ title: "Login Successful", description: "Welcome!" });
-      router.push(existingProfile?.landing_page || '/');
       return true;
 
     } catch (error: any) {
