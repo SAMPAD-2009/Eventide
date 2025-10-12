@@ -10,15 +10,16 @@ const UserProfileSchema = z.object({
     username: z.string(),
     theme: z.string(),
     photo_url: z.string().url(),
+    landing_page: z.string().optional(),
 });
 
 type UserProfile = z.infer<typeof UserProfileSchema>;
 
-export async function createUserProfile(profileData: UserProfile) {
+export async function createUserProfile(profileData: Omit<UserProfile, 'landing_page'>) {
     const supabase = createClient();
     const { data, error } = await supabase
         .from('user_profiles')
-        .insert([profileData])
+        .insert([{ ...profileData, landing_page: '/' }])
         .select()
         .single();
     
@@ -49,6 +50,17 @@ export async function updateUserTheme(email: string, theme: string) {
     
     return { data, error };
 }
+
+export async function updateUserLandingPage(email: string, landingPage: string) {
+    const supabase = createClient();
+    const { error } = await supabase
+        .from('user_profiles')
+        .update({ landing_page: landingPage })
+        .eq('email', email);
+    
+    return { error };
+}
+
 
 export async function updateUserProfilePhoto(email: string, photoURL: string) {
     const supabase = createClient();
@@ -96,6 +108,26 @@ export async function updateUserEmailInDb(oldEmail: string, newEmail: string) {
         await supabase.from('user_profiles').update({ email: oldEmail }).eq('email', newEmail);
         return { error: `Failed to update events: ${eventsError.message}. Profile change was reverted.` };
     }
+    
+    // 3. Update todos table
+    const { error: todosError } = await supabase
+        .from('todos')
+        .update({ user_email: newEmail })
+        .eq('user_email', oldEmail);
+    if (todosError) {
+        console.error("Error updating todos table:", todosError);
+        return { error: `Failed to update todos: ${todosError.message}` };
+    }
+
+    // 4. Update projects table
+    const { error: projectsError } = await supabase
+        .from('projects')
+        .update({ user_email: newEmail })
+        .eq('user_email', oldEmail);
+    if (projectsError) {
+        console.error("Error updating projects table:", projectsError);
+        return { error: `Failed to update projects: ${projectsError.message}` };
+    }
 
     return { error: null };
 }
@@ -113,8 +145,28 @@ export async function deleteUserData(email: string) {
         console.error("Error deleting user events:", eventsError);
         return { error: `Failed to delete events: ${eventsError.message}` };
     }
+    
+    // 2. Delete todos
+    const { error: todosError } = await supabase
+        .from('todos')
+        .delete()
+        .eq('user_email', email);
+    if (todosError) {
+        console.error("Error deleting user todos:", todosError);
+        return { error: `Failed to delete todos: ${todosError.message}` };
+    }
 
-    // 2. Delete user profile
+    // 3. Delete projects
+    const { error: projectsError } = await supabase
+        .from('projects')
+        .delete()
+        .eq('user_email', email);
+    if (projectsError) {
+        console.error("Error deleting user projects:", projectsError);
+        return { error: `Failed to delete projects: ${projectsError.message}` };
+    }
+
+    // 4. Delete user profile
     const { error: profileError } = await supabase
         .from('user_profiles')
         .delete()

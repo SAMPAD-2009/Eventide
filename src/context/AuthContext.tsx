@@ -29,6 +29,8 @@ interface AuthContextType {
   deleteUserAccount: () => Promise<void>;
   linkWithGoogle: () => Promise<void>;
   isLoading: boolean;
+  landingPage: string;
+  setLandingPage: (page: string) => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -49,6 +51,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [initialAuthCheck, setInitialAuthCheck] = useState(false);
+  const [landingPage, setLandingPage] = useState('/');
+
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser: FirebaseUser | null) => {
@@ -60,6 +64,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           photoURL: userProfile?.photo_url || firebaseUser.photoURL,
           displayName: userProfile?.username || firebaseUser.displayName,
         });
+        setLandingPage(userProfile?.landing_page || '/');
       } else {
         setUser(null);
       }
@@ -79,14 +84,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     // Determine if the current path is one from which a logged-in user should be redirected.
     const isAuthRedirectPath = AUTH_REDIRECT_PATHS.includes(pathname);
 
-    if (user && isAuthRedirectPath) {
-      router.push('/');
+    if (user && (isAuthRedirectPath || (pathname === '/' && landingPage !== '/'))) {
+      router.push(landingPage);
     } else if (!user && !isPublicPath) {
       router.push('/login');
     }
     setIsLoading(false);
 
-  }, [user, pathname, router, initialAuthCheck]);
+  }, [user, pathname, router, initialAuthCheck, landingPage]);
 
 
   const login = async (email: string, pass: string) => {
@@ -181,10 +186,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
               description: "Your account was created, but we failed to sync your profile. Please contact support.",
            });
         }
+      } else {
+        setLandingPage(existingProfile.landing_page || '/');
       }
 
       toast({ title: "Login Successful", description: "Welcome!" });
-      router.push('/');
+      router.push(existingProfile?.landing_page || '/');
       return true;
 
     } catch (error: any) {
@@ -388,7 +395,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   }
 
 
-  const contextValue = { user, login, signup, signInWithGoogle, logout, updateUserProfile, updateUserUsername, updateUserPassword, updateUserEmail, deleteUserAccount, linkWithGoogle, isLoading };
+  const contextValue = { user, login, signup, signInWithGoogle, logout, updateUserProfile, updateUserUsername, updateUserPassword, updateUserEmail, deleteUserAccount, linkWithGoogle, isLoading, landingPage, setLandingPage };
 
   return (
     <AuthContext.Provider value={contextValue}>
@@ -404,5 +411,3 @@ export const useAuth = () => {
   }
   return context;
 };
-
-    

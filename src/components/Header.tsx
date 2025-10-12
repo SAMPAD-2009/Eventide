@@ -3,7 +3,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Calendar, LogOut, Menu, CalendarDays, CloudSun, CheckSquare } from 'lucide-react';
+import { Calendar, LogOut, Menu, CalendarDays, CloudSun, CheckSquare, Settings } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { ThemeToggle } from './ThemeToggle';
 import { useAuth } from '@/context/AuthContext';
@@ -14,18 +14,23 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
 } from "@/components/ui/dropdown-menu"
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
 import { Button } from './ui/button';
 import { generateAvatar } from '@/lib/utils';
 import { Sheet, SheetContent, SheetTrigger, SheetHeader, SheetTitle, SheetDescription } from './ui/sheet';
 import React from 'react';
+import { updateUserLandingPage } from '@/services/supabase';
+import { useToast } from '@/hooks/use-toast';
 
 
 export function Header() {
   const pathname = usePathname();
-  const { user, logout } = useAuth();
+  const { user, logout, landingPage, setLandingPage } = useAuth();
   const [isSheetOpen, setSheetOpen] = React.useState(false);
+  const { toast } = useToast();
 
   const navLinks = [
     { href: "/", label: "Upcoming" },
@@ -34,6 +39,26 @@ export function Header() {
     { href: "/weather", label: <CloudSun className="h-5 w-5" />, textLabel: "Weather" },
     { href: "/calendar", label: <CalendarDays className="h-5 w-5" />, textLabel: "Calendar" },
   ];
+
+  const handleLandingPageChange = async (page: string) => {
+    if (user?.email) {
+      setLandingPage(page);
+      const { error } = await updateUserLandingPage(user.email, page);
+      if (error) {
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: "Could not save your landing page preference.",
+        });
+        setLandingPage(landingPage); // Revert on error
+      } else {
+        toast({
+          title: "Landing Page Set",
+          description: `Your landing page is now set to ${navLinks.find(l => l.href === page)?.label || 'Upcoming'}.`,
+        });
+      }
+    }
+  };
 
   const navLinkClasses = (path: string) =>
     cn(
@@ -63,6 +88,27 @@ export function Header() {
         </div>
         <div className="flex flex-1 items-center justify-end gap-2">
             <ThemeToggle />
+
+            {user && (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                   <Button variant="ghost" size="icon">
+                        <Settings className="h-5 w-5" />
+                   </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent className="w-56" align="end" forceMount>
+                   <DropdownMenuLabel>Set Landing Page</DropdownMenuLabel>
+                   <DropdownMenuRadioGroup value={landingPage} onValueChange={handleLandingPageChange}>
+                        {navLinks.map(link => (
+                            <DropdownMenuRadioItem key={link.href} value={link.href}>
+                                {link.textLabel || (typeof link.label === 'string' ? link.label : '')}
+                            </DropdownMenuRadioItem>
+                        ))}
+                   </DropdownMenuRadioGroup>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            )}
+
             {user ? (
                <DropdownMenu>
                   <DropdownMenuTrigger asChild>
