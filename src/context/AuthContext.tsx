@@ -80,15 +80,24 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
 
     const isPublicPath = PUBLIC_PATHS.includes(pathname);
-    
-    // Determine if the current path is one from which a logged-in user should be redirected.
     const isAuthRedirectPath = AUTH_REDIRECT_PATHS.includes(pathname);
 
-    if (user && (isAuthRedirectPath || (pathname === '/' && landingPage !== '/'))) {
-      router.push(landingPage);
-    } else if (!user && !isPublicPath) {
-      router.push('/login');
+    if (user) {
+      // If the user is logged in and on a page like /login or /signup,
+      // redirect them to their chosen landing page.
+      if (isAuthRedirectPath) {
+        router.push(landingPage);
+      }
+    } else {
+      // If the user is not logged in and not on a public path,
+      // redirect them to the login page.
+      if (!isPublicPath) {
+        router.push('/login');
+      }
     }
+    
+    // We can set loading to false after the first check.
+    // The router will handle the view transition.
     setIsLoading(false);
 
   }, [user, pathname, router, initialAuthCheck, landingPage]);
@@ -411,3 +420,5 @@ export const useAuth = () => {
   }
   return context;
 };
+
+    
