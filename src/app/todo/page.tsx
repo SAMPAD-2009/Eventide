@@ -119,7 +119,7 @@ export default function TodoPage() {
             )}
         </div>
         <Dialog open={isFormOpen} onOpenChange={setFormOpen}>
-            <DialogContent className="sm:max-w-lg lg:max-w-3xl">
+            <DialogContent className="sm:max-w-lg">
                  <DialogHeader>
                     <DialogTitle>{editingTodo ? 'Edit task' : 'Add task'}</DialogTitle>
                     <DialogDescription>
@@ -130,6 +130,7 @@ export default function TodoPage() {
                   projectId={projectIdForNewTask} 
                   existingTodo={editingTodo || undefined}
                   onCancel={handleFormClose}
+                  onAdded={() => { /* Keep form open */ }}
                   onUpdated={handleFormClose}
                 />
             </DialogContent>
