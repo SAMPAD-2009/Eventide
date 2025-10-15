@@ -13,6 +13,7 @@ import { Suspense } from 'react';
 import { AdminHeader } from '@/components/AdminHeader';
 import { ConditionalFooter } from '@/components/ConditionalFooter';
 import { TodoProvider } from '@/context/TodoContext';
+import { LabelProvider } from '@/context/LabelContext';
 
 const inter = Inter({
   subsets: ['latin'],
@@ -43,20 +44,22 @@ export default function RootLayout({
       <body className="font-body antialiased min-h-screen bg-background text-foreground">
         <AuthProvider>
           <ThemeProvider>
-            <EventProvider>
-              <TodoProvider>
-                <div className="relative flex min-h-screen flex-col">
-                  <Suspense fallback={null}>
-                    <SiteAlert />
-                  </Suspense>
-                  <ConditionalHeader />
-                  <AdminHeader />
-                  <main className="flex-1">{children}</main>
-                  <ConditionalFooter />
-                </div>
-                <Toaster />
-              </TodoProvider>
-            </EventProvider>
+            <LabelProvider>
+              <EventProvider>
+                <TodoProvider>
+                  <div className="relative flex min-h-screen flex-col">
+                    <Suspense fallback={null}>
+                      <SiteAlert />
+                    </Suspense>
+                    <ConditionalHeader />
+                    <AdminHeader />
+                    <main className="flex-1">{children}</main>
+                    <ConditionalFooter />
+                  </div>
+                  <Toaster />
+                </TodoProvider>
+              </EventProvider>
+            </LabelProvider>
           </ThemeProvider>
         </AuthProvider>
       </body>

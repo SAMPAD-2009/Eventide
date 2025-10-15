@@ -58,7 +58,6 @@ export const TodoProvider = ({ children }: { children: ReactNode }) => {
         if (!projectsRes.ok) throw new Error('Failed to fetch projects');
         let projectsData = await projectsRes.json();
         
-        // Ensure Inbox project exists before fetching todos
         const inboxExists = projectsData.some((p: Project) => p.name === 'Inbox');
         if (!inboxExists) {
             const newInbox = await addProject({ name: 'Inbox' });
@@ -122,24 +121,22 @@ export const TodoProvider = ({ children }: { children: ReactNode }) => {
 
     let finalProjectId = todoData.project_id;
     
-    // Check if the project_id is a name or an ID
-    const projectExistsById = projects.some(p => p.project_id === finalProjectId);
-
-    if (!projectExistsById) {
-      // It's not an ID, so assume it's a name. Does a project with this name exist?
-      const projectExistsByName = projects.find(p => p.name.toLowerCase() === finalProjectId.toLowerCase());
-      if (projectExistsByName) {
-        finalProjectId = projectExistsByName.project_id;
-      } else {
-        // Project doesn't exist, create it.
-        const newProject = await addProject({ name: finalProjectId });
-        if (newProject) {
-            finalProjectId = newProject.project_id;
-        } else {
-            toast({ variant: 'destructive', title: "Error", description: `Could not find or create project '${finalProjectId}'.` });
-            return;
+    if (finalProjectId) {
+        const projectExistsById = projects.some(p => p.project_id === finalProjectId);
+        if (!projectExistsById) {
+          const projectExistsByName = projects.find(p => p.name.toLowerCase() === finalProjectId.toLowerCase());
+          if (projectExistsByName) {
+            finalProjectId = projectExistsByName.project_id;
+          } else {
+            const newProject = await addProject({ name: finalProjectId });
+            if (newProject) {
+                finalProjectId = newProject.project_id;
+            } else {
+                toast({ variant: 'destructive', title: "Error", description: `Could not find or create project '${finalProjectId}'.` });
+                return;
+            }
+          }
         }
-      }
     }
 
 
@@ -160,23 +157,25 @@ export const TodoProvider = ({ children }: { children: ReactNode }) => {
   const updateTodo = async (todoId: string, todoData: Partial<Omit<Todo, 'todo_id' | 'user_email' | 'created_at'>>) => {
     const originalTodos = [...todos];
     
-    // Optimistic update
-    setTodos(prev => prev.map(t => t.todo_id === todoId ? {...t, ...todoData} as Todo : t));
-
-    const payload: Partial<Todo & { completed_at?: string | null }> = { ...todoData };
-    if (payload.completed === true) {
-        payload.completed_at = new Date().toISOString();
-    } else if (payload.completed === false) {
-        payload.completed_at = null;
-    }
-
     try {
+        const payload: Partial<Todo & { completed_at?: string | null }> = { ...todoData };
+        if (payload.completed === true) {
+            payload.completed_at = new Date().toISOString();
+        } else if (payload.completed === false) {
+            payload.completed_at = null;
+        }
+
         const response = await fetch(`/api/todos/${todoId}`, {
             method: 'PATCH',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(payload),
         });
         if (!response.ok) throw new Error('Failed to update task');
+
+        const updatedTodo = await response.json();
+
+        setTodos(prev => prev.map(t => t.todo_id === todoId ? updatedTodo : t));
+
     } catch (e: any) {
         setTodos(originalTodos);
         toast({ variant: 'destructive', title: "Error", description: e.message });

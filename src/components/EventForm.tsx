@@ -5,7 +5,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { format, parseISO } from 'date-fns';
-import { Calendar as CalendarIcon, Loader2, ChevronsUpDown } from 'lucide-react';
+import { Calendar as CalendarIcon, Loader2, ChevronsUpDown, PlusCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
@@ -14,21 +14,22 @@ import { Input } from '@/components/ui/input';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Textarea } from '@/components/ui/textarea';
 import { useEvents } from '@/context/EventContext';
-import { CATEGORIES, getCategoryByName } from '@/lib/categories';
+import { useLabels } from '@/context/LabelContext';
 import { useEffect, useState } from 'react';
 import { Checkbox } from './ui/checkbox';
 import type { Event } from '@/lib/types';
 import { useAuth } from '@/context/AuthContext';
 import { useToast } from '@/hooks/use-toast';
-import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem } from '@/components/ui/command';
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList, CommandSeparator } from '@/components/ui/command';
 import { Badge } from './ui/badge';
+import { LabelDialog } from './settings/LabelDialog';
 
 const eventFormSchema = z.object({
   title: z.string().min(2, { message: "Title must be at least 2 characters long." }),
   details: z.string().optional(),
   date: z.date().optional(),
   time: z.string().optional(),
-  category: z.string().min(1, { message: "Please select a category." }),
+  label_id: z.string().optional(),
   isIndefinite: z.boolean().default(false).optional(),
 }).refine(data => data.isIndefinite || (data.date && data.time), {
     message: "Date and time are required unless the event is indefinite.",
@@ -47,9 +48,11 @@ interface EventFormProps {
 
 export function EventForm({ event, onEventCreated, onEventUpdated, selectedDate }: EventFormProps) {
   const { addEvent, updateEvent, isLoading } = useEvents();
+  const { labels, getLabelById } = useLabels();
   const { user } = useAuth();
   const { toast } = useToast();
   const [isCategoryPopoverOpen, setCategoryPopoverOpen] = useState(false);
+  const [isLabelDialogOpen, setLabelDialogOpen] = useState(false);
 
   const form = useForm<EventFormValues>({
     resolver: zodResolver(eventFormSchema),
@@ -58,7 +61,7 @@ export function EventForm({ event, onEventCreated, onEventUpdated, selectedDate 
       details: "",
       date: undefined,
       time: "",
-      category: "",
+      label_id: undefined,
       isIndefinite: false,
     },
   });
@@ -72,30 +75,20 @@ export function EventForm({ event, onEventCreated, onEventUpdated, selectedDate 
             details: event.details,
             date: event.isIndefinite || !event.datetime ? undefined : parseISO(event.datetime),
             time: event.isIndefinite || !event.datetime ? '' : format(parseISO(event.datetime), 'HH:mm'),
-            category: event.category,
+            label_id: event.label_id ?? undefined,
             isIndefinite: event.isIndefinite,
         });
-    } else if (selectedDate) {
-        const hasTime = selectedDate.getHours() !== 0 || selectedDate.getMinutes() !== 0;
+    } else {
         form.reset({
             title: "",
             details: "",
-            date: selectedDate,
-            time: hasTime ? format(selectedDate, 'HH:mm') : '',
-            category: "Personal",
-            isIndefinite: false,
-        });
-    } else {
-         form.reset({
-            title: "",
-            details: "",
-            date: new Date(),
-            time: format(new Date(), 'HH:mm'),
-            category: "Personal",
+            date: selectedDate ?? new Date(),
+            time: selectedDate ? format(selectedDate, 'HH:mm') : format(new Date(), 'HH:mm'),
+            label_id: labels.length > 0 ? labels[0].label_id : undefined,
             isIndefinite: false,
         });
     }
-  }, [event, form, selectedDate]);
+  }, [event, form, selectedDate, labels]);
 
 
   const onSubmit = async (data: EventFormValues) => {
@@ -123,10 +116,11 @@ export function EventForm({ event, onEventCreated, onEventUpdated, selectedDate 
     }
   };
 
-  const currentCategoryValue = form.watch('category');
-  const selectedCategoryInfo = getCategoryByName(currentCategoryValue);
+  const currentLabelId = form.watch('label_id');
+  const selectedLabel = currentLabelId ? getLabelById(currentLabelId) : null;
 
   return (
+    <>
     <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 md:gap-8 space-y-6 md:space-y-0">
@@ -232,7 +226,7 @@ export function EventForm({ event, onEventCreated, onEventUpdated, selectedDate 
 
                     <FormField
                         control={form.control}
-                        name="category"
+                        name="label_id"
                         render={({ field }) => (
                         <FormItem>
                             <FormLabel>Category</FormLabel>
@@ -244,18 +238,12 @@ export function EventForm({ event, onEventCreated, onEventUpdated, selectedDate 
                                                 role="combobox"
                                                 className={cn("w-full justify-between", !field.value && "text-muted-foreground")}
                                             >
-                                                {field.value ? (
-                                                     <Badge
-                                                        style={{
-                                                            backgroundColor: `hsl(var(${selectedCategoryInfo?.cssVars.bg}))`,
-                                                            color: `hsl(var(${selectedCategoryInfo?.cssVars.fg}))`,
-                                                            border: `1px solid hsl(var(${selectedCategoryInfo?.cssVars.fg}))`,
-                                                        }}
-                                                     >
-                                                        {field.value}
+                                                {selectedLabel ? (
+                                                     <Badge style={{ backgroundColor: selectedLabel.color }}>
+                                                        {selectedLabel.name}
                                                     </Badge>
                                                 ) : (
-                                                    "Select a category"
+                                                    "Select a label"
                                                 )}
                                                 <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                                             </Button>
@@ -263,22 +251,37 @@ export function EventForm({ event, onEventCreated, onEventUpdated, selectedDate 
                                     </PopoverTrigger>
                                     <PopoverContent className="w-[--radix-popover-trigger-width] p-0">
                                        <Command>
-                                            <CommandInput placeholder="Search category..." />
-                                            <CommandEmpty>No category found.</CommandEmpty>
-                                            <CommandGroup>
-                                                {CATEGORIES.map((category) => (
-                                                    <CommandItem
-                                                        value={category.name}
-                                                        key={category.name}
-                                                        onSelect={() => {
-                                                            form.setValue("category", category.name);
-                                                            setCategoryPopoverOpen(false);
-                                                        }}
-                                                    >
-                                                        {category.name}
-                                                    </CommandItem>
-                                                ))}
-                                            </CommandGroup>
+                                            <CommandInput placeholder="Search labels..." />
+                                            <CommandList>
+                                                <CommandEmpty>No labels found.</CommandEmpty>
+                                                <CommandGroup>
+                                                    {labels.map((label) => (
+                                                        <CommandItem
+                                                            value={label.name}
+                                                            key={label.label_id}
+                                                            onSelect={() => {
+                                                                form.setValue("label_id", label.label_id);
+                                                                setCategoryPopoverOpen(false);
+                                                            }}
+                                                        >
+                                                            <div className="flex items-center">
+                                                                <span className="h-2 w-2 rounded-full mr-2" style={{ backgroundColor: label.color }} />
+                                                                {label.name}
+                                                            </div>
+                                                        </CommandItem>
+                                                    ))}
+                                                </CommandGroup>
+                                                <CommandSeparator />
+                                                <CommandGroup>
+                                                     <CommandItem onSelect={() => {
+                                                         setCategoryPopoverOpen(false);
+                                                         setLabelDialogOpen(true);
+                                                     }}>
+                                                        <PlusCircle className="mr-2 h-4 w-4" />
+                                                        Create new label
+                                                     </CommandItem>
+                                                </CommandGroup>
+                                            </CommandList>
                                        </Command>
                                     </PopoverContent>
                                 </Popover>
@@ -301,5 +304,7 @@ export function EventForm({ event, onEventCreated, onEventUpdated, selectedDate 
         </Button>
         </form>
     </Form>
+    <LabelDialog isOpen={isLabelDialogOpen} onOpenChange={setLabelDialogOpen} label={null} />
+    </>
   );
 }

@@ -12,10 +12,10 @@ export async function GET(request: NextRequest) {
 
   try {
     const { data, error } = await supabase
-      .from('todos')
-      .select('*, labels ( name, color, label_id )')
+      .from('labels')
+      .select('*')
       .eq('user_email', userEmail)
-      .order('created_at', { ascending: true });
+      .order('name', { ascending: true });
 
     if (error) {
       throw error;
@@ -33,25 +33,21 @@ export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
 
-    const { data: newTodo, error } = await supabase
-      .from('todos')
+    const { data: newLabel, error } = await supabase
+      .from('labels')
       .insert({
         user_email: body.user_email,
-        project_id: body.project_id,
-        title: body.title,
-        description: body.description,
-        due_date: body.due_date,
-        priority: body.priority,
-        label_id: body.label_id,
+        name: body.name,
+        color: body.color,
       })
-      .select('*, labels ( name, color, label_id )')
+      .select()
       .single();
 
     if (error) {
       throw error;
     }
 
-    return NextResponse.json(newTodo, { status: 201 });
+    return NextResponse.json(newLabel, { status: 201 });
   } catch (e: any) {
     return NextResponse.json({ error: e.message }, { status: 500 });
   }

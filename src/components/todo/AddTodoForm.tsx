@@ -5,10 +5,11 @@ import { useForm } from "react-hook-form";
 import * as z from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useTodos } from "@/context/TodoContext";
+import { useLabels } from "@/context/LabelContext";
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "../ui/dialog";
-import { CalendarIcon, Flag, MoreHorizontal, Inbox, FolderPlus, Folder } from "lucide-react";
+import { CalendarIcon, Flag, MoreHorizontal, Inbox, FolderPlus, Folder, Tag, PlusCircle } from "lucide-react";
 import { Calendar } from "../ui/calendar";
 import { format, addDays, endOfWeek } from "date-fns";
 import { cn } from "@/lib/utils";
@@ -27,10 +28,12 @@ import {
   DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList, CommandSeparator } from "@/components/ui/command";
 import { useState, useEffect } from "react";
 import { AddProjectDialog } from "./AddProjectDialog";
 import { Card } from "../ui/card";
-
+import { LabelDialog } from "../settings/LabelDialog";
 
 const todoFormSchema = z.object({
   title: z.string().min(1, "Title is required"),
@@ -38,6 +41,7 @@ const todoFormSchema = z.object({
   due_date: z.date().optional(),
   priority: z.string().default('Casual'),
   project_id: z.string(),
+  label_id: z.string().optional(),
 });
 
 type TodoFormValues = z.infer<typeof todoFormSchema>;
@@ -52,8 +56,10 @@ interface AddTodoFormProps {
 
 export function AddTodoForm({ projectId, existingTodo, onCancel, onAdded, onUpdated }: AddTodoFormProps) {
   const { addTodo, updateTodo, projects } = useTodos();
+  const { labels, getLabelById } = useLabels();
   const [isAddProjectDialogOpen, setAddProjectDialogOpen] = useState(false);
   const [isDateDialogOpen, setDateDialogOpen] = useState(false);
+  const [isLabelDialogOpen, setLabelDialogOpen] = useState(false);
 
   const form = useForm<TodoFormValues>({
     resolver: zodResolver(todoFormSchema),
@@ -63,6 +69,7 @@ export function AddTodoForm({ projectId, existingTodo, onCancel, onAdded, onUpda
       due_date: undefined,
       priority: 'Casual',
       project_id: projectId,
+      label_id: undefined,
     },
   });
 
@@ -73,6 +80,7 @@ export function AddTodoForm({ projectId, existingTodo, onCancel, onAdded, onUpda
       due_date: existingTodo?.due_date ? new Date(existingTodo.due_date) : undefined,
       priority: existingTodo?.priority || 'Casual',
       project_id: existingTodo?.project_id || projectId,
+      label_id: existingTodo?.label_id || undefined,
     })
   }, [existingTodo, projectId, form]);
   
@@ -96,11 +104,11 @@ export function AddTodoForm({ projectId, existingTodo, onCancel, onAdded, onUpda
             due_date: form.getValues('due_date'),
             priority: form.getValues('priority'),
             project_id: form.getValues('project_id'),
+            label_id: form.getValues('label_id'),
         });
         if(onAdded) {
            onAdded();
         } else {
-           // This keeps the form open for continuous adding
            form.setFocus('title'); 
         }
     }
@@ -114,6 +122,9 @@ export function AddTodoForm({ projectId, existingTodo, onCancel, onAdded, onUpda
   const currentProjectId = form.watch('project_id');
   const currentProject = projects.find(p => p.project_id === currentProjectId);
   const inboxProject = projects.find(p => p.name === 'Inbox');
+  
+  const currentLabelId = form.watch('label_id');
+  const selectedLabel = currentLabelId ? getLabelById(currentLabelId) : null;
 
   const getProjectName = () => {
     if (currentProjectId === inboxProject?.project_id) return 'Inbox';
@@ -134,24 +145,25 @@ export function AddTodoForm({ projectId, existingTodo, onCancel, onAdded, onUpda
   return (
     <>
       <AddProjectDialog isOpen={isAddProjectDialogOpen} onOpenChange={setAddProjectDialogOpen} />
+      <LabelDialog isOpen={isLabelDialogOpen} onOpenChange={setLabelDialogOpen} label={null} />
        <Card className={cn(isEditing ? "" : "p-4 border border-border")}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-3">
-            <div className="space-y-1">
+            <div className="space-y-1 px-2">
                 <Input 
                     placeholder="Task name"
                     {...form.register("title")}
-                    className="border-none text-base font-medium focus-visible:ring-0 px-2"
+                    className="border-none text-base font-medium focus-visible:ring-0 p-0"
                     autoFocus
                     onKeyDown={handleKeyDown}
                 />
                 <Input
                     placeholder="Description"
                     {...form.register("description")}
-                    className="border-none text-sm text-muted-foreground focus-visible:ring-0 resize-none h-auto py-0 px-2"
+                    className="border-none text-sm text-muted-foreground focus-visible:ring-0 resize-none h-auto p-0"
                 />
             </div>
             
-            <div className="flex items-center gap-1 pt-2">
+            <div className="flex items-center gap-1 pt-2 flex-wrap">
                 <Dialog open={isDateDialogOpen} onOpenChange={setDateDialogOpen}>
                     <DialogTrigger asChild>
                         <Button type="button" variant="outline" size="sm" className={cn("text-sm h-8", !form.watch('due_date') && "text-muted-foreground")}>
@@ -160,9 +172,9 @@ export function AddTodoForm({ projectId, existingTodo, onCancel, onAdded, onUpda
                         </Button>
                     </DialogTrigger>
                     <DialogContent className="w-auto p-0">
-                          <DialogHeader className="p-4 pb-0 sr-only">
-                            <DialogTitle>Set due date</DialogTitle>
-                            <DialogDescription>Select a due date for your task.</DialogDescription>
+                          <DialogHeader className="p-4 pb-0">
+                            <DialogTitle className="sr-only">Set due date</DialogTitle>
+                            <DialogDescription className="sr-only">Select a due date for your task.</DialogDescription>
                           </DialogHeader>
                         <div className="p-2 space-y-1">
                             <Button variant="ghost" size="sm" className="w-full justify-start" onClick={() => setDate(new Date())}><span className="mr-2">🗓️</span> Today</Button>
@@ -183,6 +195,7 @@ export function AddTodoForm({ projectId, existingTodo, onCancel, onAdded, onUpda
                     <DropdownMenuTrigger asChild>
                         <Button variant="outline" size="sm" className="h-8">
                             <Flag className={cn("mr-2 h-4 w-4", priorityInfo.className)} />
+                            Priority
                         </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent>
@@ -197,6 +210,43 @@ export function AddTodoForm({ projectId, existingTodo, onCancel, onAdded, onUpda
                         </DropdownMenuRadioGroup>
                     </DropdownMenuContent>
                 </DropdownMenu>
+
+                <Popover>
+                    <PopoverTrigger asChild>
+                        <Button type="button" variant="outline" size="sm" className="h-8">
+                            <Tag className="mr-2 h-4 w-4" />
+                            {selectedLabel ? selectedLabel.name : "Label"}
+                        </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-60 p-0">
+                        <Command>
+                            <CommandInput placeholder="Search labels..." />
+                            <CommandList>
+                                <CommandEmpty>No labels found.</CommandEmpty>
+                                <CommandGroup>
+                                    {labels.map(label => (
+                                        <CommandItem
+                                            key={label.label_id}
+                                            onSelect={() => form.setValue('label_id', label.label_id)}
+                                        >
+                                            <div className="flex items-center">
+                                                <span className="h-2 w-2 rounded-full mr-2" style={{ backgroundColor: label.color }} />
+                                                {label.name}
+                                            </div>
+                                        </CommandItem>
+                                    ))}
+                                </CommandGroup>
+                                <CommandSeparator />
+                                <CommandGroup>
+                                    <CommandItem onSelect={() => setLabelDialogOpen(true)}>
+                                        <PlusCircle className="mr-2 h-4 w-4" />
+                                        Create new label
+                                    </CommandItem>
+                                </CommandGroup>
+                            </CommandList>
+                        </Command>
+                    </PopoverContent>
+                </Popover>
 
                 <DropdownMenu>
                     <DropdownMenuTrigger asChild>

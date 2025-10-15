@@ -4,25 +4,25 @@ import { NextRequest, NextResponse } from 'next/server';
 
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { todoId: string } }
+  { params }: { params: { labelId: string } }
 ) {
   const supabase = createClient();
-  const todoId = params.todoId;
+  const labelId = params.labelId;
 
   try {
     const body = await request.json();
-    const { data: updatedTodo, error } = await supabase
-      .from('todos')
-      .update(body) // flexible update
-      .eq('todo_id', todoId)
-      .select('*, labels ( name, color, label_id )')
+    const { data: updatedLabel, error } = await supabase
+      .from('labels')
+      .update(body)
+      .eq('label_id', labelId)
+      .select()
       .single();
 
     if (error) {
       throw error;
     }
 
-    return NextResponse.json(updatedTodo);
+    return NextResponse.json(updatedLabel);
   } catch (e: any) {
     return NextResponse.json({ error: e.message }, { status: 500 });
   }
@@ -30,22 +30,23 @@ export async function PATCH(
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { todoId: string } }
+  { params }: { params: { labelId: string } }
 ) {
   const supabase = createClient();
-  const todoId = params.todoId;
+  const labelId = params.labelId;
 
   try {
+    // Note: RLS policies or DB schema should handle setting label_id to null in todos/events
     const { error } = await supabase
-      .from('todos')
+      .from('labels')
       .delete()
-      .eq('todo_id', todoId);
+      .eq('label_id', labelId);
 
     if (error) {
       throw error;
     }
 
-    return NextResponse.json({ message: 'Todo deleted successfully' }, { status: 200 });
+    return NextResponse.json({ message: 'Label deleted successfully' }, { status: 200 });
   } catch (e: any) {
     return NextResponse.json({ error: e.message }, { status: 500 });
   }

@@ -6,10 +6,11 @@ export interface Event {
   details: string;
   date: string;
   time: string;
-  category: string;
+  category: string; // This will now be the label name, for display
   datetime: string | null;
   isIndefinite?: boolean;
   user_email: string;
+  label_id?: string | null;
 }
 
 export interface AirQualityData {
@@ -110,6 +111,14 @@ export interface Todo {
   completed: boolean;
   created_at: string;
   completed_at?: string | null;
+  label_id?: string | null;
 }
 
+export interface Label {
+  label_id: string;
+  user_email: string;
+  name: string;
+  color: string;
+  created_at: string;
+}
     

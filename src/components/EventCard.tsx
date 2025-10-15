@@ -17,12 +17,12 @@ import {
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { useEvents } from '@/context/EventContext';
-import type { Event } from '@/lib/types';
-import { getCategoryByName } from '@/lib/categories';
+import type { Event, Label } from '@/lib/types';
 import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useState } from 'react';
+import { useLabels } from '@/context/LabelContext';
 
 interface EventCardProps {
   event: Event;
@@ -31,8 +31,10 @@ interface EventCardProps {
 
 export function EventCard({ event, onEdit }: EventCardProps) {
   const { deleteEvent } = useEvents();
-  const categoryInfo = getCategoryByName(event.category);
+  const { getLabelById } = useLabels();
   const [isDeleting, setIsDeleting] = useState(false);
+  
+  const label = event.label_id ? getLabelById(event.label_id) : null;
 
   const handleQuickDelete = () => {
     setIsDeleting(true);
@@ -48,7 +50,7 @@ export function EventCard({ event, onEdit }: EventCardProps) {
             "border-2 flex flex-col transition-opacity duration-500",
             isDeleting ? "opacity-50" : "opacity-100"
         )} 
-        style={{ borderColor: categoryInfo ? `hsl(var(${categoryInfo?.cssVars.fg}))` : undefined }}>
+        style={{ borderColor: label ? label.color : undefined }}>
       <CardHeader className="p-4 pb-2">
         <div className="flex justify-between items-start gap-2">
             <div className="flex items-start gap-3 flex-1">
@@ -121,19 +123,20 @@ export function EventCard({ event, onEdit }: EventCardProps) {
                 </div>
             </>
         )}
-        <div className="flex items-center gap-2">
-            <Tag className="h-4 w-4" />
-            <Badge 
-              variant="default"
-              style={{
-                backgroundColor: `hsl(var(${categoryInfo?.cssVars.bg}))`,
-                color: `hsl(var(${categoryInfo?.cssVars.fg}))`,
-                border: `1px solid hsl(var(${categoryInfo?.cssVars.fg}))`,
-              }}
-            >
-                {event.category}
-            </Badge>
-        </div>
+        {label && (
+            <div className="flex items-center gap-2">
+                <Tag className="h-4 w-4" />
+                <Badge 
+                variant="default"
+                style={{
+                    backgroundColor: label.color,
+                    color: '#ffffff', // Assuming white text is readable on custom colors
+                }}
+                >
+                    {label.name}
+                </Badge>
+            </div>
+        )}
       </CardFooter>
     </Card>
   );

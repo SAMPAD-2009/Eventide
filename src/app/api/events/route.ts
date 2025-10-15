@@ -15,7 +15,7 @@ export async function GET(request: NextRequest) {
   try {
     const { data, error } = await supabase
       .from('events')
-      .select('*')
+      .select('*, labels ( name, color )')
       .eq('user_email', userEmail)
       .order('datetime', { ascending: false });
 
@@ -41,15 +41,15 @@ export async function POST(request: NextRequest) {
       title: body.title,
       details: body.details,
       datetime: body.datetime,
-      category: body.category,
       is_indefinite: body.is_indefinite,
       user_email: body.user_email,
+      label_id: body.label_id,
     };
 
     const { data: newEvent, error } = await supabase
       .from('events')
       .insert(newRecord)
-      .select()
+      .select('*, labels ( name, color )')
       .single();
 
     if (error) {

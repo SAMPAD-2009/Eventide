@@ -2,11 +2,11 @@
 "use client";
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import type { Event } from '@/lib/types';
+import type { Event, Label } from '@/lib/types';
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from './AuthContext';
 
-type EventCreationData = Omit<Event, 'event_id' | 'datetime' | 'user_email'> & {
+type EventCreationData = Omit<Event, 'event_id' | 'datetime' | 'user_email' | 'category'> & {
     date?: string;
     time?: string;
 };
@@ -47,7 +47,8 @@ export const EventProvider = ({ children }: { children: ReactNode }) => {
             datetime: e.datetime,
             date: e.datetime ? e.datetime.split('T')[0] : '',
             time: e.datetime ? new Date(e.datetime).toTimeString().substring(0,5) : '',
-            category: e.category,
+            category: e.labels?.name || 'Uncategorized', // Use label name for category
+            label_id: e.label_id,
             isIndefinite: e.is_indefinite,
             user_email: e.user_email
           }));
@@ -89,7 +90,7 @@ export const EventProvider = ({ children }: { children: ReactNode }) => {
       title: eventData.title,
       details: eventData.details || '',
       datetime: eventData.isIndefinite ? null : new Date(`${eventData.date}T${eventData.time}`).toISOString(),
-      category: eventData.category,
+      label_id: eventData.label_id,
       is_indefinite: !!eventData.isIndefinite,
       user_email: user.email,
     };
@@ -115,12 +116,17 @@ export const EventProvider = ({ children }: { children: ReactNode }) => {
             datetime: newEvent.datetime,
             date: newEvent.datetime ? newEvent.datetime.split('T')[0] : '',
             time: newEvent.datetime ? new Date(newEvent.datetime).toTimeString().substring(0,5) : '',
-            category: newEvent.category,
+            category: newEvent.labels?.name || 'Uncategorized',
+            label_id: newEvent.label_id,
             isIndefinite: newEvent.is_indefinite,
             user_email: newEvent.user_email
         };
 
-        setEvents(prevEvents => [formattedEvent, ...prevEvents]);
+        setEvents(prevEvents => [formattedEvent, ...prevEvents].sort((a, b) => {
+            if (!a.datetime) return 1;
+            if (!b.datetime) return -1;
+            return new Date(b.datetime).getTime() - new Date(a.datetime).getTime();
+        }));
         toast({
             title: "Event Created",
             description: "Your new event has been added successfully.",
@@ -141,18 +147,9 @@ export const EventProvider = ({ children }: { children: ReactNode }) => {
       title: eventData.title,
       details: eventData.details || '',
       datetime: eventData.isIndefinite ? null : new Date(`${eventData.date}T${eventData.time}`).toISOString(),
-      category: eventData.category,
+      label_id: eventData.label_id,
       isIndefinite: !!eventData.isIndefinite,
     };
-
-    // Optimistic update
-    const optimisticEvent: Event = {
-        event_id,
-        user_email: user?.email || '',
-        ...eventData,
-        datetime: updatedRecord.datetime
-    };
-    setEvents(prevEvents => prevEvents.map(event => event.event_id === event_id ? optimisticEvent : event));
 
     try {
         const response = await fetch(`/api/events/${event_id}`, {
@@ -165,6 +162,26 @@ export const EventProvider = ({ children }: { children: ReactNode }) => {
             const errorData = await response.json();
             throw new Error(errorData.error || 'Failed to update event');
         }
+
+        const updatedEvent = await response.json();
+        const formattedEvent: Event = {
+            event_id: updatedEvent.event_id,
+            title: updatedEvent.title,
+            details: updatedEvent.details || '',
+            datetime: updatedEvent.datetime,
+            date: updatedEvent.datetime ? updatedEvent.datetime.split('T')[0] : '',
+            time: updatedEvent.datetime ? new Date(updatedEvent.datetime).toTimeString().substring(0,5) : '',
+            category: updatedEvent.labels?.name || 'Uncategorized',
+            label_id: updatedEvent.label_id,
+            isIndefinite: updatedEvent.is_indefinite,
+            user_email: updatedEvent.user_email
+        };
+
+        setEvents(prevEvents => prevEvents.map(event => event.event_id === event_id ? formattedEvent : event).sort((a, b) => {
+            if (!a.datetime) return 1;
+            if (!b.datetime) return -1;
+            return new Date(b.datetime).getTime() - new Date(a.datetime).getTime();
+        }));
 
         toast({
           title: "Event Updated",

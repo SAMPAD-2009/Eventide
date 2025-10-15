@@ -17,11 +17,11 @@ export async function PATCH(
         title: body.title,
         details: body.details,
         datetime: body.datetime,
-        category: body.category,
         is_indefinite: body.isIndefinite,
+        label_id: body.label_id
       })
       .eq('event_id', eventId)
-      .select()
+      .select('*, labels ( name, color )')
       .single();
 
     if (error) {

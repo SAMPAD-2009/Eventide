@@ -3,13 +3,15 @@
 
 import { Todo } from "@/lib/types";
 import { useTodos } from "@/context/TodoContext";
+import { useLabels } from "@/context/LabelContext";
 import { Checkbox } from "../ui/checkbox";
 import { cn } from "@/lib/utils";
 import { Button } from "../ui/button";
-import { Trash2, Edit, Flag } from "lucide-react";
+import { Trash2, Edit, Flag, Tag } from "lucide-react";
 import { format, parseISO, isToday, isPast } from 'date-fns';
 import { getPriorityInfo } from "@/lib/priorities";
 import { AddTodoForm } from "./AddTodoForm";
+import { Badge } from "../ui/badge";
 
 interface TodoItemProps {
   todo: Todo;
@@ -19,10 +21,13 @@ interface TodoItemProps {
 
 export function TodoItem({ todo, isEditing, onSetEditing }: TodoItemProps) {
   const { updateTodo, deleteTodo } = useTodos();
+  const { getLabelById } = useLabels();
 
   const handleComplete = (checked: boolean) => {
     updateTodo(todo.todo_id, { completed: checked });
   };
+  
+  const label = todo.label_id ? getLabelById(todo.label_id) : null;
   
   const DueDate = () => {
     if (!todo.due_date) return null;
@@ -77,10 +82,22 @@ export function TodoItem({ todo, isEditing, onSetEditing }: TodoItemProps) {
         {todo.description && (
           <p className="text-sm text-muted-foreground">{todo.description}</p>
         )}
-        <div className="mt-1 flex items-center gap-2">
+        <div className="mt-1 flex items-center gap-3 flex-wrap">
             <DueDate />
             {todo.priority !== 'Casual' && (
                 <Flag className={cn("h-3 w-3", priorityInfo.className)} />
+            )}
+            {label && (
+                <Badge
+                    variant="outline"
+                    className="text-xs"
+                    style={{
+                        borderColor: label.color,
+                        color: label.color,
+                    }}
+                >
+                    {label.name}
+                </Badge>
             )}
         </div>
       </div>

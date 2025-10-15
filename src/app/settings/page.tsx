@@ -4,13 +4,14 @@
 import Link from 'next/link';
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Home, Palette } from 'lucide-react';
+import { ArrowLeft, Home, Palette, Tags } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useAuth } from '@/context/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { updateUserLandingPage } from '@/services/supabase';
+import { LabelSettings } from '@/components/settings/LabelSettings';
 
 const navLinks = [
     { href: "/", label: "Upcoming" },
@@ -75,6 +76,8 @@ export default function SettingsPage() {
                         </CardContent>
                     </Card>
                 );
+            case 'labels':
+                return <LabelSettings />;
             default:
                 return null;
         }
@@ -98,6 +101,13 @@ export default function SettingsPage() {
                             onClick={() => setSelectedSection('landing-page')}
                         >
                             <Home className="mr-2 h-4 w-4" /> Landing Page
+                        </Button>
+                        <Button 
+                            variant={selectedSection === 'labels' ? 'secondary' : 'ghost'} 
+                            className="justify-start"
+                            onClick={() => setSelectedSection('labels')}
+                        >
+                            <Tags className="mr-2 h-4 w-4" /> Labels
                         </Button>
                     </nav>
                 </aside>
