@@ -11,7 +11,7 @@ import { Textarea } from "../ui/textarea";
 import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
 import { CalendarIcon, Flag, MoreHorizontal, Inbox, FolderPlus, Folder } from "lucide-react";
 import { Calendar } from "../ui/calendar";
-import { format, addDays, startOfWeek, endOfWeek } from "date-fns";
+import { format, addDays, endOfWeek } from "date-fns";
 import { cn } from "@/lib/utils";
 import { Todo, Priority } from "@/lib/types";
 import { PRIORITIES, getPriorityInfo } from "@/lib/priorities";
@@ -30,7 +30,6 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { useState, useEffect } from "react";
 import { AddProjectDialog } from "./AddProjectDialog";
-import { ScrollArea } from "../ui/scroll-area";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Card } from "../ui/card";
 
@@ -46,7 +45,7 @@ const todoFormSchema = z.object({
 type TodoFormValues = z.infer<typeof todoFormSchema>;
 
 interface AddTodoFormProps {
-  projectId: string; // Can be a project_id or "inbox"
+  projectId: string;
   existingTodo?: Todo;
   onCancel?: () => void;
   onAdded?: () => void;
@@ -93,7 +92,7 @@ export function AddTodoForm({ projectId, existingTodo, onCancel, onAdded, onUpda
         onUpdated?.();
     } else {
         await addTodo(data);
-        form.reset({
+        form.reset({ 
             ...form.getValues(),
             title: "",
             description: "",
@@ -140,7 +139,7 @@ export function AddTodoForm({ projectId, existingTodo, onCancel, onAdded, onUpda
                         rows={2}
                     />
                 
-                    <div className="flex flex-wrap items-center gap-1">
+                    <div className="flex items-center gap-1">
                         <CollapsibleTrigger asChild>
                         <Button type="button" variant="outline" size="sm" className={cn("text-sm", !form.watch('due_date') && "text-muted-foreground")}>
                             <CalendarIcon className="mr-2 h-4 w-4" />
