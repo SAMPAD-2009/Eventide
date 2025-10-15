@@ -160,9 +160,9 @@ export function AddTodoForm({ projectId, existingTodo, onCancel, onAdded, onUpda
                         </Button>
                     </DialogTrigger>
                     <DialogContent className="w-auto p-0">
-                          <DialogHeader className="p-4 pb-0">
-                            <DialogTitle className="sr-only">Set due date</DialogTitle>
-                            <DialogDescription className="sr-only">Select a due date for your task.</DialogDescription>
+                          <DialogHeader className="p-4 pb-0 sr-only">
+                            <DialogTitle>Set due date</DialogTitle>
+                            <DialogDescription>Select a due date for your task.</DialogDescription>
                           </DialogHeader>
                         <div className="p-2 space-y-1">
                             <Button variant="ghost" size="sm" className="w-full justify-start" onClick={() => setDate(new Date())}><span className="mr-2">🗓️</span> Today</Button>
@@ -174,7 +174,7 @@ export function AddTodoForm({ projectId, existingTodo, onCancel, onAdded, onUpda
                             selected={form.watch('due_date')}
                             onSelect={(date) => setDate(date)}
                             initialFocus
-                            className="p-0 border-t"
+                            className="border-t"
                         />
                     </DialogContent>
                 </Dialog>
