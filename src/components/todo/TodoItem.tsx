@@ -50,7 +50,7 @@ export function TodoItem({ todo, onEdit }: TodoItemProps) {
         id={`todo-${todo.todo_id}`}
         checked={todo.completed}
         onCheckedChange={handleComplete}
-        className="mt-1"
+        className={cn("mt-1", priorityInfo.checkboxClassName)}
       />
       <div className="flex-1">
         <label
