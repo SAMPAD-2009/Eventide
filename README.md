@@ -1,6 +1,6 @@
 # Eventide
 
-This is an event management application built with Next.js in Firebase Studio.
+This is an event management application built with Next.js
 
 ## Features
 
