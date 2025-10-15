@@ -11,7 +11,6 @@ import { parseISO } from 'date-fns/fp';
 import { Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import type { Todo } from '@/lib/types';
 import { TodoBottomNav } from '@/components/todo/TodoBottomNav';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
@@ -21,8 +20,7 @@ export default function TodoPage() {
   const { projects, todos, isLoading } = useTodos();
   const [selectedSection, setSelectedSection] = useState('inbox'); // 'inbox', 'today', or a project_id
   const [isCreateFormOpen, setCreateFormOpen] = useState(false);
-  const [isEditFormOpen, setEditFormOpen] = useState(false);
-  const [editingTodo, setEditingTodo] = useState<Todo | null>(null);
+  const [editingTodoId, setEditingTodoId] = useState<string | null>(null);
 
   const filteredTodos = useMemo(() => {
     if (isLoading) return [];
@@ -71,14 +69,8 @@ export default function TodoPage() {
   }, [selectedSection, projects]);
   
 
-  const handleOpenEditForm = (todo: Todo) => {
-    setEditingTodo(todo);
-    setEditFormOpen(true);
-  }
-
-  const handleFormClose = () => {
-    setEditFormOpen(false);
-    setEditingTodo(null);
+  const handleSetEditing = (todoId: string | null) => {
+    setEditingTodoId(todoId);
   }
 
 
@@ -104,7 +96,11 @@ export default function TodoPage() {
       <main className="flex-1 p-4 md:p-8 overflow-y-auto pb-24 md:pb-8">
         <h1 className="text-3xl font-bold tracking-tight mb-6">{sectionTitle}</h1>
         <div className="max-w-3xl mx-auto">
-            <TaskList todos={filteredTodos} onEdit={handleOpenEditForm} />
+            <TaskList
+                todos={filteredTodos}
+                editingTodoId={editingTodoId}
+                onSetEditing={handleSetEditing}
+            />
             
             <Collapsible open={isCreateFormOpen} onOpenChange={setCreateFormOpen}>
                 {!isCreateFormOpen && (
@@ -120,7 +116,7 @@ export default function TodoPage() {
                         <AddTodoForm
                             projectId={projectIdForNewTask}
                             onCancel={() => setCreateFormOpen(false)}
-                            onAdded={() => {}}
+                            onAdded={() => { /* setCreateFormOpen(false) maybe? */ }}
                         />
                     </div>
                 </CollapsibleContent>
@@ -130,26 +126,14 @@ export default function TodoPage() {
             {completedTodos.length > 0 && (
                 <div className="mt-12">
                     <h2 className="text-lg font-semibold mb-4">Completed</h2>
-                    <TaskList todos={completedTodos} onEdit={handleOpenEditForm} />
+                    <TaskList 
+                        todos={completedTodos}
+                        editingTodoId={editingTodoId}
+                        onSetEditing={handleSetEditing}
+                    />
                 </div>
             )}
         </div>
-        <Dialog open={isEditFormOpen} onOpenChange={setEditFormOpen}>
-            <DialogContent className="sm:max-w-lg">
-                 <DialogHeader>
-                    <DialogTitle>Edit task</DialogTitle>
-                    <DialogDescription>
-                        Update the details of your task.
-                    </DialogDescription>
-                </DialogHeader>
-                <AddTodoForm 
-                  projectId={projectIdForNewTask} 
-                  existingTodo={editingTodo || undefined}
-                  onCancel={handleFormClose}
-                  onUpdated={handleFormClose}
-                />
-            </DialogContent>
-        </Dialog>
       </main>
       <TodoBottomNav selectedSection={selectedSection} onSelectSection={setSelectedSection} />
     </div>

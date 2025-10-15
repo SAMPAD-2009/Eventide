@@ -8,10 +8,11 @@ import { Card, CardContent } from "../ui/card";
 
 interface TaskListProps {
   todos: Todo[];
-  onEdit: (todo: Todo) => void;
+  editingTodoId: string | null;
+  onSetEditing: (todoId: string | null) => void;
 }
 
-export function TaskList({ todos, onEdit }: TaskListProps) {
+export function TaskList({ todos, editingTodoId, onSetEditing }: TaskListProps) {
 
   if (todos.length === 0) {
     return (
@@ -35,7 +36,11 @@ export function TaskList({ todos, onEdit }: TaskListProps) {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, x: -20, transition: { duration: 0.2 } }}
           >
-            <TodoItem todo={todo} onEdit={onEdit} />
+            <TodoItem 
+                todo={todo}
+                isEditing={editingTodoId === todo.todo_id}
+                onSetEditing={onSetEditing}
+            />
           </motion.div>
         ))}
       </AnimatePresence>
