@@ -14,11 +14,14 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import type { Todo } from '@/lib/types';
 import { TodoBottomNav } from '@/components/todo/TodoBottomNav';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+
 
 export default function TodoPage() {
   const { projects, todos, isLoading } = useTodos();
   const [selectedSection, setSelectedSection] = useState('inbox'); // 'inbox', 'today', or a project_id
-  const [isFormOpen, setFormOpen] = useState(false);
+  const [isCreateFormOpen, setCreateFormOpen] = useState(false);
+  const [isEditFormOpen, setEditFormOpen] = useState(false);
   const [editingTodo, setEditingTodo] = useState<Todo | null>(null);
 
   const filteredTodos = useMemo(() => {
@@ -67,18 +70,14 @@ export default function TodoPage() {
     return selectedSection;
   }, [selectedSection, projects]);
   
-  const handleOpenCreateForm = () => {
-    setEditingTodo(null);
-    setFormOpen(true);
-  }
 
   const handleOpenEditForm = (todo: Todo) => {
     setEditingTodo(todo);
-    setFormOpen(true);
+    setEditFormOpen(true);
   }
 
   const handleFormClose = () => {
-    setFormOpen(false);
+    setEditFormOpen(false);
     setEditingTodo(null);
   }
 
@@ -107,9 +106,24 @@ export default function TodoPage() {
         <div className="max-w-3xl mx-auto">
             <TaskList todos={filteredTodos} onEdit={handleOpenEditForm} />
             
-            <Button variant="ghost" className="w-full justify-start mt-2" onClick={handleOpenCreateForm}>
-                <Plus className="mr-2 h-4 w-4" /> Add task
-            </Button>
+            <Collapsible open={isCreateFormOpen} onOpenChange={setCreateFormOpen}>
+                <CollapsibleTrigger asChild>
+                    <Button variant="ghost" className="w-full justify-start mt-2 group">
+                        <Plus className="mr-2 h-4 w-4 text-primary group-hover:bg-primary/20 rounded-full p-0.5" /> 
+                        Add task
+                    </Button>
+                </CollapsibleTrigger>
+                <CollapsibleContent>
+                    <div className="mt-2">
+                        <AddTodoForm
+                            projectId={projectIdForNewTask}
+                            onCancel={() => setCreateFormOpen(false)}
+                            onAdded={() => setCreateFormOpen(false)}
+                        />
+                    </div>
+                </CollapsibleContent>
+            </Collapsible>
+
 
             {completedTodos.length > 0 && (
                 <div className="mt-12">
@@ -118,19 +132,18 @@ export default function TodoPage() {
                 </div>
             )}
         </div>
-        <Dialog open={isFormOpen} onOpenChange={setFormOpen}>
+        <Dialog open={isEditFormOpen} onOpenChange={setEditFormOpen}>
             <DialogContent className="sm:max-w-lg">
                  <DialogHeader>
-                    <DialogTitle>{editingTodo ? 'Edit task' : 'Add task'}</DialogTitle>
+                    <DialogTitle>Edit task</DialogTitle>
                     <DialogDescription>
-                        {editingTodo ? 'Update the details of your task.' : 'Add a new task to your list.'}
+                        Update the details of your task.
                     </DialogDescription>
                 </DialogHeader>
                 <AddTodoForm 
                   projectId={projectIdForNewTask} 
                   existingTodo={editingTodo || undefined}
                   onCancel={handleFormClose}
-                  onAdded={() => { /* Keep form open */ }}
                   onUpdated={handleFormClose}
                 />
             </DialogContent>
