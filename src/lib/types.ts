@@ -6,7 +6,7 @@ export interface Event {
   details: string;
   date: string;
   time: string;
-  category: string; // This will now be the label name, for display
+  category?: string | null;
   datetime: string | null;
   isIndefinite?: boolean;
   user_email: string;

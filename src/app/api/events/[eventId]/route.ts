@@ -18,7 +18,8 @@ export async function PATCH(
         details: body.details,
         datetime: body.datetime,
         is_indefinite: body.isIndefinite,
-        label_id: body.label_id
+        label_id: body.label_id,
+        category: body.category,
       })
       .eq('event_id', eventId)
       .select('*, labels ( name, color )')

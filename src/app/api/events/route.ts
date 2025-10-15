@@ -44,6 +44,7 @@ export async function POST(request: NextRequest) {
       is_indefinite: body.is_indefinite,
       user_email: body.user_email,
       label_id: body.label_id,
+      category: body.category,
     };
 
     const { data: newEvent, error } = await supabase

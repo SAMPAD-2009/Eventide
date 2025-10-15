@@ -5,8 +5,9 @@ import React, { createContext, useContext, useState, useEffect, ReactNode } from
 import type { Event, Label } from '@/lib/types';
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from './AuthContext';
+import { getCategoryByName } from '@/lib/categories';
 
-type EventCreationData = Omit<Event, 'event_id' | 'datetime' | 'user_email' | 'category'> & {
+type EventCreationData = Omit<Event, 'event_id' | 'datetime' | 'user_email'> & {
     date?: string;
     time?: string;
 };
@@ -47,7 +48,7 @@ export const EventProvider = ({ children }: { children: ReactNode }) => {
             datetime: e.datetime,
             date: e.datetime ? e.datetime.split('T')[0] : '',
             time: e.datetime ? new Date(e.datetime).toTimeString().substring(0,5) : '',
-            category: e.labels?.name || 'Uncategorized', // Use label name for category
+            category: e.category,
             label_id: e.label_id,
             isIndefinite: e.is_indefinite,
             user_email: e.user_email
@@ -91,6 +92,7 @@ export const EventProvider = ({ children }: { children: ReactNode }) => {
       details: eventData.details || '',
       datetime: eventData.isIndefinite ? null : new Date(`${eventData.date}T${eventData.time}`).toISOString(),
       label_id: eventData.label_id,
+      category: eventData.category,
       is_indefinite: !!eventData.isIndefinite,
       user_email: user.email,
     };
@@ -116,7 +118,7 @@ export const EventProvider = ({ children }: { children: ReactNode }) => {
             datetime: newEvent.datetime,
             date: newEvent.datetime ? newEvent.datetime.split('T')[0] : '',
             time: newEvent.datetime ? new Date(newEvent.datetime).toTimeString().substring(0,5) : '',
-            category: newEvent.labels?.name || 'Uncategorized',
+            category: newEvent.category,
             label_id: newEvent.label_id,
             isIndefinite: newEvent.is_indefinite,
             user_email: newEvent.user_email
@@ -148,6 +150,7 @@ export const EventProvider = ({ children }: { children: ReactNode }) => {
       details: eventData.details || '',
       datetime: eventData.isIndefinite ? null : new Date(`${eventData.date}T${eventData.time}`).toISOString(),
       label_id: eventData.label_id,
+      category: eventData.category,
       isIndefinite: !!eventData.isIndefinite,
     };
 
@@ -171,7 +174,7 @@ export const EventProvider = ({ children }: { children: ReactNode }) => {
             datetime: updatedEvent.datetime,
             date: updatedEvent.datetime ? updatedEvent.datetime.split('T')[0] : '',
             time: updatedEvent.datetime ? new Date(updatedEvent.datetime).toTimeString().substring(0,5) : '',
-            category: updatedEvent.labels?.name || 'Uncategorized',
+            category: updatedEvent.category,
             label_id: updatedEvent.label_id,
             isIndefinite: updatedEvent.is_indefinite,
             user_email: updatedEvent.user_email

@@ -23,6 +23,7 @@ import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useState } from 'react';
 import { useLabels } from '@/context/LabelContext';
+import { getCategoryByName } from '@/lib/categories';
 
 interface EventCardProps {
   event: Event;
@@ -35,6 +36,22 @@ export function EventCard({ event, onEdit }: EventCardProps) {
   const [isDeleting, setIsDeleting] = useState(false);
   
   const label = event.label_id ? getLabelById(event.label_id) : null;
+  const categoryInfo = event.category ? getCategoryByName(event.category) : null;
+
+  let borderColor, badge;
+
+  if (label) {
+      borderColor = label.color;
+      badge = (
+        <Badge style={{ backgroundColor: label.color, color: '#ffffff' }}>
+            {label.name}
+        </Badge>
+      );
+  } else if (categoryInfo) {
+      borderColor = `hsl(var(${categoryInfo.cssVars.fg}))`;
+      badge = <Badge className={categoryInfo.colorClass}>{categoryInfo.name}</Badge>;
+  }
+
 
   const handleQuickDelete = () => {
     setIsDeleting(true);
@@ -50,7 +67,7 @@ export function EventCard({ event, onEdit }: EventCardProps) {
             "border-2 flex flex-col transition-opacity duration-500",
             isDeleting ? "opacity-50" : "opacity-100"
         )} 
-        style={{ borderColor: label ? label.color : undefined }}>
+        style={{ borderColor: borderColor }}>
       <CardHeader className="p-4 pb-2">
         <div className="flex justify-between items-start gap-2">
             <div className="flex items-start gap-3 flex-1">
@@ -123,18 +140,10 @@ export function EventCard({ event, onEdit }: EventCardProps) {
                 </div>
             </>
         )}
-        {label && (
+        {badge && (
             <div className="flex items-center gap-2">
                 <Tag className="h-4 w-4" />
-                <Badge 
-                variant="default"
-                style={{
-                    backgroundColor: label.color,
-                    color: '#ffffff', // Assuming white text is readable on custom colors
-                }}
-                >
-                    {label.name}
-                </Badge>
+                {badge}
             </div>
         )}
       </CardFooter>

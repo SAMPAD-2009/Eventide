@@ -23,6 +23,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList, CommandSeparator } from '@/components/ui/command';
 import { Badge } from './ui/badge';
 import { LabelDialog } from './settings/LabelDialog';
+import { CATEGORIES, getCategoryByName } from '@/lib/categories';
 
 const eventFormSchema = z.object({
   title: z.string().min(2, { message: "Title must be at least 2 characters long." }),
@@ -30,6 +31,7 @@ const eventFormSchema = z.object({
   date: z.date().optional(),
   time: z.string().optional(),
   label_id: z.string().optional(),
+  category: z.string().optional(),
   isIndefinite: z.boolean().default(false).optional(),
 }).refine(data => data.isIndefinite || (data.date && data.time), {
     message: "Date and time are required unless the event is indefinite.",
@@ -62,6 +64,7 @@ export function EventForm({ event, onEventCreated, onEventUpdated, selectedDate 
       date: undefined,
       time: "",
       label_id: undefined,
+      category: "Other",
       isIndefinite: false,
     },
   });
@@ -76,6 +79,7 @@ export function EventForm({ event, onEventCreated, onEventUpdated, selectedDate 
             date: event.isIndefinite || !event.datetime ? undefined : parseISO(event.datetime),
             time: event.isIndefinite || !event.datetime ? '' : format(parseISO(event.datetime), 'HH:mm'),
             label_id: event.label_id ?? undefined,
+            category: event.category,
             isIndefinite: event.isIndefinite,
         });
     } else {
@@ -84,11 +88,12 @@ export function EventForm({ event, onEventCreated, onEventUpdated, selectedDate 
             details: "",
             date: selectedDate ?? new Date(),
             time: selectedDate ? format(selectedDate, 'HH:mm') : format(new Date(), 'HH:mm'),
-            label_id: labels.length > 0 ? labels[0].label_id : undefined,
+            label_id: undefined,
+            category: "Other",
             isIndefinite: false,
         });
     }
-  }, [event, form, selectedDate, labels]);
+  }, [event, form, selectedDate]);
 
 
   const onSubmit = async (data: EventFormValues) => {
@@ -118,6 +123,8 @@ export function EventForm({ event, onEventCreated, onEventUpdated, selectedDate 
 
   const currentLabelId = form.watch('label_id');
   const selectedLabel = currentLabelId ? getLabelById(currentLabelId) : null;
+  const currentCategoryName = form.watch('category');
+  const selectedCategory = currentCategoryName ? getCategoryByName(currentCategoryName) : null;
 
   return (
     <>
@@ -236,14 +243,18 @@ export function EventForm({ event, onEventCreated, onEventUpdated, selectedDate 
                                             <Button
                                                 variant="outline"
                                                 role="combobox"
-                                                className={cn("w-full justify-between", !field.value && "text-muted-foreground")}
+                                                className={cn("w-full justify-between", !field.value && !currentCategoryName && "text-muted-foreground")}
                                             >
                                                 {selectedLabel ? (
                                                      <Badge style={{ backgroundColor: selectedLabel.color }}>
                                                         {selectedLabel.name}
                                                     </Badge>
+                                                ) : selectedCategory ? (
+                                                    <Badge className={cn(selectedCategory.colorClass)}>
+                                                        {selectedCategory.name}
+                                                    </Badge>
                                                 ) : (
-                                                    "Select a label"
+                                                    "Select a category"
                                                 )}
                                                 <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                                             </Button>
@@ -254,13 +265,30 @@ export function EventForm({ event, onEventCreated, onEventUpdated, selectedDate 
                                             <CommandInput placeholder="Search labels..." />
                                             <CommandList>
                                                 <CommandEmpty>No labels found.</CommandEmpty>
-                                                <CommandGroup>
+                                                <CommandGroup heading="Categories">
+                                                  {CATEGORIES.map((cat) => (
+                                                    <CommandItem
+                                                      value={cat.name}
+                                                      key={cat.name}
+                                                      onSelect={() => {
+                                                          form.setValue("category", cat.name);
+                                                          form.setValue("label_id", undefined);
+                                                          setCategoryPopoverOpen(false);
+                                                      }}
+                                                    >
+                                                        {cat.name}
+                                                    </CommandItem>
+                                                  ))}
+                                                </CommandGroup>
+                                                <CommandSeparator />
+                                                <CommandGroup heading="Custom Labels">
                                                     {labels.map((label) => (
                                                         <CommandItem
                                                             value={label.name}
                                                             key={label.label_id}
                                                             onSelect={() => {
                                                                 form.setValue("label_id", label.label_id);
+                                                                form.setValue("category", undefined);
                                                                 setCategoryPopoverOpen(false);
                                                             }}
                                                         >
