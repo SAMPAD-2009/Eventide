@@ -7,7 +7,7 @@ import { usePathname } from 'next/navigation';
 export function ConditionalFooter() {
   const pathname = usePathname();
 
-  if (pathname === '/calendar') {
+  if (pathname === '/calendar' || pathname === '/todo' || pathname === '/todo-calendar') {
     return null;
   }
 
