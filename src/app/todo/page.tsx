@@ -107,12 +107,14 @@ export default function TodoPage() {
             <TaskList todos={filteredTodos} onEdit={handleOpenEditForm} />
             
             <Collapsible open={isCreateFormOpen} onOpenChange={setCreateFormOpen}>
-                <CollapsibleTrigger asChild>
-                    <Button variant="ghost" className="w-full justify-start mt-2 group">
-                        <Plus className="mr-2 h-4 w-4 text-primary group-hover:bg-primary/20 rounded-full p-0.5" /> 
-                        Add task
-                    </Button>
-                </CollapsibleTrigger>
+                {!isCreateFormOpen && (
+                    <CollapsibleTrigger asChild>
+                        <Button variant="ghost" className="w-full justify-start mt-2 group">
+                            <Plus className="mr-2 h-4 w-4 text-primary group-hover:bg-primary/20 rounded-full p-0.5" /> 
+                            Add task
+                        </Button>
+                    </CollapsibleTrigger>
+                )}
                 <CollapsibleContent>
                     <div className="mt-2">
                         <AddTodoForm
