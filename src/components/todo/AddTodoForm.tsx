@@ -7,7 +7,6 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useTodos } from "@/context/TodoContext";
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
-import { Textarea } from "../ui/textarea";
 import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
 import { CalendarIcon, Flag, MoreHorizontal, Inbox, FolderPlus, Folder } from "lucide-react";
 import { Calendar } from "../ui/calendar";
@@ -125,23 +124,22 @@ export function AddTodoForm({ projectId, existingTodo, onCancel, onAdded, onUpda
        <Card className={cn(isEditing ? "" : "p-4 border-2 border-primary/50")}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-3">
              <Collapsible open={isDateSelectorOpen} onOpenChange={setDateSelectorOpen} className="w-full">
-                <div className="space-y-3">
+                <div className="space-y-1">
                     <Input 
                         placeholder="Task name"
                         {...form.register("title")}
                         className="border-none text-base font-medium focus-visible:ring-0 !px-0"
                         autoFocus
                     />
-                    <Textarea 
+                    <Input
                         placeholder="Description"
                         {...form.register("description")}
-                        className="border-none focus-visible:ring-0 resize-none !px-0"
-                        rows={2}
+                        className="border-none text-sm text-muted-foreground focus-visible:ring-0 resize-none !px-0 h-auto py-0"
                     />
                 
-                    <div className="flex items-center gap-1">
+                    <div className="flex items-center gap-1 pt-2">
                         <CollapsibleTrigger asChild>
-                        <Button type="button" variant="outline" size="sm" className={cn("text-sm", !form.watch('due_date') && "text-muted-foreground")}>
+                        <Button type="button" variant="outline" size="sm" className={cn("text-sm h-8", !form.watch('due_date') && "text-muted-foreground")}>
                             <CalendarIcon className="mr-2 h-4 w-4" />
                             {form.watch('due_date') ? format(form.watch('due_date')!, 'MMM d') : "Due date"}
                         </Button>
@@ -149,7 +147,7 @@ export function AddTodoForm({ projectId, existingTodo, onCancel, onAdded, onUpda
                     
                         <DropdownMenu>
                             <DropdownMenuTrigger asChild>
-                                <Button variant="outline" size="sm">
+                                <Button variant="outline" size="sm" className="h-8">
                                     <Flag className={cn("mr-2 h-4 w-4", priorityInfo.className)} />
                                     {priorityValue}
                                 </Button>
@@ -169,7 +167,7 @@ export function AddTodoForm({ projectId, existingTodo, onCancel, onAdded, onUpda
 
                         <DropdownMenu>
                             <DropdownMenuTrigger asChild>
-                                <Button variant="outline" size="icon" className="h-9 w-9">
+                                <Button variant="outline" size="icon" className="h-8 w-8">
                                     <MoreHorizontal className="h-4 w-4" />
                                 </Button>
                             </DropdownMenuTrigger>
@@ -199,7 +197,7 @@ export function AddTodoForm({ projectId, existingTodo, onCancel, onAdded, onUpda
 
                         <div className="flex-grow"></div>
                         
-                        <Button variant="ghost" size="sm" disabled className="ml-auto">
+                        <Button variant="ghost" size="sm" disabled className="ml-auto h-8">
                             {getProjectName() === 'Inbox' ? <Inbox className="mr-2 h-4 w-4"/> : <Folder className="mr-2 h-4 w-4"/>}
                             {getProjectName()}
                         </Button>
