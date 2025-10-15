@@ -7,7 +7,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useTodos } from "@/context/TodoContext";
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
-import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
+import { Dialog, DialogContent, DialogTrigger } from "../ui/dialog";
 import { CalendarIcon, Flag, MoreHorizontal, Inbox, FolderPlus, Folder } from "lucide-react";
 import { Calendar } from "../ui/calendar";
 import { format, addDays, endOfWeek } from "date-fns";
@@ -29,7 +29,6 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { useState, useEffect } from "react";
 import { AddProjectDialog } from "./AddProjectDialog";
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Card } from "../ui/card";
 
 
@@ -54,7 +53,7 @@ interface AddTodoFormProps {
 export function AddTodoForm({ projectId, existingTodo, onCancel, onAdded, onUpdated }: AddTodoFormProps) {
   const { addTodo, updateTodo, projects } = useTodos();
   const [isAddProjectDialogOpen, setAddProjectDialogOpen] = useState(false);
-  const [isDatePopoverOpen, setDatePopoverOpen] = useState(false);
+  const [isDateDialogOpen, setDateDialogOpen] = useState(false);
 
   const form = useForm<TodoFormValues>({
     resolver: zodResolver(todoFormSchema),
@@ -98,13 +97,18 @@ export function AddTodoForm({ projectId, existingTodo, onCancel, onAdded, onUpda
             priority: form.getValues('priority'),
             project_id: form.getValues('project_id'),
         });
-        onAdded?.();
+        if(onAdded) {
+           onAdded();
+        } else {
+           // This keeps the form open for continuous adding
+           form.setFocus('title'); 
+        }
     }
   };
   
   const setDate = (date: Date | undefined) => {
     form.setValue('due_date', date, { shouldDirty: true });
-    setDatePopoverOpen(false);
+    setDateDialogOpen(false);
   }
 
   const currentProjectId = form.watch('project_id');
@@ -139,14 +143,14 @@ export function AddTodoForm({ projectId, existingTodo, onCancel, onAdded, onUpda
                 />
             
                 <div className="flex items-center gap-1 pt-2">
-                    <Popover open={isDatePopoverOpen} onOpenChange={setDatePopoverOpen}>
-                        <PopoverTrigger asChild>
+                    <Dialog open={isDateDialogOpen} onOpenChange={setDateDialogOpen}>
+                        <DialogTrigger asChild>
                             <Button type="button" variant="outline" size="sm" className={cn("text-sm h-8", !form.watch('due_date') && "text-muted-foreground")}>
                                 <CalendarIcon className="mr-2 h-4 w-4" />
                                 {form.watch('due_date') ? format(form.watch('due_date')!, 'MMM d') : "Due date"}
                             </Button>
-                        </PopoverTrigger>
-                         <PopoverContent className="w-auto p-0" align="start">
+                        </DialogTrigger>
+                         <DialogContent className="w-auto p-0">
                             <div className="p-2 space-y-1">
                                 <Button variant="ghost" size="sm" className="w-full justify-start" onClick={() => setDate(new Date())}>Today</Button>
                                 <Button variant="ghost" size="sm" className="w-full justify-start" onClick={() => setDate(addDays(new Date(), 1))}>Tomorrow</Button>
@@ -159,8 +163,8 @@ export function AddTodoForm({ projectId, existingTodo, onCancel, onAdded, onUpda
                                 initialFocus
                                 className="p-0 border-t"
                             />
-                        </PopoverContent>
-                    </Popover>
+                        </DialogContent>
+                    </Dialog>
                 
                     <DropdownMenu>
                         <DropdownMenuTrigger asChild>
