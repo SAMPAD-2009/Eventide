@@ -118,7 +118,7 @@ export default function TodoPage() {
                         <AddTodoForm
                             projectId={projectIdForNewTask}
                             onCancel={() => setCreateFormOpen(false)}
-                            onAdded={() => setCreateFormOpen(false)}
+                            onAdded={() => {}}
                         />
                     </div>
                 </CollapsibleContent>

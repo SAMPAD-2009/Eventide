@@ -54,7 +54,7 @@ interface AddTodoFormProps {
 export function AddTodoForm({ projectId, existingTodo, onCancel, onAdded, onUpdated }: AddTodoFormProps) {
   const { addTodo, updateTodo, projects } = useTodos();
   const [isAddProjectDialogOpen, setAddProjectDialogOpen] = useState(false);
-  const [isDateSelectorOpen, setDateSelectorOpen] = useState(false);
+  const [isDatePopoverOpen, setDatePopoverOpen] = useState(false);
 
   const form = useForm<TodoFormValues>({
     resolver: zodResolver(todoFormSchema),
@@ -92,9 +92,11 @@ export function AddTodoForm({ projectId, existingTodo, onCancel, onAdded, onUpda
     } else {
         await addTodo(data);
         form.reset({ 
-            ...form.getValues(),
             title: "",
             description: "",
+            due_date: form.getValues('due_date'),
+            priority: form.getValues('priority'),
+            project_id: form.getValues('project_id'),
         });
         onAdded?.();
     }
@@ -102,7 +104,7 @@ export function AddTodoForm({ projectId, existingTodo, onCancel, onAdded, onUpda
   
   const setDate = (date: Date | undefined) => {
     form.setValue('due_date', date, { shouldDirty: true });
-    setDateSelectorOpen(false);
+    setDatePopoverOpen(false);
   }
 
   const currentProjectId = form.watch('project_id');
@@ -121,106 +123,103 @@ export function AddTodoForm({ projectId, existingTodo, onCancel, onAdded, onUpda
   return (
     <>
       <AddProjectDialog isOpen={isAddProjectDialogOpen} onOpenChange={setAddProjectDialogOpen} />
-       <Card className={cn(isEditing ? "" : "p-4 border-2 border-primary/50")}>
+       <Card className={cn(isEditing ? "" : "p-4 border border-border")}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-3">
-             <Collapsible open={isDateSelectorOpen} onOpenChange={setDateSelectorOpen} className="w-full">
-                <div className="space-y-1">
-                    <Input 
-                        placeholder="Task name"
-                        {...form.register("title")}
-                        className="border-none text-base font-medium focus-visible:ring-0 !px-0"
-                        autoFocus
-                    />
-                    <Input
-                        placeholder="Description"
-                        {...form.register("description")}
-                        className="border-none text-sm text-muted-foreground focus-visible:ring-0 resize-none !px-0 h-auto py-0"
-                    />
+            <div className="space-y-1">
+                <Input 
+                    placeholder="Task name"
+                    {...form.register("title")}
+                    className="border-none text-base font-medium focus-visible:ring-0 px-0"
+                    autoFocus
+                />
+                <Input
+                    placeholder="Description"
+                    {...form.register("description")}
+                    className="border-none text-sm text-muted-foreground focus-visible:ring-0 resize-none px-0 h-auto py-0"
+                />
+            
+                <div className="flex items-center gap-1 pt-2">
+                    <Popover open={isDatePopoverOpen} onOpenChange={setDatePopoverOpen}>
+                        <PopoverTrigger asChild>
+                            <Button type="button" variant="outline" size="sm" className={cn("text-sm h-8", !form.watch('due_date') && "text-muted-foreground")}>
+                                <CalendarIcon className="mr-2 h-4 w-4" />
+                                {form.watch('due_date') ? format(form.watch('due_date')!, 'MMM d') : "Due date"}
+                            </Button>
+                        </PopoverTrigger>
+                         <PopoverContent className="w-auto p-0" align="start">
+                            <div className="p-2 space-y-1">
+                                <Button variant="ghost" size="sm" className="w-full justify-start" onClick={() => setDate(new Date())}>Today</Button>
+                                <Button variant="ghost" size="sm" className="w-full justify-start" onClick={() => setDate(addDays(new Date(), 1))}>Tomorrow</Button>
+                                <Button variant="ghost" size="sm" className="w-full justify-start" onClick={() => setDate(endOfWeek(new Date()))}>This weekend</Button>
+                            </div>
+                            <Calendar
+                                mode="single"
+                                selected={form.watch('due_date')}
+                                onSelect={(date) => setDate(date)}
+                                initialFocus
+                                className="p-0 border-t"
+                            />
+                        </PopoverContent>
+                    </Popover>
                 
-                    <div className="flex items-center gap-1 pt-2">
-                        <CollapsibleTrigger asChild>
-                        <Button type="button" variant="outline" size="sm" className={cn("text-sm h-8", !form.watch('due_date') && "text-muted-foreground")}>
-                            <CalendarIcon className="mr-2 h-4 w-4" />
-                            {form.watch('due_date') ? format(form.watch('due_date')!, 'MMM d') : "Due date"}
-                        </Button>
-                        </CollapsibleTrigger>
+                    <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                            <Button variant="outline" size="sm" className="h-8">
+                                <Flag className={cn("mr-2 h-4 w-4", priorityInfo.className)} />
+                                {priorityValue}
+                            </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent>
+                            <DropdownMenuLabel>Set Priority</DropdownMenuLabel>
+                            <DropdownMenuRadioGroup value={priorityValue} onValueChange={(value) => form.setValue('priority', value, { shouldDirty: true })}>
+                                {PRIORITIES.map(p => (
+                                <DropdownMenuRadioItem key={p.level} value={p.level}>
+                                    <Flag className={cn("mr-2 h-4 w-4", p.className)} />
+                                    {p.level}
+                                </DropdownMenuRadioItem>
+                                ))}
+                            </DropdownMenuRadioGroup>
+                        </DropdownMenuContent>
+                    </DropdownMenu>
+
+                    <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                            <Button variant="outline" size="icon" className="h-8 w-8">
+                                <MoreHorizontal className="h-4 w-4" />
+                            </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent>
+                            <DropdownMenuLabel>Project</DropdownMenuLabel>
+                            <DropdownMenuItem onClick={() => setAddProjectDialogOpen(true)}>
+                                <FolderPlus className="mr-2 h-4 w-4" />
+                                Create new project
+                            </DropdownMenuItem>
+                            <DropdownMenuSub>
+                                <DropdownMenuSubTrigger>
+                                    <Folder className="mr-2 h-4 w-4" />
+                                    Move to project
+                                </DropdownMenuSubTrigger>
+                                <DropdownMenuSubContent>
+                                    <DropdownMenuRadioGroup value={currentProjectId} onValueChange={(value) => form.setValue('project_id', value)}>
+                                        {projects.map(p => (
+                                        <DropdownMenuRadioItem key={p.project_id} value={p.project_id}>
+                                            {p.name}
+                                        </DropdownMenuRadioItem>
+                                        ))}
+                                    </DropdownMenuRadioGroup>
+                                </DropdownMenuSubContent>
+                            </DropdownMenuSub>
+                        </DropdownMenuContent>
+                    </DropdownMenu>
+
+                    <div className="flex-grow"></div>
                     
-                        <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                                <Button variant="outline" size="sm" className="h-8">
-                                    <Flag className={cn("mr-2 h-4 w-4", priorityInfo.className)} />
-                                    {priorityValue}
-                                </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent>
-                                <DropdownMenuLabel>Set Priority</DropdownMenuLabel>
-                                <DropdownMenuRadioGroup value={priorityValue} onValueChange={(value) => form.setValue('priority', value, { shouldDirty: true })}>
-                                    {PRIORITIES.map(p => (
-                                    <DropdownMenuRadioItem key={p.level} value={p.level}>
-                                        <Flag className={cn("mr-2 h-4 w-4", p.className)} />
-                                        {p.level}
-                                    </DropdownMenuRadioItem>
-                                    ))}
-                                </DropdownMenuRadioGroup>
-                            </DropdownMenuContent>
-                        </DropdownMenu>
-
-                        <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                                <Button variant="outline" size="icon" className="h-8 w-8">
-                                    <MoreHorizontal className="h-4 w-4" />
-                                </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent>
-                                <DropdownMenuLabel>Project</DropdownMenuLabel>
-                                <DropdownMenuItem onClick={() => setAddProjectDialogOpen(true)}>
-                                    <FolderPlus className="mr-2 h-4 w-4" />
-                                    Create new project
-                                </DropdownMenuItem>
-                                <DropdownMenuSub>
-                                    <DropdownMenuSubTrigger>
-                                        <Folder className="mr-2 h-4 w-4" />
-                                        Move to project
-                                    </DropdownMenuSubTrigger>
-                                    <DropdownMenuSubContent>
-                                        <DropdownMenuRadioGroup value={currentProjectId} onValueChange={(value) => form.setValue('project_id', value)}>
-                                            {projects.map(p => (
-                                            <DropdownMenuRadioItem key={p.project_id} value={p.project_id}>
-                                                {p.name}
-                                            </DropdownMenuRadioItem>
-                                            ))}
-                                        </DropdownMenuRadioGroup>
-                                    </DropdownMenuSubContent>
-                                </DropdownMenuSub>
-                            </DropdownMenuContent>
-                        </DropdownMenu>
-
-                        <div className="flex-grow"></div>
-                        
-                        <Button variant="ghost" size="sm" disabled className="ml-auto h-8">
-                            {getProjectName() === 'Inbox' ? <Inbox className="mr-2 h-4 w-4"/> : <Folder className="mr-2 h-4 w-4"/>}
-                            {getProjectName()}
-                        </Button>
-                    </div>
+                    <Button variant="ghost" size="sm" disabled className="ml-auto h-8">
+                        {getProjectName() === 'Inbox' ? <Inbox className="mr-2 h-4 w-4"/> : <Folder className="mr-2 h-4 w-4"/>}
+                        {getProjectName()}
+                    </Button>
                 </div>
-
-                <CollapsibleContent>
-                    <div className="p-2 border rounded-md mt-2">
-                        <div className="flex items-center justify-center gap-2 mb-2">
-                            <Button variant="ghost" size="sm" className="flex-1" onClick={() => setDate(new Date())}>Today</Button>
-                            <Button variant="ghost" size="sm" className="flex-1" onClick={() => setDate(addDays(new Date(), 1))}>Tomorrow</Button>
-                            <Button variant="ghost" size="sm" className="flex-1" onClick={() => setDate(endOfWeek(new Date()))}>This weekend</Button>
-                        </div>
-                        <Calendar
-                            mode="single"
-                            selected={form.watch('due_date')}
-                            onSelect={(date) => setDate(date)}
-                            initialFocus
-                            className="p-0 w-full"
-                        />
-                    </div>
-                </CollapsibleContent>
-             </Collapsible>
+            </div>
             
             <div className="flex justify-end gap-2 pt-2 border-t mt-4">
                 {onCancel && (
