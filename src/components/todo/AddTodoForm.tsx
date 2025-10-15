@@ -122,6 +122,13 @@ export function AddTodoForm({ projectId, existingTodo, onCancel, onAdded, onUpda
   
   const priorityValue = form.watch('priority') as Priority;
   const priorityInfo = getPriorityInfo(priorityValue);
+  
+  const handleKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
+    if (event.key === 'Enter' && !event.shiftKey) {
+        event.preventDefault();
+        form.handleSubmit(onSubmit)();
+    }
+  };
 
 
   return (
@@ -135,6 +142,7 @@ export function AddTodoForm({ projectId, existingTodo, onCancel, onAdded, onUpda
                     {...form.register("title")}
                     className="border-none text-base font-medium focus-visible:ring-0 px-2"
                     autoFocus
+                    onKeyDown={handleKeyDown}
                 />
                 <Input
                     placeholder="Description"
