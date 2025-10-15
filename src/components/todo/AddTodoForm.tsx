@@ -129,17 +129,17 @@ export function AddTodoForm({ projectId, existingTodo, onCancel, onAdded, onUpda
       <AddProjectDialog isOpen={isAddProjectDialogOpen} onOpenChange={setAddProjectDialogOpen} />
        <Card className={cn(isEditing ? "" : "p-4 border border-border")}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-3">
-            <div className="space-y-1 pl-4">
+            <div className="space-y-1">
                 <Input 
                     placeholder="Task name"
                     {...form.register("title")}
-                    className="border-none text-base font-medium focus-visible:ring-0 px-0"
+                    className="border-none text-base font-medium focus-visible:ring-0 px-2"
                     autoFocus
                 />
                 <Input
                     placeholder="Description"
                     {...form.register("description")}
-                    className="border-none text-sm text-muted-foreground focus-visible:ring-0 resize-none px-0 h-auto py-0"
+                    className="border-none text-sm text-muted-foreground focus-visible:ring-0 resize-none h-auto py-0 px-2"
                 />
             </div>
             
@@ -152,7 +152,7 @@ export function AddTodoForm({ projectId, existingTodo, onCancel, onAdded, onUpda
                         </Button>
                     </DialogTrigger>
                         <DialogContent className="w-auto p-0">
-                          <DialogHeader className="sr-only">
+                           <DialogHeader className="sr-only">
                             <DialogTitle>Set due date</DialogTitle>
                             <DialogDescription>Select a due date for your task.</DialogDescription>
                           </DialogHeader>
