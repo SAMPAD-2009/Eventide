@@ -1,3 +1,4 @@
+
 import type {Config} from 'tailwindcss';
 
 export default {
@@ -6,6 +7,15 @@ export default {
     './src/pages/**/*.{js,ts,jsx,tsx,mdx}',
     './src/components/**/*.{js,ts,jsx,tsx,mdx}',
     './src/app/**/*.{js,ts,jsx,tsx,mdx}',
+  ],
+  safelist: [
+    'border-red-500',
+    'data-[state=checked]:bg-red-500',
+    'data-[state=checked]:text-white',
+    'border-yellow-500',
+    'data-[state=checked]:bg-yellow-500',
+    'border-sky-500',
+    'data-[state=checked]:bg-sky-500',
   ],
   theme: {
     extend: {

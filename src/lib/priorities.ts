@@ -10,15 +10,15 @@ export const PRIORITIES: { level: Priority; className: string; borderClassName: 
     },
     { 
         level: 'Important', 
-        className: 'text-orange-500',
-        borderClassName: 'border-orange-500/30 hover:border-orange-500/60',
-        checkboxClassName: 'border-orange-500 data-[state=checked]:bg-orange-500 data-[state=checked]:text-white',
+        className: 'text-yellow-500',
+        borderClassName: 'border-yellow-500/30 hover:border-yellow-500/60',
+        checkboxClassName: 'border-yellow-500 data-[state=checked]:bg-yellow-500 data-[state=checked]:text-white',
     },
     { 
         level: 'Not Important', 
-        className: 'text-blue-500',
-        borderClassName: 'border-blue-500/30 hover:border-blue-500/60',
-        checkboxClassName: 'border-blue-500 data-[state=checked]:bg-blue-500 data-[state=checked]:text-white',
+        className: 'text-sky-500',
+        borderClassName: 'border-sky-500/30 hover:border-sky-500/60',
+        checkboxClassName: 'border-sky-500 data-[state=checked]:bg-sky-500 data-[state=checked]:text-white',
     },
     { 
         level: 'Casual', 
