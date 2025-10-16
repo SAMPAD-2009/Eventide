@@ -8,19 +8,24 @@ import { TaskList } from '@/components/todo/TaskList';
 import { AddTodoForm } from '@/components/todo/AddTodoForm';
 import { isToday } from 'date-fns';
 import { parseISO } from 'date-fns/fp';
-import { Plus } from 'lucide-react';
+import { Plus, Sparkles, Send, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import type { Todo } from '@/lib/types';
 import { TodoBottomNav } from '@/components/todo/TodoBottomNav';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-
+import { parseTask } from '@/ai/flows/parse-task-flow';
+import { useToast } from '@/hooks/use-toast';
+import { Input } from '@/components/ui/input';
 
 export default function TodoPage() {
-  const { projects, todos, isLoading } = useTodos();
+  const { projects, todos, isLoading, addTodo } = useTodos();
+  const { toast } = useToast();
   const [selectedSection, setSelectedSection] = useState('inbox'); // 'inbox', 'today', or a project_id
   const [isCreateFormOpen, setCreateFormOpen] = useState(false);
   const [editingTodoId, setEditingTodoId] = useState<string | null>(null);
+  const [smartTaskText, setSmartTaskText] = useState('');
+  const [isCreatingSmartTask, setIsCreatingSmartTask] = useState(false);
 
   const filteredTodos = useMemo(() => {
     if (isLoading) return [];
@@ -73,6 +78,29 @@ export default function TodoPage() {
     setEditingTodoId(todoId);
   }
 
+  const handleSmartTaskCreate = async () => {
+    if (!smartTaskText.trim()) return;
+    setIsCreatingSmartTask(true);
+    try {
+      const parsedTask = await parseTask(smartTaskText);
+      await addTodo(parsedTask);
+      setSmartTaskText('');
+      toast({
+        title: "Smart Task Created!",
+        description: `"${parsedTask.title}" was added.`,
+      })
+    } catch(e) {
+      console.error(e);
+      toast({
+        variant: 'destructive',
+        title: 'Smart Task Failed',
+        description: 'Could not understand the task. Please try a different phrasing.',
+      })
+    } finally {
+      setIsCreatingSmartTask(false);
+    }
+  }
+
 
   if (isLoading && projects.length === 0) {
     return (
@@ -96,6 +124,27 @@ export default function TodoPage() {
       <main className="flex-1 p-4 md:p-8 overflow-y-auto pb-24 md:pb-8">
         <h1 className="text-3xl font-bold tracking-tight mb-6">{sectionTitle}</h1>
         <div className="max-w-3xl mx-auto">
+            <div className="relative mb-4">
+              <Sparkles className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-yellow-500" />
+              <Input
+                placeholder="Create a task with AI... e.g., 'Do laundry tomorrow at 5pm #home'"
+                className="pl-10"
+                value={smartTaskText}
+                onChange={(e) => setSmartTaskText(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && handleSmartTaskCreate()}
+              />
+              {smartTaskText && (
+                <Button 
+                  size="icon" 
+                  className="absolute right-1 top-1/2 -translate-y-1/2 h-8 w-8"
+                  onClick={handleSmartTaskCreate}
+                  disabled={isCreatingSmartTask}
+                >
+                  {isCreatingSmartTask ? <Loader2 className="animate-spin" /> : <Send />}
+                </Button>
+              )}
+            </div>
+
             <TaskList
                 todos={filteredTodos}
                 editingTodoId={editingTodoId}

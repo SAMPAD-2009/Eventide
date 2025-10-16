@@ -7,11 +7,12 @@ import { useLabels } from "@/context/LabelContext";
 import { Checkbox } from "../ui/checkbox";
 import { cn } from "@/lib/utils";
 import { Button } from "../ui/button";
-import { Trash2, Edit, Flag, Tag } from "lucide-react";
+import { Trash2, Edit, Flag, Tag, Focus } from "lucide-react";
 import { format, parseISO, isToday, isPast } from 'date-fns';
 import { getPriorityInfo } from "@/lib/priorities";
 import { AddTodoForm } from "./AddTodoForm";
 import { Badge } from "../ui/badge";
+import Link from 'next/link';
 
 interface TodoItemProps {
   todo: Todo;
@@ -102,6 +103,11 @@ export function TodoItem({ todo, isEditing, onSetEditing }: TodoItemProps) {
         </div>
       </div>
       <div className="opacity-100 md:opacity-0 group-hover:opacity-100 transition-opacity flex items-center">
+        <Button asChild variant="ghost" size="icon">
+          <Link href={`/focus/${todo.todo_id}`}>
+            <Focus className="h-4 w-4" />
+          </Link>
+        </Button>
         {!todo.completed && (
             <Button variant="ghost" size="icon" onClick={() => onSetEditing(todo.todo_id)}>
             <Edit className="h-4 w-4" />

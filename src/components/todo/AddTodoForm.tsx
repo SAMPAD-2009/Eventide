@@ -9,7 +9,7 @@ import { useLabels } from "@/context/LabelContext";
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "../ui/dialog";
-import { CalendarIcon, Flag, MoreHorizontal, Inbox, FolderPlus, Folder, Tag, PlusCircle } from "lucide-react";
+import { CalendarIcon, Flag, MoreHorizontal, Inbox, FolderPlus, Folder, Tag, PlusCircle, Sparkles, Loader2 } from "lucide-react";
 import { Calendar } from "../ui/calendar";
 import { format, addDays, endOfWeek } from "date-fns";
 import { cn } from "@/lib/utils";
@@ -34,6 +34,8 @@ import { useState, useEffect } from "react";
 import { AddProjectDialog } from "./AddProjectDialog";
 import { Card } from "../ui/card";
 import { LabelDialog } from "../settings/LabelDialog";
+import { summarize } from "@/ai/flows/summarize-flow";
+import { useToast } from "@/hooks/use-toast";
 
 const todoFormSchema = z.object({
   title: z.string().min(1, "Title is required"),
@@ -60,6 +62,8 @@ export function AddTodoForm({ projectId, existingTodo, onCancel, onAdded, onUpda
   const [isAddProjectDialogOpen, setAddProjectDialogOpen] = useState(false);
   const [isDateDialogOpen, setDateDialogOpen] = useState(false);
   const [isLabelDialogOpen, setLabelDialogOpen] = useState(false);
+  const [isSummarizing, setIsSummarizing] = useState(false);
+  const { toast } = useToast();
 
   const form = useForm<TodoFormValues>({
     resolver: zodResolver(todoFormSchema),
@@ -141,6 +145,28 @@ export function AddTodoForm({ projectId, existingTodo, onCancel, onAdded, onUpda
     }
   };
 
+  const handleSummarize = async () => {
+    const description = form.getValues('description');
+    if (!description || description.trim().length < 20) {
+      toast({
+        variant: 'destructive',
+        title: 'Not enough text',
+        description: 'Please provide more details to generate a summary.',
+      });
+      return;
+    }
+    setIsSummarizing(true);
+    try {
+      const summary = await summarize(description);
+      form.setValue('description', summary, { shouldDirty: true });
+    } catch (e) {
+      console.error(e);
+      toast({ variant: 'destructive', title: 'Error', description: 'Failed to generate summary.' });
+    } finally {
+      setIsSummarizing(false);
+    }
+  };
+
 
   return (
     <>
@@ -156,11 +182,27 @@ export function AddTodoForm({ projectId, existingTodo, onCancel, onAdded, onUpda
                     autoFocus
                     onKeyDown={handleKeyDown}
                 />
-                <Input
-                    placeholder="Description"
-                    {...form.register("description")}
-                    className="border-none text-sm text-muted-foreground focus-visible:ring-0 resize-none h-auto p-0"
-                />
+                 <div className="relative">
+                    <Input
+                        placeholder="Description"
+                        {...form.register("description")}
+                        className="border-none text-sm text-muted-foreground focus-visible:ring-0 resize-none h-auto p-0 pr-10"
+                    />
+                    <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        className="absolute right-0 top-1/2 -translate-y-1/2 h-7 w-7"
+                        onClick={handleSummarize}
+                        disabled={isSummarizing}
+                    >
+                       {isSummarizing ? (
+                         <Loader2 className="h-4 w-4 animate-spin" />
+                       ) : (
+                         <Sparkles className="h-4 w-4 text-yellow-500" />
+                       )}
+                    </Button>
+                </div>
             </div>
             
             <div className="flex items-center gap-1 pt-2 flex-wrap">

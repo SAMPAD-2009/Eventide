@@ -13,6 +13,7 @@ type ProjectCreationData = Omit<Project, 'project_id' | 'user_email' | 'created_
 interface TodoContextType {
   projects: Project[];
   todos: Todo[];
+  getTodoById: (todoId: string) => Todo | undefined;
   addProject: (projectData: ProjectCreationData) => Promise<Project | void>;
   deleteProject: (projectId: string) => Promise<void>;
   addTodo: (todoData: TodoCreationData) => Promise<void>;
@@ -98,6 +99,10 @@ export const TodoProvider = ({ children }: { children: ReactNode }) => {
   }, [user, fetchData]);
 
   
+  const getTodoById = useCallback((todoId: string) => {
+    return todos.find(t => t.todo_id === todoId);
+  }, [todos]);
+
   const deleteProject = async (projectId: string) => {
     const originalProjects = [...projects];
     const originalTodos = [...todos];
@@ -197,6 +202,7 @@ export const TodoProvider = ({ children }: { children: ReactNode }) => {
   const contextValue = {
     projects,
     todos,
+    getTodoById,
     addProject,
     deleteProject,
     addTodo,

@@ -5,7 +5,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { format, parseISO } from 'date-fns';
-import { Calendar as CalendarIcon, Loader2, ChevronsUpDown, PlusCircle } from 'lucide-react';
+import { Calendar as CalendarIcon, Loader2, ChevronsUpDown, PlusCircle, Sparkles } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
@@ -24,6 +24,7 @@ import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, Command
 import { Badge } from './ui/badge';
 import { LabelDialog } from './settings/LabelDialog';
 import { CATEGORIES, getCategoryByName } from '@/lib/categories';
+import { summarize } from '@/ai/flows/summarize-flow';
 
 const eventFormSchema = z.object({
   title: z.string().min(2, { message: "Title must be at least 2 characters long." }),
@@ -55,6 +56,7 @@ export function EventForm({ event, onEventCreated, onEventUpdated, selectedDate 
   const { toast } = useToast();
   const [isCategoryPopoverOpen, setCategoryPopoverOpen] = useState(false);
   const [isLabelDialogOpen, setLabelDialogOpen] = useState(false);
+  const [isSummarizing, setIsSummarizing] = useState(false);
 
   const form = useForm<EventFormValues>({
     resolver: zodResolver(eventFormSchema),
@@ -121,6 +123,29 @@ export function EventForm({ event, onEventCreated, onEventUpdated, selectedDate 
     }
   };
 
+  const handleSummarize = async () => {
+    const details = form.getValues('details');
+    if (!details || details.trim().length < 20) {
+      toast({
+        variant: 'destructive',
+        title: 'Not enough text',
+        description: 'Please provide more details to generate a summary.',
+      });
+      return;
+    }
+    setIsSummarizing(true);
+    try {
+      const summary = await summarize(details);
+      form.setValue('details', summary, { shouldDirty: true });
+    } catch (e) {
+      console.error(e);
+      toast({ variant: 'destructive', title: 'Error', description: 'Failed to generate summary.' });
+    } finally {
+      setIsSummarizing(false);
+    }
+  };
+
+
   const currentLabelId = form.watch('label_id');
   const selectedLabel = currentLabelId ? getLabelById(currentLabelId) : null;
   const currentCategoryName = form.watch('category');
@@ -150,7 +175,23 @@ export function EventForm({ event, onEventCreated, onEventUpdated, selectedDate 
                         name="details"
                         render={({ field }) => (
                         <FormItem>
-                            <FormLabel>Event Details (Optional)</FormLabel>
+                           <div className="flex items-center justify-between">
+                             <FormLabel>Event Details (Optional)</FormLabel>
+                             <Button
+                               type="button"
+                               variant="ghost"
+                               size="sm"
+                               onClick={handleSummarize}
+                               disabled={isSummarizing}
+                             >
+                               {isSummarizing ? (
+                                 <Loader2 className="animate-spin" />
+                               ) : (
+                                 <Sparkles className="text-yellow-500" />
+                               )}
+                               Summarize
+                             </Button>
+                           </div>
                             <FormControl>
                             <Textarea placeholder="Discuss quarterly goals and project updates..." className="resize-none h-32" {...field} />
                             </FormControl>
