@@ -14,7 +14,7 @@ export function EventList({ events, emptyStateMessage = "No events to display.",
     return (
       <div className="flex flex-col items-center justify-center text-center p-8 gap-4 mt-8">
         <Image
-            src="https://i.ibb.co/9vW3YFj/event-not.png"
+            src="https://i.ibb.co/qLVn60Qx/event-not.png"
             alt="No events found"
             width={300}
             height={300}
