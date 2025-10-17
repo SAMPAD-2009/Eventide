@@ -8,56 +8,17 @@ import { TaskList } from '@/components/todo/TaskList';
 import { AddTodoForm } from '@/components/todo/AddTodoForm';
 import { isToday, addDays, nextDay, Day } from 'date-fns';
 import { parseISO } from 'date-fns/fp';
-import { Plus, Sparkles, Send, Loader2 } from 'lucide-react';
+import { Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
-import type { Todo, Priority } from '@/lib/types';
 import { TodoBottomNav } from '@/components/todo/TodoBottomNav';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { useToast } from '@/hooks/use-toast';
-import { Input } from '@/components/ui/input';
-import { PRIORITIES } from '@/lib/priorities';
-
-// Helper function to parse dates from simple strings
-const parseDateString = (dateStr: string): Date | undefined => {
-    const lowerDateStr = dateStr.toLowerCase();
-    const now = new Date();
-
-    switch (lowerDateStr) {
-        case 'today':
-            return now;
-        case 'tomorrow':
-            return addDays(now, 1);
-        case 'next week':
-            return addDays(now, 7);
-        default:
-            // Handle days of the week like "monday", "tuesday"
-            const daysOfWeek: { [key: string]: Day } = {
-                sunday: 0,
-                monday: 1,
-                tuesday: 2,
-                wednesday: 3,
-                thursday: 4,
-                friday: 5,
-                saturday: 6,
-            };
-            const day = daysOfWeek[lowerDateStr];
-            if (day !== undefined) {
-                return nextDay(now, day);
-            }
-            return undefined;
-    }
-};
-
 
 export default function TodoPage() {
   const { projects, todos, isLoading, addTodo } = useTodos();
-  const { toast } = useToast();
   const [selectedSection, setSelectedSection] = useState('inbox'); // 'inbox', 'today', or a project_id
   const [isCreateFormOpen, setCreateFormOpen] = useState(false);
   const [editingTodoId, setEditingTodoId] = useState<string | null>(null);
-  const [smartTaskText, setSmartTaskText] = useState('');
-  const [isCreatingSmartTask, setIsCreatingSmartTask] = useState(false);
 
   const filteredTodos = useMemo(() => {
     if (isLoading) return [];
@@ -110,93 +71,6 @@ export default function TodoPage() {
     setEditingTodoId(todoId);
   }
 
-  const parseSmartTask = (input: string) => {
-    let title = input;
-    let priority: Priority = 'Casual';
-    let dueDate: Date | undefined;
-    let projectId: string = projectIdForNewTask;
-
-    const priorityRegex = /#([\w\s]+)/;
-    const dateRegex = /@(\w+)/;
-    const projectRegex = /p:([\w\s]+)/;
-
-    const priorityMatch = title.match(priorityRegex);
-    if (priorityMatch) {
-      const priorityStr = priorityMatch[1].trim().toLowerCase();
-      const foundPriority = PRIORITIES.find(p => p.level.toLowerCase().replace(' ', '') === priorityStr.replace(' ', ''));
-      if (foundPriority) {
-        priority = foundPriority.level;
-        title = title.replace(priorityMatch[0], '').trim();
-      }
-    }
-
-    const dateMatch = title.match(dateRegex);
-    if (dateMatch) {
-      dueDate = parseDateString(dateMatch[1].trim());
-      title = title.replace(dateMatch[0], '').trim();
-    }
-    
-    const projectMatch = title.match(projectRegex);
-    if (projectMatch) {
-        const projectName = projectMatch[1].trim();
-        const foundProject = projects.find(p => p.name.toLowerCase() === projectName.toLowerCase());
-        if (foundProject) {
-            projectId = foundProject.project_id;
-            title = title.replace(projectMatch[0], '').trim();
-        }
-    }
-
-
-    return {
-      title,
-      priority,
-      due_date: dueDate,
-      project_id: projectId
-    };
-  };
-
-
-  const handleSmartTaskCreate = async () => {
-    if (!smartTaskText.trim()) return;
-    setIsCreatingSmartTask(true);
-    
-    try {
-      const parsedTask = parseSmartTask(smartTaskText);
-
-      if (!parsedTask.title) {
-        toast({
-          variant: 'destructive',
-          title: 'Task Creation Failed',
-          description: 'A task title is required.',
-        });
-        return;
-      }
-
-      await addTodo({
-        title: parsedTask.title,
-        priority: parsedTask.priority,
-        due_date: parsedTask.due_date ? parsedTask.due_date.toISOString().split('T')[0] : undefined,
-        project_id: parsedTask.project_id,
-      });
-
-      setSmartTaskText('');
-      toast({
-        title: "Task Created!",
-        description: `"${parsedTask.title}" was added.`,
-      })
-    } catch(e: any) {
-      console.error(e);
-      toast({
-        variant: 'destructive',
-        title: 'Task Creation Failed',
-        description: 'Could not create the task. Please check your input.',
-      })
-    } finally {
-      setIsCreatingSmartTask(false);
-    }
-  }
-
-
   if (isLoading && projects.length === 0) {
     return (
         <div className="flex h-[calc(100vh-4rem)]">
@@ -219,27 +93,6 @@ export default function TodoPage() {
       <main className="flex-1 p-4 md:p-8 overflow-y-auto pb-24 md:pb-8">
         <h1 className="text-3xl font-bold tracking-tight mb-6">{sectionTitle}</h1>
         <div className="max-w-3xl mx-auto">
-            <div className="relative mb-4">
-              <Sparkles className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-yellow-500" />
-              <Input
-                placeholder="Create a task... e.g., 'Do laundry @tomorrow #important p:Home'"
-                className="pl-10"
-                value={smartTaskText}
-                onChange={(e) => setSmartTaskText(e.target.value)}
-                onKeyDown={(e) => e.key === 'Enter' && handleSmartTaskCreate()}
-              />
-              {smartTaskText && (
-                <Button 
-                  size="icon" 
-                  className="absolute right-1 top-1/2 -translate-y-1/2 h-8 w-8"
-                  onClick={handleSmartTaskCreate}
-                  disabled={isCreatingSmartTask}
-                >
-                  {isCreatingSmartTask ? <Loader2 className="animate-spin" /> : <Send />}
-                </Button>
-              )}
-            </div>
-
             <TaskList
                 todos={filteredTodos}
                 editingTodoId={editingTodoId}
@@ -283,4 +136,3 @@ export default function TodoPage() {
     </div>
   );
 }
-
