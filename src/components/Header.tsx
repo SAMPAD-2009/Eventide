@@ -28,7 +28,7 @@ export function Header() {
   const [isSheetOpen, setSheetOpen] = React.useState(false);
 
   const navLinks = [
-    { href: "/", label: "Upcoming" },
+    { href: "/", label: "Events" },
     { href: "/todo", label: "Todo" },
     { href: "/history", label: "History" },
     { href: "/weather", label: <CloudSun className="h-5 w-5" />, textLabel: "Weather" },

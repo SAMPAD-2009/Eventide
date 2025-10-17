@@ -14,7 +14,7 @@ import { updateUserLandingPage } from '@/services/supabase';
 import { LabelSettings } from '@/components/settings/LabelSettings';
 
 const navLinks = [
-    { href: "/", label: "Upcoming" },
+    { href: "/", label: "Events" },
     { href: "/todo", label: "Todo" },
     { href: "/history", label: "History" },
     { href: "/weather", label: "Weather" },
