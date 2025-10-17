@@ -4,24 +4,30 @@
 import { Todo } from "@/lib/types";
 import { TodoItem } from "./TodoItem";
 import { AnimatePresence, motion } from "framer-motion";
-import { Card, CardContent } from "../ui/card";
+import Image from 'next/image';
 
 interface TaskListProps {
   todos: Todo[];
-  editingTodoId: string | null;
-  onSetEditing: (todoId: string | null) => void;
+  editingTodoId?: string | null;
+  onSetEditing?: (todoId: string | null) => void;
 }
 
 export function TaskList({ todos, editingTodoId, onSetEditing }: TaskListProps) {
 
   if (todos.length === 0) {
     return (
-        <Card className="flex items-center justify-center h-48 border-dashed">
-            <CardContent className="p-6 text-center">
-                <p className="text-lg font-medium text-muted-foreground">All clear!</p>
-                <p className="text-sm text-muted-foreground">Looks like there are no tasks here.</p>
-            </CardContent>
-        </Card>
+        <div className="flex flex-col items-center justify-center text-center p-8 gap-4 mt-8">
+            <Image
+                src="https://i.ibb.co/3kL2bHP/todo-not.png"
+                alt="All tasks clear"
+                width={300}
+                height={300}
+                className="max-w-[200px] md:max-w-[300px]"
+                data-ai-hint="empty checklist"
+            />
+            <h3 className="text-xl md:text-2xl font-semibold text-muted-foreground mt-4">All clear!</h3>
+            <p className="text-muted-foreground">Looks like there are no tasks here.</p>
+        </div>
     );
   }
 
@@ -39,7 +45,7 @@ export function TaskList({ todos, editingTodoId, onSetEditing }: TaskListProps) 
             <TodoItem 
                 todo={todo}
                 isEditing={editingTodoId === todo.todo_id}
-                onSetEditing={onSetEditing}
+                onSetEditing={onSetEditing!}
             />
           </motion.div>
         ))}
