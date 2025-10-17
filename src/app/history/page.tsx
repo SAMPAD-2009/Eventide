@@ -84,7 +84,7 @@ export default function HistoryPage() {
       <div className="max-w-7xl mx-auto">
         <h1 className="text-3xl font-bold tracking-tight mb-2">Moments in History</h1>
         <p className="text-muted-foreground mb-6">
-          A collection of notable events from a Supabase database.
+          A collection of notable events from Brittanica
         </p>
 
         <Suspense fallback={<HistorySkeleton />}>
