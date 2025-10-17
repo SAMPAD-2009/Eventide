@@ -3,7 +3,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Calendar, LogOut, Menu, CalendarDays, CloudSun, Settings } from 'lucide-react';
+import { Calendar, LogOut, Menu, CalendarDays, CloudSun, Settings, ListTodo, History, Home } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { ThemeToggle } from './ThemeToggle';
 import { useAuth } from '@/context/AuthContext';
@@ -28,11 +28,11 @@ export function Header() {
   const [isSheetOpen, setSheetOpen] = React.useState(false);
 
   const navLinks = [
-    { href: "/", label: "Events" },
-    { href: "/todo", label: "Todo" },
-    { href: "/history", label: "History" },
-    { href: "/weather", label: <CloudSun className="h-5 w-5" />, textLabel: "Weather" },
-    { href: "/calendar", label: <CalendarDays className="h-5 w-5" />, textLabel: "Calendar" },
+    { href: "/", label: "Events", mobileLabel: "Events", icon: Home },
+    { href: "/todo", label: "Todo", mobileLabel: "Todo", icon: ListTodo },
+    { href: "/history", label: "History", mobileLabel: "History", icon: History },
+    { href: "/weather", label: <CloudSun className="h-5 w-5" />, mobileLabel: "Weather", icon: CloudSun },
+    { href: "/calendar", label: <CalendarDays className="h-5 w-5" />, mobileLabel: "Calendar", icon: CalendarDays },
   ];
 
   const navLinkClasses = (path: string) =>
@@ -132,11 +132,12 @@ export function Header() {
                     <Link 
                       key={`mobile-${link.href}`}
                       href={link.href} 
-                      className={navLinkClasses(link.href)}
+                      className={cn("flex items-center gap-4", navLinkClasses(link.href))}
                       onClick={handleLinkClick}
                       prefetch={true}
                     >
-                      {link.textLabel || (typeof link.label === 'string' ? link.label : link.href.substring(1))}
+                      <link.icon className="h-5 w-5" />
+                      {link.mobileLabel}
                     </Link>
                   ))}
                   <DropdownMenuSeparator />
