@@ -93,13 +93,7 @@ export default function TodoPage() {
       <main className="flex-1 p-4 md:p-8 overflow-y-auto pb-24 md:pb-8">
         <h1 className="text-3xl font-bold tracking-tight mb-6">{sectionTitle}</h1>
         <div className="max-w-3xl mx-auto">
-            <TaskList
-                todos={filteredTodos}
-                editingTodoId={editingTodoId}
-                onSetEditing={handleSetEditing}
-            />
-            
-            <Collapsible open={isCreateFormOpen} onOpenChange={setCreateFormOpen}>
+            <Collapsible open={isCreateFormOpen} onOpenChange={setCreateFormOpen} className="mb-4">
                 {!isCreateFormOpen && (
                     <CollapsibleTrigger asChild>
                         <Button variant="ghost" className="w-full justify-start mt-2 group">
@@ -119,6 +113,11 @@ export default function TodoPage() {
                 </CollapsibleContent>
             </Collapsible>
 
+            <TaskList
+                todos={filteredTodos}
+                editingTodoId={editingTodoId}
+                onSetEditing={handleSetEditing}
+            />
 
             {completedTodos.length > 0 && (
                 <div className="mt-12">
