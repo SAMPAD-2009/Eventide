@@ -14,7 +14,7 @@ export function EventList({ events, emptyStateMessage = "No events to display.",
     return (
       <div className="flex flex-col items-center justify-center text-center p-8 gap-4 mt-8">
         <Image
-            src="https://picsum.photos/seed/no-events/300/300"
+            src="/event-not-min.png"
             alt="No events found"
             data-ai-hint="illustration empty state"
             width={300}

@@ -18,7 +18,7 @@ export function TaskList({ todos, editingTodoId, onSetEditing }: TaskListProps) 
     return (
         <div className="flex flex-col items-center justify-center text-center p-8 gap-4 mt-8">
             <Image
-                src="https://picsum.photos/seed/no-todos/300/300"
+                src="/todo-not-min.png"
                 alt="All tasks clear"
                 data-ai-hint="illustration tasks done"
                 width={300}
