@@ -18,11 +18,11 @@ export function TaskList({ todos, editingTodoId, onSetEditing }: TaskListProps) 
     return (
         <div className="flex flex-col items-center justify-center text-center p-8 gap-4 mt-8">
             <Image
-                src="https://i.ibb.co/JwVTft3F/todo-not.png"
+                src="https://picsum.photos/seed/2/300/300"
                 alt="All tasks clear"
                 width={300}
                 height={300}
-                className="max-w-[200px] md:max-w-[300px]"
+                className="max-w-[200px] md:max-w-[300px] rounded-lg"
                 data-ai-hint="empty checklist"
             />
             <h3 className="text-xl md:text-2xl font-semibold text-muted-foreground mt-4">All clear!</h3>
