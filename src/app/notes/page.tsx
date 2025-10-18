@@ -27,7 +27,7 @@ import {
 } from "@/components/ui/resizable";
 
 export default function NotesDashboardPage() {
-  const { notebooks, addNotebook, deleteNotebook, isLoading } = useNotes();
+  const { notebooks, addNotebook, deleteNotebook, isLoading, getNotesByNotebook } = useNotes();
   const [isCreateDialogOpen, setCreateDialogOpen] = useState(false);
   const [newNotebookName, setNewNotebookName] = useState('');
 
@@ -108,42 +108,47 @@ export default function NotesDashboardPage() {
 
           {notebooks.length > 0 ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-              {notebooks.map(notebook => (
-                <Card key={notebook.notebook_id}>
-                  <CardHeader>
-                    <CardTitle className="truncate">{notebook.name}</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <CardDescription>Contains notes and ideas.</CardDescription>
-                  </CardContent>
-                  <CardFooter className="flex justify-end gap-2">
-                    <AlertDialog>
-                      <AlertDialogTrigger asChild>
-                        <Button variant="destructive" size="sm">
-                          <Trash2 className="mr-2" /> Delete
-                        </Button>
-                      </AlertDialogTrigger>
-                      <AlertDialogContent>
-                        <AlertDialogHeader>
-                          <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-                          <AlertDialogDescription>
-                            This will permanently delete the notebook &quot;{notebook.name}&quot; and all notes inside it.
-                          </AlertDialogDescription>
-                        </AlertDialogHeader>
-                        <AlertDialogFooter>
-                          <AlertDialogCancel>Cancel</AlertDialogCancel>
-                          <AlertDialogAction onClick={() => deleteNotebook(notebook.notebook_id)} className="bg-destructive hover:bg-destructive/90">Delete</AlertDialogAction>
-                        </AlertDialogFooter>
-                      </AlertDialogContent>
-                    </AlertDialog>
-                    <Button asChild size="sm">
-                      <Link href={`/notes/${notebook.notebook_id}`}>
-                        <Edit className="mr-2" /> View
-                      </Link>
-                    </Button>
-                  </CardFooter>
-                </Card>
-              ))}
+              {notebooks.map(notebook => {
+                const noteCount = getNotesByNotebook(notebook.notebook_id).length;
+                return (
+                  <Card key={notebook.notebook_id}>
+                    <CardHeader>
+                      <CardTitle className="truncate">{notebook.name}</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <CardDescription>
+                        {noteCount} {noteCount === 1 ? 'note' : 'notes'}
+                      </CardDescription>
+                    </CardContent>
+                    <CardFooter className="flex justify-end gap-2">
+                      <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                          <Button variant="destructive" size="sm" disabled={notebook.name === 'Default'}>
+                            <Trash2 className="mr-2" /> Delete
+                          </Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                          <AlertDialogHeader>
+                            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                            <AlertDialogDescription>
+                              This will permanently delete the notebook &quot;{notebook.name}&quot; and all notes inside it.
+                            </AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel>Cancel</AlertDialogCancel>
+                            <AlertDialogAction onClick={() => deleteNotebook(notebook.notebook_id)} className="bg-destructive hover:bg-destructive/90">Delete</AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
+                      <Button asChild size="sm">
+                        <Link href={`/notes/${notebook.notebook_id}`}>
+                          <Edit className="mr-2" /> View
+                        </Link>
+                      </Button>
+                    </CardFooter>
+                  </Card>
+                )
+              })}
             </div>
           ) : (
             <div className="text-center py-16 border-2 border-dashed rounded-lg">
