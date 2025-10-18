@@ -123,8 +123,8 @@ export default function NotesDashboardPage() {
                     <CardFooter className="flex justify-end gap-2">
                       <AlertDialog>
                         <AlertDialogTrigger asChild>
-                          <Button variant="destructive" size="sm" disabled={notebook.name === 'Default'}>
-                            <Trash2 className="mr-2" /> Delete
+                          <Button variant="destructive" size="icon" disabled={notebook.name === 'Default'} className="pl-[5px]">
+                            <Trash2 className="h-4 w-4" />
                           </Button>
                         </AlertDialogTrigger>
                         <AlertDialogContent>
