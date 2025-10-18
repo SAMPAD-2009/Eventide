@@ -17,6 +17,11 @@ import {
   AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger
 } from "@/components/ui/alert-dialog";
 import { format } from 'date-fns';
+import {
+  ResizableHandle,
+  ResizablePanel,
+  ResizablePanelGroup,
+} from "@/components/ui/resizable";
 
 // A simple function to strip HTML for the preview
 const stripHtml = (html: string) => {
@@ -77,71 +82,79 @@ export default function NotebookViewPage() {
   }
 
   return (
-    <div className="flex h-[calc(100vh-4rem)]">
-      <NoteSidebar currentNotebookId={notebook.notebook_id} />
-      <main className="flex-1 p-4 md:p-8 overflow-y-auto">
-        <header className="mb-8">
-          <NoteBreadcrumbs notebook={notebook} />
-          <div className="flex items-center justify-between mt-2">
-            <h1 className="text-3xl font-bold tracking-tight">{notebook.name}</h1>
-            <Button onClick={handleCreateNote}>
-              <Plus className="mr-2" />
-              New Note
-            </Button>
-          </div>
-        </header>
+    <ResizablePanelGroup
+        direction="horizontal"
+        className="h-[calc(100vh-4rem)] w-full rounded-none border-none"
+      >
+      <ResizablePanel defaultSize={25} minSize={15} collapsible={true} collapsedSize={4}>
+        <NoteSidebar currentNotebookId={notebook.notebook_id} />
+      </ResizablePanel>
+      <ResizableHandle withHandle />
+      <ResizablePanel defaultSize={75}>
+        <main className="flex-1 p-4 md:p-8 overflow-y-auto h-full">
+          <header className="mb-8">
+            <NoteBreadcrumbs notebook={notebook} />
+            <div className="flex items-center justify-between mt-2">
+              <h1 className="text-3xl font-bold tracking-tight">{notebook.name}</h1>
+              <Button onClick={handleCreateNote}>
+                <Plus className="mr-2" />
+                New Note
+              </Button>
+            </div>
+          </header>
 
-        {notesInNotebook.length > 0 ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {notesInNotebook.map(note => (
-              <Card key={note.note_id} className="flex flex-col">
-                <CardHeader>
-                  <CardTitle className="truncate">{note.title || 'Untitled Note'}</CardTitle>
-                  <CardDescription>
-                    Last updated: {format(new Date(note.updated_at), 'MMM d, yyyy')}
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="flex-grow">
-                  <p className="text-muted-foreground line-clamp-3">
-                    {stripHtml(note.content) || 'No content yet...'}
-                  </p>
-                </CardContent>
-                <CardFooter className="flex justify-end gap-2">
-                  <AlertDialog>
-                    <AlertDialogTrigger asChild>
-                      <Button variant="ghost" size="icon">
-                        <Trash2 className="text-destructive" />
-                      </Button>
-                    </AlertDialogTrigger>
-                    <AlertDialogContent>
-                      <AlertDialogHeader>
-                        <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-                        <AlertDialogDescription>
-                          This will permanently delete the note &quot;{note.title}&quot;.
-                        </AlertDialogDescription>
-                      </AlertDialogHeader>
-                      <AlertDialogFooter>
-                        <AlertDialogCancel>Cancel</AlertDialogCancel>
-                        <AlertDialogAction onClick={() => deleteNote(note.note_id)} className="bg-destructive hover:bg-destructive/90">Delete</AlertDialogAction>
-                      </AlertDialogFooter>
-                    </AlertDialogContent>
-                  </AlertDialog>
-                  <Button asChild size="icon">
-                    <Link href={`/notes/${notebook.notebook_id}/${note.note_id}`}>
-                      <Eye />
-                    </Link>
-                  </Button>
-                </CardFooter>
-              </Card>
-            ))}
-          </div>
-        ) : (
-          <div className="text-center py-16 border-2 border-dashed rounded-lg">
-            <h3 className="text-xl font-semibold text-muted-foreground">No Notes Yet</h3>
-            <p className="text-muted-foreground mt-2">Click &quot;New Note&quot; to get started.</p>
-          </div>
-        )}
-      </main>
-    </div>
+          {notesInNotebook.length > 0 ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+              {notesInNotebook.map(note => (
+                <Card key={note.note_id} className="flex flex-col">
+                  <CardHeader>
+                    <CardTitle className="truncate">{note.title || 'Untitled Note'}</CardTitle>
+                    <CardDescription>
+                      Last updated: {format(new Date(note.updated_at), 'MMM d, yyyy')}
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="flex-grow">
+                    <p className="text-muted-foreground line-clamp-3">
+                      {stripHtml(note.content) || 'No content yet...'}
+                    </p>
+                  </CardContent>
+                  <CardFooter className="flex justify-end gap-2">
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <Button variant="ghost" size="icon">
+                          <Trash2 className="text-destructive" />
+                        </Button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                          <AlertDialogDescription>
+                            This will permanently delete the note &quot;{note.title}&quot;.
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>Cancel</AlertDialogCancel>
+                          <AlertDialogAction onClick={() => deleteNote(note.note_id)} className="bg-destructive hover:bg-destructive/90">Delete</AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
+                    <Button asChild size="icon">
+                      <Link href={`/notes/${notebook.notebook_id}/${note.note_id}`}>
+                        <Eye />
+                      </Link>
+                    </Button>
+                  </CardFooter>
+                </Card>
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-16 border-2 border-dashed rounded-lg">
+              <h3 className="text-xl font-semibold text-muted-foreground">No Notes Yet</h3>
+              <p className="text-muted-foreground mt-2">Click &quot;New Note&quot; to get started.</p>
+            </div>
+          )}
+        </main>
+      </ResizablePanel>
+    </ResizablePanelGroup>
   );
 }
