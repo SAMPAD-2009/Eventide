@@ -16,6 +16,7 @@ import {
   Loader2,
   Palette,
   ChevronDown,
+  Smile,
 } from 'lucide-react'
 import { Toggle } from '@/components/ui/toggle'
 import { Button } from '../ui/button'
@@ -30,7 +31,8 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { cn } from '@/lib/utils'
 import { useEffect, useState } from 'react'
-
+import EmojiPicker, { Theme as EmojiTheme } from 'emoji-picker-react'
+import { useTheme } from '@/context/ThemeProvider'
 
 type Props = {
   editor: Editor | null
@@ -47,6 +49,7 @@ const FONT_SIZES = [
 
 export function EditorToolbar({ editor, onSave, isSaving }: Props) {
   const [currentFontSize, setCurrentFontSize] = useState('Regular');
+  const { theme } = useTheme();
 
   useEffect(() => {
     if (!editor) return;
@@ -57,14 +60,14 @@ export function EditorToolbar({ editor, onSave, isSaving }: Props) {
     };
 
     editor.on('transaction', updateHandler);
-    editor.on('update', updateHandler);
+    editor.on('selectionUpdate', updateHandler);
 
     // Initial check
     updateHandler();
 
     return () => {
       editor.off('transaction', updateHandler);
-      editor.off('update', updateHandler);
+      editor.off('selectionUpdate', updateHandler);
     };
   }, [editor]);
 
@@ -175,6 +178,22 @@ export function EditorToolbar({ editor, onSave, isSaving }: Props) {
             </PopoverTrigger>
             <PopoverContent className="w-auto p-2">
                 <ColorPalette editor={editor} />
+            </PopoverContent>
+        </Popover>
+      
+        <Popover>
+            <PopoverTrigger asChild>
+                <Button variant="ghost" size="icon">
+                    <Smile />
+                </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0 border-none">
+                <EmojiPicker
+                  onEmojiClick={(emojiObject) => {
+                      editor.chain().focus().insertContent(emojiObject.emoji).run()
+                  }}
+                  theme={theme === 'dark' ? EmojiTheme.DARK : EmojiTheme.LIGHT}
+                />
             </PopoverContent>
         </Popover>
 

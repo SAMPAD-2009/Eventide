@@ -46,6 +46,9 @@ export function TiptapEditor({ note, onSave, isSaving }: TiptapEditorProps) {
           'prose dark:prose-invert prose-h1:text-4xl prose-h2:text-3xl prose-h3:text-2xl prose-sm sm:prose-base lg:prose-lg xl:prose-2xl m-5 focus:outline-none h-full',
       },
     },
+    addKeyboardShortcuts: {
+        'Mod-Shift-x': () => editor.chain().focus().unsetAllMarks().run(),
+    },
   })
 
   useEffect(() => {
