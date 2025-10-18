@@ -28,7 +28,6 @@ export function TiptapEditor({ note, onSave, isSaving }: TiptapEditorProps) {
         heading: {
           levels: [1, 2, 3],
         },
-        code: false,
         codeBlock: {},
       }),
       Placeholder.configure({
