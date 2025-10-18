@@ -15,12 +15,21 @@ import {
   Save,
   Loader2,
   Palette,
+  ChevronDown,
 } from 'lucide-react'
 import { Toggle } from '@/components/ui/toggle'
 import { Button } from '../ui/button'
 import { Separator } from '../ui/separator'
 import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover'
 import { ColorPalette } from './ColorPalette'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
+import { cn } from '@/lib/utils'
+
 
 type Props = {
   editor: Editor | null
@@ -28,13 +37,47 @@ type Props = {
   isSaving: boolean;
 }
 
+const FONT_SIZES = [
+  { label: 'Regular', value: '1rem' },
+  { label: 'Large', value: '1.25rem' },
+  { label: 'Extra Large', value: '1.5rem' },
+  { label: 'Huge', value: '2rem' },
+]
+
 export function EditorToolbar({ editor, onSave, isSaving }: Props) {
   if (!editor) {
     return null
   }
 
+  const currentFontSize = FONT_SIZES.find(size => editor.isActive('textStyle', { fontSize: size.value }))?.label || 'Regular'
+
   return (
     <div className="flex w-full items-center gap-1 border-b bg-background p-2 flex-wrap">
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button variant="ghost" size="sm" className="w-28 justify-between">
+            {currentFontSize}
+            <ChevronDown className="h-4 w-4" />
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="start">
+          {FONT_SIZES.map(size => (
+            <DropdownMenuItem
+              key={size.value}
+              onClick={() => editor.chain().focus().setFontSize(size.value).run()}
+              className={cn(editor.isActive('textStyle', { fontSize: size.value }) && 'bg-accent')}
+            >
+              <span style={{ fontSize: size.value }}>{size.label}</span>
+            </DropdownMenuItem>
+          ))}
+          <DropdownMenuItem onClick={() => editor.chain().focus().unsetFontSize().run()}>
+             Reset
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+
+      <Separator orientation="vertical" className="h-8 mx-1" />
+
       <Toggle
         size="sm"
         pressed={editor.isActive('heading', { level: 1 })}

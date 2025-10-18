@@ -10,6 +10,8 @@ import { EditorToolbar } from './EditorToolbar'
 import { Color } from '@tiptap/extension-color'
 import TextStyle from '@tiptap/extension-text-style'
 import Highlight from '@tiptap/extension-highlight'
+import { FontSize } from '@/lib/tiptap/FontSize'
+
 
 interface TiptapEditorProps {
   note: Note
@@ -26,7 +28,7 @@ export function TiptapEditor({ note, onSave, isSaving }: TiptapEditorProps) {
         heading: {
           levels: [1, 2, 3],
         },
-        code: false, // We're using toggleCode() for inline code
+        code: false,
         codeBlock: {},
       }),
       Placeholder.configure({
@@ -34,6 +36,7 @@ export function TiptapEditor({ note, onSave, isSaving }: TiptapEditorProps) {
       }),
       Color,
       TextStyle,
+      FontSize,
       Highlight.configure({ multicolor: true }),
     ],
     content: note.content || '',
@@ -42,9 +45,6 @@ export function TiptapEditor({ note, onSave, isSaving }: TiptapEditorProps) {
         class:
           'prose dark:prose-invert prose-h1:text-4xl prose-h2:text-3xl prose-h3:text-2xl prose-sm sm:prose-base lg:prose-lg xl:prose-2xl m-5 focus:outline-none h-full',
       },
-    },
-    onUpdate: ({ editor }) => {
-      // Logic for double space to remove marks can be added here if needed
     },
   })
 
@@ -78,7 +78,7 @@ export function TiptapEditor({ note, onSave, isSaving }: TiptapEditorProps) {
 
       <EditorToolbar editor={editor} onSave={handleSave} isSaving={isSaving} />
       
-      <div className="flex-1 overflow-y-auto">
+      <div className="flex-1 overflow-y-auto relative">
         <EditorContent editor={editor} className="h-full" />
       </div>
     </div>
