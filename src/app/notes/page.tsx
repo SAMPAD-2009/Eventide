@@ -6,7 +6,7 @@ import { useState } from 'react';
 import { NoteSidebar } from '@/components/notes/NoteSidebar';
 import { NoteBreadcrumbs } from '@/components/notes/NoteBreadcrumbs';
 import { Button } from '@/components/ui/button';
-import { Plus, Trash2, Eye } from 'lucide-react';
+import { Plus, Trash2, Edit } from 'lucide-react';
 import Link from 'next/link';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -138,7 +138,7 @@ export default function NotesDashboardPage() {
                     </AlertDialog>
                     <Button asChild size="sm">
                       <Link href={`/notes/${notebook.notebook_id}`}>
-                        <Eye className="mr-2" /> View
+                        <Edit className="mr-2" /> View
                       </Link>
                     </Button>
                   </CardFooter>

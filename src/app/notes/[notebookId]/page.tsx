@@ -8,7 +8,7 @@ import { Note, Notebook } from '@/lib/types';
 import { NoteSidebar } from '@/components/notes/NoteSidebar';
 import { NoteBreadcrumbs } from '@/components/notes/NoteBreadcrumbs';
 import { Button } from '@/components/ui/button';
-import { Plus, Trash2, Eye } from 'lucide-react';
+import { Plus, Trash2, Edit } from 'lucide-react';
 import Link from 'next/link';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -138,9 +138,9 @@ export default function NotebookViewPage() {
                         </AlertDialogFooter>
                       </AlertDialogContent>
                     </AlertDialog>
-                    <Button asChild size="icon">
+                    <Button asChild>
                       <Link href={`/notes/${notebook.notebook_id}/${note.note_id}`}>
-                        <Eye />
+                        <Edit className="mr-2 h-4 w-4" /> Edit
                       </Link>
                     </Button>
                   </CardFooter>
