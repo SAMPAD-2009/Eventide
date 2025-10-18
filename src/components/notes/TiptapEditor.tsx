@@ -1,25 +1,14 @@
 
 "use client"
 
-import { useEditor, EditorContent, BubbleMenu } from '@tiptap/react'
+import { useEditor, EditorContent } from '@tiptap/react'
 import StarterKit from '@tiptap/starter-kit'
 import Placeholder from '@tiptap/extension-placeholder'
-import {
-  Bold,
-  Italic,
-  Strikethrough,
-  Code,
-  Heading1,
-  Heading2,
-  Heading3,
-  List,
-  ListOrdered,
-} from 'lucide-react'
 import { useEffect, useState } from 'react'
 import type { Note } from '@/lib/types'
 import { Button } from '@/components/ui/button'
 import { Loader2, Save } from 'lucide-react'
-import { Toggle } from '@/components/ui/toggle'
+import { EditorToolbar } from './EditorToolbar'
 
 interface TiptapEditorProps {
   note: Note
@@ -41,7 +30,7 @@ export function TiptapEditor({ note, onSave, isSaving }: TiptapEditorProps) {
     editorProps: {
       attributes: {
         class:
-          'prose dark:prose-invert prose-sm sm:prose-base lg:prose-lg xl:prose-2xl m-5 focus:outline-none',
+          'prose dark:prose-invert prose-sm sm:prose-base lg:prose-lg xl:prose-2xl m-5 focus:outline-none h-full',
       },
     },
   })
@@ -74,48 +63,10 @@ export function TiptapEditor({ note, onSave, isSaving }: TiptapEditorProps) {
         />
       </div>
 
-      <BubbleMenu editor={editor} tippyOptions={{ duration: 100 }}>
-        <div className="flex gap-1 rounded-md border bg-background p-1">
-          <Toggle
-            size="sm"
-            pressed={editor.isActive('bold')}
-            onPressedChange={() => editor.chain().focus().toggleBold().run()}
-          >
-            <Bold className="h-4 w-4" />
-          </Toggle>
-          <Toggle
-            size="sm"
-            pressed={editor.isActive('italic')}
-            onPressedChange={() => editor.chain().focus().toggleItalic().run()}
-          >
-            <Italic className="h-4 w-4" />
-          </Toggle>
-          <Toggle
-            size="sm"
-            pressed={editor.isActive('strike')}
-            onPressedChange={() => editor.chain().focus().toggleStrike().run()}
-          >
-            <Strikethrough className="h-4 w-4" />
-          </Toggle>
-           <Toggle
-            size="sm"
-            pressed={editor.isActive('heading', { level: 1 })}
-            onPressedChange={() => editor.chain().focus().toggleHeading({ level: 1 }).run()}
-          >
-            <Heading1 className="h-4 w-4" />
-          </Toggle>
-           <Toggle
-            size="sm"
-            pressed={editor.isActive('heading', { level: 2 })}
-            onPressedChange={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}
-          >
-            <Heading2 className="h-4 w-4" />
-          </Toggle>
-        </div>
-      </BubbleMenu>
-
+      <EditorToolbar editor={editor} />
+      
       <div className="flex-1 overflow-y-auto">
-        <EditorContent editor={editor} />
+        <EditorContent editor={editor} className="h-full" />
       </div>
 
       <div className="flex flex-shrink-0 items-center justify-end border-t p-2">
