@@ -49,13 +49,6 @@ export function TiptapEditor({ note, onSave, isSaving }: TiptapEditorProps) {
   })
 
   useEffect(() => {
-    if (editor) {
-      // Add keyboard shortcut for clearing marks
-      editor.addKeyboardShortcut('Mod-Shift-x', () => editor.chain().focus().unsetAllMarks().run());
-    }
-  }, [editor])
-
-  useEffect(() => {
     if (editor && note.content !== editor.getHTML()) {
       editor.commands.setContent(note.content || '')
     }
