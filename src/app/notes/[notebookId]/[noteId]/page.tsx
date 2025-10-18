@@ -7,15 +7,13 @@ import { useEffect, useState } from 'react';
 import { Note, Notebook } from '@/lib/types';
 import { NoteSidebar } from '@/components/notes/NoteSidebar';
 import { NoteBreadcrumbs } from '@/components/notes/NoteBreadcrumbs';
-import { MarkdownEditor } from '@/components/notes/MarkdownEditor';
+import { TiptapEditor } from '@/components/notes/TiptapEditor';
 import { Skeleton } from '@/components/ui/skeleton';
 import {
   ResizableHandle,
   ResizablePanel,
   ResizablePanelGroup,
 } from "@/components/ui/resizable";
-import { Toaster as SonnerToaster } from "sonner";
-
 
 export default function NoteEditorPage() {
   const { notebookId, noteId } = useParams();
@@ -85,8 +83,7 @@ export default function NoteEditorPage() {
                     note={note}
                 />
                 </header>
-                 <SonnerToaster />
-                <MarkdownEditor
+                <TiptapEditor
                   note={note}
                   onSave={handleSave}
                   isSaving={isSaving}

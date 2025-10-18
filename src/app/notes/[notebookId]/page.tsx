@@ -18,6 +18,12 @@ import {
 } from "@/components/ui/alert-dialog";
 import { format } from 'date-fns';
 
+// A simple function to strip HTML for the preview
+const stripHtml = (html: string) => {
+    const doc = new DOMParser().parseFromString(html, 'text/html');
+    return doc.body.textContent || "";
+}
+
 export default function NotebookViewPage() {
   const { notebookId } = useParams();
   const { getNotebookById, getNotesByNotebook, addNote, deleteNote, isLoading } = useNotes();
@@ -97,7 +103,7 @@ export default function NotebookViewPage() {
                 </CardHeader>
                 <CardContent className="flex-grow">
                   <p className="text-muted-foreground line-clamp-3">
-                    {note.content || 'No content yet...'}
+                    {stripHtml(note.content) || 'No content yet...'}
                   </p>
                 </CardContent>
                 <CardFooter className="flex justify-end gap-2">

@@ -41,7 +41,7 @@ export function MarkdownEditor({ note, onSave, isSaving }: MarkdownEditorProps) 
               key={note.note_id} // Force re-mount when note changes
               defaultValue={content}
               onUpdate={(editor) => {
-                  setContent(editor?.storage.markdown.getMarkdown());
+                  setContent(editor?.getHTML());
               }}
               disableLocalStorage={true}
               className="relative min-h-[500px] w-full max-w-screen-lg"
