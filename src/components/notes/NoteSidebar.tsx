@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { useResizable } from 'react-resizable-layout';
 
 interface NoteSidebarProps {
   currentNotebookId?: string;
@@ -43,10 +44,10 @@ export function NoteSidebar({ currentNotebookId, currentNoteId }: NoteSidebarPro
     setNewNotebookName('');
     setCreateDialogOpen(false);
   };
-
+  
   return (
-    <aside className="w-72 flex-shrink-0 border-r bg-background/50 p-4 hidden md:block">
-      <div className="flex justify-between items-center mb-4">
+    <aside className="w-full h-full flex-shrink-0 bg-background/50 p-2 flex flex-col">
+      <div className="flex justify-between items-center mb-4 p-2">
         <h2 className="text-lg font-semibold">Notes</h2>
         <Dialog open={isCreateDialogOpen} onOpenChange={setCreateDialogOpen}>
           <DialogTrigger asChild>
@@ -71,7 +72,7 @@ export function NoteSidebar({ currentNotebookId, currentNoteId }: NoteSidebarPro
           </DialogContent>
         </Dialog>
       </div>
-      <nav className="space-y-1">
+      <nav className="space-y-1 overflow-y-auto flex-1">
         {notebooks.map(notebook => (
           <Collapsible key={notebook.notebook_id} open={openNotebooks[notebook.notebook_id]} onOpenChange={() => toggleNotebook(notebook.notebook_id)}>
             <div className={cn("flex items-center rounded-md", currentNotebookId === notebook.notebook_id && !currentNoteId && "bg-secondary")}>

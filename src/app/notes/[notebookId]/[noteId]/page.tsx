@@ -9,6 +9,13 @@ import { NoteSidebar } from '@/components/notes/NoteSidebar';
 import { NoteBreadcrumbs } from '@/components/notes/NoteBreadcrumbs';
 import { MarkdownEditor } from '@/components/notes/MarkdownEditor';
 import { Skeleton } from '@/components/ui/skeleton';
+import {
+  ResizableHandle,
+  ResizablePanel,
+  ResizablePanelGroup,
+} from "@/components/ui/resizable";
+import { Toaster as SonnerToaster } from "sonner";
+
 
 export default function NoteEditorPage() {
   const { notebookId, noteId } = useParams();
@@ -59,24 +66,33 @@ export default function NoteEditorPage() {
   }
 
   return (
-    <div className="flex h-[calc(100vh-4rem)]">
-      <NoteSidebar
-        currentNotebookId={notebook.notebook_id}
-        currentNoteId={note.note_id}
-      />
-      <main className="flex-1 flex flex-col">
-        <header className="p-4 border-b">
-          <NoteBreadcrumbs
-            notebook={notebook}
-            note={note}
+      <ResizablePanelGroup
+        direction="horizontal"
+        className="h-[calc(100vh-4rem)] w-full rounded-none border-none"
+      >
+        <ResizablePanel defaultSize={25} minSize={15} collapsible={true} collapsedSize={4}>
+           <NoteSidebar
+            currentNotebookId={notebook.notebook_id}
+            currentNoteId={note.note_id}
           />
-        </header>
-        <MarkdownEditor
-          note={note}
-          onSave={handleSave}
-          isSaving={isSaving}
-        />
-      </main>
-    </div>
+        </ResizablePanel>
+        <ResizableHandle withHandle />
+        <ResizablePanel defaultSize={75}>
+            <main className="flex-1 flex flex-col h-full">
+                <header className="p-4 border-b">
+                <NoteBreadcrumbs
+                    notebook={notebook}
+                    note={note}
+                />
+                </header>
+                 <SonnerToaster />
+                <MarkdownEditor
+                  note={note}
+                  onSave={handleSave}
+                  isSaving={isSaving}
+                />
+            </main>
+        </ResizablePanel>
+    </ResizablePanelGroup>
   );
 }
