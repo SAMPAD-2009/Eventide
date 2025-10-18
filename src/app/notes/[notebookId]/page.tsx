@@ -121,8 +121,8 @@ export default function NotebookViewPage() {
                   <CardFooter className="flex justify-end gap-2">
                     <AlertDialog>
                       <AlertDialogTrigger asChild>
-                        <Button variant="ghost" size="icon">
-                          <Trash2 className="text-destructive" />
+                        <Button variant="destructive" size="icon">
+                          <Trash2 />
                         </Button>
                       </AlertDialogTrigger>
                       <AlertDialogContent>
