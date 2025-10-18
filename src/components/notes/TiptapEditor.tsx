@@ -6,8 +6,6 @@ import StarterKit from '@tiptap/starter-kit'
 import Placeholder from '@tiptap/extension-placeholder'
 import { useEffect, useState } from 'react'
 import type { Note } from '@/lib/types'
-import { Button } from '@/components/ui/button'
-import { Loader2, Save } from 'lucide-react'
 import { EditorToolbar } from './EditorToolbar'
 
 interface TiptapEditorProps {
@@ -63,17 +61,10 @@ export function TiptapEditor({ note, onSave, isSaving }: TiptapEditorProps) {
         />
       </div>
 
-      <EditorToolbar editor={editor} />
+      <EditorToolbar editor={editor} onSave={handleSave} isSaving={isSaving} />
       
       <div className="flex-1 overflow-y-auto">
         <EditorContent editor={editor} className="h-full" />
-      </div>
-
-      <div className="flex flex-shrink-0 items-center justify-end border-t p-2">
-        <Button onClick={handleSave} disabled={isSaving}>
-          {isSaving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
-          Save Note
-        </Button>
       </div>
     </div>
   )

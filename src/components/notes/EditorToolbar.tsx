@@ -12,14 +12,20 @@ import {
   Heading2,
   Heading3,
   Code,
+  Save,
+  Loader2,
 } from 'lucide-react'
 import { Toggle } from '@/components/ui/toggle'
+import { Button } from '../ui/button'
+import { Separator } from '../ui/separator'
 
 type Props = {
   editor: Editor | null
+  onSave: () => void;
+  isSaving: boolean;
 }
 
-export function EditorToolbar({ editor }: Props) {
+export function EditorToolbar({ editor, onSave, isSaving }: Props) {
   if (!editor) {
     return null
   }
@@ -47,6 +53,7 @@ export function EditorToolbar({ editor }: Props) {
       >
         <Heading3 className="h-4 w-4" />
       </Toggle>
+      <Separator orientation="vertical" className="h-8 mx-1" />
       <Toggle
         size="sm"
         pressed={editor.isActive('bold')}
@@ -68,6 +75,7 @@ export function EditorToolbar({ editor }: Props) {
       >
         <Strikethrough className="h-4 w-4" />
       </Toggle>
+      <Separator orientation="vertical" className="h-8 mx-1" />
        <Toggle
         size="sm"
         pressed={editor.isActive('bulletList')}
@@ -89,6 +97,11 @@ export function EditorToolbar({ editor }: Props) {
       >
         <Code className="h-4 w-4" />
       </Toggle>
+      <div className="flex-grow" />
+      <Button onClick={onSave} disabled={isSaving} size="sm">
+        {isSaving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
+        Save
+      </Button>
     </div>
   )
 }
