@@ -7,6 +7,9 @@ import Placeholder from '@tiptap/extension-placeholder'
 import { useEffect, useState } from 'react'
 import type { Note } from '@/lib/types'
 import { EditorToolbar } from './EditorToolbar'
+import { Color } from '@tiptap/extension-color'
+import TextStyle from '@tiptap/extension-text-style'
+import Highlight from '@tiptap/extension-highlight'
 
 interface TiptapEditorProps {
   note: Note
@@ -27,6 +30,9 @@ export function TiptapEditor({ note, onSave, isSaving }: TiptapEditorProps) {
       Placeholder.configure({
         placeholder: 'Start writing your note here...',
       }),
+      Color,
+      TextStyle,
+      Highlight.configure({ multicolor: true }),
     ],
     content: note.content || '',
     editorProps: {

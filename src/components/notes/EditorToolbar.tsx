@@ -14,6 +14,8 @@ import {
   Code,
   Save,
   Loader2,
+  Palette,
+  Highlighter,
 } from 'lucide-react'
 import { Toggle } from '@/components/ui/toggle'
 import { Button } from '../ui/button'
@@ -31,7 +33,7 @@ export function EditorToolbar({ editor, onSave, isSaving }: Props) {
   }
 
   return (
-    <div className="flex w-full items-center gap-1 border-b bg-background p-2">
+    <div className="flex w-full items-center gap-1 border-b bg-background p-2 flex-wrap">
       <Toggle
         size="sm"
         pressed={editor.isActive('heading', { level: 1 })}
@@ -97,6 +99,30 @@ export function EditorToolbar({ editor, onSave, isSaving }: Props) {
       >
         <Code className="h-4 w-4" />
       </Toggle>
+       <Separator orientation="vertical" className="h-8 mx-1" />
+        <div className="flex items-center gap-1">
+            <Palette className="h-4 w-4 text-muted-foreground" />
+            <input
+                type="color"
+                onInput={(event) => editor.chain().focus().setColor((event.target as HTMLInputElement).value).run()}
+                value={editor.getAttributes('textStyle').color || '#000000'}
+                className="w-8 h-8 p-0 border-none bg-transparent cursor-pointer"
+                aria-label="Set text color"
+                title="Set text color"
+            />
+        </div>
+        <div className="flex items-center gap-1">
+             <Highlighter className="h-4 w-4 text-muted-foreground" />
+            <input
+                type="color"
+                onInput={(event) => editor.chain().focus().toggleHighlight({ color: (event.target as HTMLInputElement).value }).run()}
+                value={editor.getAttributes('highlight').color || '#ffffff'}
+                className="w-8 h-8 p-0 border-none bg-transparent cursor-pointer"
+                aria-label="Set highlight color"
+                title="Set highlight color"
+            />
+        </div>
+
       <div className="flex-grow" />
       <Button onClick={onSave} disabled={isSaving} size="sm">
         {isSaving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
