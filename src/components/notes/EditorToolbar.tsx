@@ -29,6 +29,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { cn } from '@/lib/utils'
+import { useEffect, useState } from 'react'
 
 
 type Props = {
@@ -45,11 +46,32 @@ const FONT_SIZES = [
 ]
 
 export function EditorToolbar({ editor, onSave, isSaving }: Props) {
+  const [currentFontSize, setCurrentFontSize] = useState('Regular');
+
+  useEffect(() => {
+    if (!editor) return;
+
+    const updateHandler = () => {
+      const activeSize = FONT_SIZES.find(size => editor.isActive('textStyle', { fontSize: size.value }))?.label || 'Regular';
+      setCurrentFontSize(activeSize);
+    };
+
+    editor.on('transaction', updateHandler);
+    editor.on('update', updateHandler);
+
+    // Initial check
+    updateHandler();
+
+    return () => {
+      editor.off('transaction', updateHandler);
+      editor.off('update', updateHandler);
+    };
+  }, [editor]);
+
+
   if (!editor) {
     return null
   }
-
-  const currentFontSize = FONT_SIZES.find(size => editor.isActive('textStyle', { fontSize: size.value }))?.label || 'Regular'
 
   return (
     <div className="flex w-full items-center gap-1 border-b bg-background p-2 flex-wrap">
@@ -121,6 +143,13 @@ export function EditorToolbar({ editor, onSave, isSaving }: Props) {
       >
         <Strikethrough className="h-4 w-4" />
       </Toggle>
+       <Toggle
+        size="sm"
+        pressed={editor.isActive('code')}
+        onPressedChange={() => editor.chain().focus().toggleCode().run()}
+      >
+        <Code className="h-4 w-4" />
+      </Toggle>
       <Separator orientation="vertical" className="h-8 mx-1" />
        <Toggle
         size="sm"
@@ -135,13 +164,6 @@ export function EditorToolbar({ editor, onSave, isSaving }: Props) {
         onPressedChange={() => editor.chain().focus().toggleOrderedList().run()}
       >
         <ListOrdered className="h-4 w-4" />
-      </Toggle>
-      <Toggle
-        size="sm"
-        pressed={editor.isActive('code')}
-        onPressedChange={() => editor.chain().focus().toggleCode().run()}
-      >
-        <Code className="h-4 w-4" />
       </Toggle>
        <Separator orientation="vertical" className="h-8 mx-1" />
         
