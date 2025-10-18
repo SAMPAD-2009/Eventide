@@ -129,15 +129,6 @@ export async function updateUserEmailInDb(oldEmail: string, newEmail: string) {
         return { error: `Failed to update projects: ${projectsError.message}` };
     }
     
-    // 5. Update notes table
-    const { error: notesError } = await supabase
-        .from('notes')
-        .update({ user_email: newEmail })
-        .eq('user_email', oldEmail);
-    if (notesError) {
-        console.error("Error updating notes table:", notesError);
-        return { error: `Failed to update notes: ${notesError.message}` };
-    }
 
     return { error: null };
 }
@@ -176,15 +167,14 @@ export async function deleteUserData(email: string) {
         return { error: `Failed to delete projects: ${projectsError.message}` };
     }
     
-    // 4. Delete notes
+    // 4. Delete notes - THIS WILL FAIL IF TABLE DOESNT EXIST, which is fine
     const { error: notesError } = await supabase
         .from('notes')
         .delete()
         .eq('user_email', email);
 
     if (notesError) {
-        console.error("Error deleting user notes:", notesError);
-        return { error: `Failed to delete notes: ${notesError.message}` };
+        console.warn("Could not delete user notes (this might be expected if the feature was removed):", notesError);
     }
 
     // 5. Delete user profile

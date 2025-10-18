@@ -30,7 +30,6 @@ export function Header() {
   const navLinks = [
     { href: "/", label: "Events", mobileLabel: "Events", icon: Home },
     { href: "/todo", label: "Todo", mobileLabel: "Todo", icon: ListTodo },
-    { href: "/notes", label: "Notes", mobileLabel: "Notes", icon: Notebook },
     { href: "/history", label: "History", mobileLabel: "History", icon: History },
     { href: "/weather", label: <CloudSun className="h-5 w-5" />, mobileLabel: "Weather", icon: CloudSun },
     { href: "/calendar", label: <CalendarDays className="h-5 w-5" />, mobileLabel: "Calendar", icon: CalendarDays },

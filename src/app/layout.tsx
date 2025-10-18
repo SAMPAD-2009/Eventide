@@ -14,7 +14,6 @@ import { AdminHeader } from '@/components/AdminHeader';
 import { ConditionalFooter } from '@/components/ConditionalFooter';
 import { TodoProvider } from '@/context/TodoContext';
 import { LabelProvider } from '@/context/LabelContext';
-import { NoteProvider } from '@/context/NoteContext';
 
 const inter = Inter({
   subsets: ['latin'],
@@ -48,7 +47,6 @@ export default function RootLayout({
             <LabelProvider>
               <EventProvider>
                 <TodoProvider>
-                  <NoteProvider>
                     <div className="relative flex min-h-screen flex-col">
                       <Suspense fallback={null}>
                         <SiteAlert />
@@ -59,7 +57,6 @@ export default function RootLayout({
                       <ConditionalFooter />
                     </div>
                     <Toaster />
-                  </NoteProvider>
                 </TodoProvider>
               </EventProvider>
             </LabelProvider>
