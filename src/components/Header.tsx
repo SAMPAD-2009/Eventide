@@ -3,7 +3,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Calendar, LogOut, Menu, CalendarDays, CloudSun, Settings, ListTodo, History, Home } from 'lucide-react';
+import { Calendar, LogOut, Menu, CalendarDays, CloudSun, Settings, ListTodo, History, Home, Notebook } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { ThemeToggle } from './ThemeToggle';
 import { useAuth } from '@/context/AuthContext';
@@ -30,6 +30,7 @@ export function Header() {
   const navLinks = [
     { href: "/", label: "Events", mobileLabel: "Events", icon: Home },
     { href: "/todo", label: "Todo", mobileLabel: "Todo", icon: ListTodo },
+    { href: "/notes", label: "Notes", mobileLabel: "Notes", icon: Notebook },
     { href: "/history", label: "History", mobileLabel: "History", icon: History },
     { href: "/weather", label: <CloudSun className="h-5 w-5" />, mobileLabel: "Weather", icon: CloudSun },
     { href: "/calendar", label: <CalendarDays className="h-5 w-5" />, mobileLabel: "Calendar", icon: CalendarDays },

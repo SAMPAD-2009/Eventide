@@ -128,6 +128,16 @@ export async function updateUserEmailInDb(oldEmail: string, newEmail: string) {
         console.error("Error updating projects table:", projectsError);
         return { error: `Failed to update projects: ${projectsError.message}` };
     }
+    
+    // 5. Update notes table
+    const { error: notesError } = await supabase
+        .from('notes')
+        .update({ user_email: newEmail })
+        .eq('user_email', oldEmail);
+    if (notesError) {
+        console.error("Error updating notes table:", notesError);
+        return { error: `Failed to update notes: ${notesError.message}` };
+    }
 
     return { error: null };
 }
@@ -165,8 +175,19 @@ export async function deleteUserData(email: string) {
         console.error("Error deleting user projects:", projectsError);
         return { error: `Failed to delete projects: ${projectsError.message}` };
     }
+    
+    // 4. Delete notes
+    const { error: notesError } = await supabase
+        .from('notes')
+        .delete()
+        .eq('user_email', email);
 
-    // 4. Delete user profile
+    if (notesError) {
+        console.error("Error deleting user notes:", notesError);
+        return { error: `Failed to delete notes: ${notesError.message}` };
+    }
+
+    // 5. Delete user profile
     const { error: profileError } = await supabase
         .from('user_profiles')
         .delete()

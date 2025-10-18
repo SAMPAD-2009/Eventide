@@ -121,4 +121,13 @@ export interface Label {
   color: string;
   created_at: string;
 }
+
+export interface Note {
+    note_id: string;
+    user_email: string;
+    title: string;
+    content: string;
+    created_at: string;
+    updated_at: string;
+}
     
