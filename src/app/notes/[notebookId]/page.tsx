@@ -18,6 +18,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { format } from 'date-fns';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
+import Image from 'next/image';
 
 
 // A simple function to strip HTML for the preview
@@ -154,9 +155,17 @@ export default function NotebookViewPage() {
               ))}
             </div>
           ) : (
-            <div className="text-center py-16 border-2 border-dashed rounded-lg">
-              <h3 className="text-xl font-semibold text-muted-foreground">No Notes Yet</h3>
-              <p className="text-muted-foreground mt-2">Click &quot;New Note&quot; to get started.</p>
+            <div className="flex flex-col items-center justify-center text-center p-8 gap-4 mt-8">
+                <Image
+                    src="/note-not-min.png"
+                    alt="No notes found"
+                    data-ai-hint="illustration empty state"
+                    width={300}
+                    height={300}
+                    className="max-w-[200px] md:max-w-[300px] rounded-lg"
+                />
+                <h3 className="text-xl md:text-2xl font-semibold text-muted-foreground mt-4">No Notes Yet</h3>
+                <p className="text-muted-foreground">Click &quot;New Note&quot; to get started.</p>
             </div>
           )}
         </main>

@@ -21,6 +21,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
+import Image from 'next/image';
 
 export default function NotesDashboardPage() {
   const { notebooks, addNotebook, deleteNotebook, isLoading, getNotesByNotebook } = useNotes();
@@ -153,9 +154,17 @@ export default function NotesDashboardPage() {
               })}
             </div>
           ) : (
-            <div className="text-center py-16 border-2 border-dashed rounded-lg">
-              <h3 className="text-xl font-semibold text-muted-foreground">No Notebooks Yet</h3>
-              <p className="text-muted-foreground mt-2">Click &quot;New Notebook&quot; to get started.</p>
+            <div className="flex flex-col items-center justify-center text-center p-8 gap-4 mt-8">
+                <Image
+                    src="/note-not-min.png"
+                    alt="No notebooks found"
+                    data-ai-hint="illustration empty state"
+                    width={300}
+                    height={300}
+                    className="max-w-[200px] md:max-w-[300px] rounded-lg"
+                />
+                <h3 className="text-xl md:text-2xl font-semibold text-muted-foreground mt-4">No Notebooks Yet</h3>
+                <p className="text-muted-foreground">Click &quot;New Notebook&quot; to get started.</p>
             </div>
           )}
         </main>
