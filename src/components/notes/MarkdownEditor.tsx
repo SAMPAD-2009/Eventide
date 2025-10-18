@@ -56,4 +56,3 @@ export function MarkdownEditor({ note, onSave, isSaving }: MarkdownEditorProps) 
     </div>
   );
 }
-
