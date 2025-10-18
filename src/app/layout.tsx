@@ -10,7 +10,6 @@ import { Inter } from 'next/font/google';
 import Link from 'next/link';
 import { SiteAlert } from '@/components/SiteAlert';
 import { Suspense } from 'react';
-import { AdminHeader } from '@/components/AdminHeader';
 import { ConditionalFooter } from '@/components/ConditionalFooter';
 import { TodoProvider } from '@/context/TodoContext';
 import { LabelProvider } from '@/context/LabelContext';
@@ -52,7 +51,6 @@ export default function RootLayout({
                         <SiteAlert />
                       </Suspense>
                       <ConditionalHeader />
-                      <AdminHeader />
                       <main className="flex-1">{children}</main>
                       <ConditionalFooter />
                     </div>

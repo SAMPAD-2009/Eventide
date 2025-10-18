@@ -8,7 +8,7 @@ export function ConditionalHeader() {
   const pathname = usePathname();
   const noHeaderPaths = ['/login', '/signup', '/terms', '/privacy'];
 
-  if (noHeaderPaths.includes(pathname) || pathname.startsWith('/admin')) {
+  if (noHeaderPaths.includes(pathname)) {
     return null;
   }
 
