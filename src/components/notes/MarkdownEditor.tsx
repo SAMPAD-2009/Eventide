@@ -5,7 +5,7 @@ import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Loader2, Save } from 'lucide-react';
 import type { Note } from '@/lib/types';
-import { Editor } from "novel";
+import Editor from "novel";
 
 interface MarkdownEditorProps {
   note: Note;
