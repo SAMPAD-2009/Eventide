@@ -14,7 +14,6 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { useResizable } from 'react-resizable-layout';
 
 interface NoteSidebarProps {
   currentNotebookId?: string;
@@ -56,6 +55,9 @@ export function NoteSidebar({ currentNotebookId, currentNoteId }: NoteSidebarPro
           <DialogContent>
             <DialogHeader>
               <DialogTitle>Create New Notebook</DialogTitle>
+              <DialogDescription>
+                Give your new notebook a name to start adding notes.
+              </DialogDescription>
             </DialogHeader>
             <div className="grid gap-4 py-4">
               <Label htmlFor="name">Notebook Name</Label>
@@ -105,3 +107,5 @@ export function NoteSidebar({ currentNotebookId, currentNoteId }: NoteSidebarPro
     </aside>
   );
 }
+
+    
