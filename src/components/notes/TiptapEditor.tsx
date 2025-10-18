@@ -43,7 +43,7 @@ export function TiptapEditor({ note, onSave, isSaving }: TiptapEditorProps) {
     editorProps: {
       attributes: {
         class:
-          'prose dark:prose-invert prose-h1:text-4xl prose-h2:text-3xl prose-h3:text-2xl prose-sm sm:prose-base lg:prose-lg xl:prose-2xl m-5 focus:outline-none h-full',
+          'prose dark:prose-invert prose-h1:font-bold prose-h1:text-4xl prose-h2:font-normal prose-h2:italic prose-h2:text-3xl prose-h3:font-normal prose-h3:text-2xl prose-sm sm:prose-base lg:prose-lg xl:prose-2xl m-5 focus:outline-none h-full',
       },
     },
     addKeyboardShortcuts: {
