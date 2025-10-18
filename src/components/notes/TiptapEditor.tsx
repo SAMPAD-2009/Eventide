@@ -19,7 +19,11 @@ export function TiptapEditor({ note, onSave, isSaving }: TiptapEditorProps) {
 
   const editor = useEditor({
     extensions: [
-      StarterKit,
+      StarterKit.configure({
+        heading: {
+          levels: [1, 2, 3],
+        },
+      }),
       Placeholder.configure({
         placeholder: 'Start writing your note here...',
       }),
