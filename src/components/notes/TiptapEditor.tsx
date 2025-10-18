@@ -28,7 +28,7 @@ export function TiptapEditor({ note, onSave, isSaving }: TiptapEditorProps) {
         heading: {
           levels: [1, 2, 3],
         },
-        codeBlock: {},
+        codeBlock: false,
       }),
       Placeholder.configure({
         placeholder: 'Start writing your note here...',
