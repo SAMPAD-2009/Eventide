@@ -26,6 +26,8 @@ export function TiptapEditor({ note, onSave, isSaving }: TiptapEditorProps) {
         heading: {
           levels: [1, 2, 3],
         },
+        code: false, // We're using toggleCode() for inline code
+        codeBlock: {},
       }),
       Placeholder.configure({
         placeholder: 'Start writing your note here...',
@@ -41,7 +43,17 @@ export function TiptapEditor({ note, onSave, isSaving }: TiptapEditorProps) {
           'prose dark:prose-invert prose-h1:text-4xl prose-h2:text-3xl prose-h3:text-2xl prose-sm sm:prose-base lg:prose-lg xl:prose-2xl m-5 focus:outline-none h-full',
       },
     },
+    onUpdate: ({ editor }) => {
+      // Logic for double space to remove marks can be added here if needed
+    },
   })
+
+  useEffect(() => {
+    if (editor) {
+      // Add keyboard shortcut for clearing marks
+      editor.addKeyboardShortcut('Mod-Shift-x', () => editor.chain().focus().unsetAllMarks().run());
+    }
+  }, [editor])
 
   useEffect(() => {
     if (editor && note.content !== editor.getHTML()) {
