@@ -84,8 +84,8 @@ export function EditorToolbar({ editor }: Props) {
       </Toggle>
       <Toggle
         size="sm"
-        pressed={editor.isActive('codeBlock')}
-        onPressedChange={() => editor.chain().focus().toggleCodeBlock().run()}
+        pressed={editor.isActive('code')}
+        onPressedChange={() => editor.chain().focus().toggleCode().run()}
       >
         <Code className="h-4 w-4" />
       </Toggle>
