@@ -17,6 +17,7 @@ import {
   Palette,
   ChevronDown,
   Smile,
+  Sigma,
 } from 'lucide-react'
 import { Toggle } from '@/components/ui/toggle'
 import { Button } from '../ui/button'
@@ -196,6 +197,10 @@ export function EditorToolbar({ editor, onSave, isSaving }: Props) {
                 />
             </PopoverContent>
         </Popover>
+
+        <Button variant="ghost" size="icon" onClick={() => editor.chain().focus().insertContent('<katex-component></katex-component>').run()}>
+            <Sigma />
+        </Button>
 
 
       <div className="flex-grow" />

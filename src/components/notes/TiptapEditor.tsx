@@ -11,6 +11,7 @@ import { Color } from '@tiptap/extension-color'
 import TextStyle from '@tiptap/extension-text-style'
 import Highlight from '@tiptap/extension-highlight'
 import { FontSize } from '@/lib/tiptap/FontSize'
+import { KatexNode } from './KatexNode'
 
 
 interface TiptapEditorProps {
@@ -37,6 +38,7 @@ export function TiptapEditor({ note, onSave, isSaving }: TiptapEditorProps) {
       TextStyle,
       FontSize,
       Highlight.configure({ multicolor: true }),
+      KatexNode,
     ],
     content: note.content || '',
     editorProps: {
