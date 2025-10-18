@@ -8,7 +8,7 @@ import { Note, Notebook } from '@/lib/types';
 import { NoteSidebar } from '@/components/notes/NoteSidebar';
 import { NoteBreadcrumbs } from '@/components/notes/NoteBreadcrumbs';
 import { Button } from '@/components/ui/button';
-import { Plus, Trash2, Edit } from 'lucide-react';
+import { Plus, Trash2, Edit, Menu } from 'lucide-react';
 import Link from 'next/link';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -17,11 +17,8 @@ import {
   AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger
 } from "@/components/ui/alert-dialog";
 import { format } from 'date-fns';
-import {
-  ResizableHandle,
-  ResizablePanel,
-  ResizablePanelGroup,
-} from "@/components/ui/resizable";
+import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
+
 
 // A simple function to strip HTML for the preview
 const stripHtml = (html: string) => {
@@ -31,7 +28,7 @@ const stripHtml = (html: string) => {
 
 export default function NotebookViewPage() {
   const { notebookId } = useParams();
-  const { getNotebookById, getNotesByNotebook, addNote, deleteNote, isLoading } = useNotes();
+  const { getNotebookById, getNotesByNotebook, addNote, isLoading } = useNotes();
   const [notebook, setNotebook] = useState<Notebook | null>(null);
   const router = useRouter();
 
@@ -82,23 +79,32 @@ export default function NotebookViewPage() {
   }
 
   return (
-    <ResizablePanelGroup
-        direction="horizontal"
-        className="h-[calc(100vh-4rem)] w-full rounded-none border-none"
-      >
-      <ResizablePanel defaultSize={25} minSize={15} collapsible={true} collapsedSize={4}>
-        <NoteSidebar currentNotebookId={notebook.notebook_id} />
-      </ResizablePanel>
-      <ResizableHandle withHandle />
-      <ResizablePanel defaultSize={75}>
+    <div className="flex h-[calc(100vh-4rem)]">
+        <div className="hidden md:block md:w-72 md:flex-shrink-0 border-r">
+          <NoteSidebar currentNotebookId={notebook.notebook_id}/>
+        </div>
         <main className="flex-1 p-4 md:p-8 overflow-y-auto h-full">
           <header className="mb-8">
-            <NoteBreadcrumbs notebook={notebook} />
+            <div className="flex items-center gap-2 md:hidden mb-4">
+               <Sheet>
+                  <SheetTrigger asChild>
+                      <Button variant="outline" size="icon"><Menu/></Button>
+                  </SheetTrigger>
+                  <SheetContent side="left" className="p-0 w-72">
+                      <NoteSidebar currentNotebookId={notebook.notebook_id}/>
+                  </SheetContent>
+              </Sheet>
+              <NoteBreadcrumbs notebook={notebook} />
+            </div>
+            <div className="hidden md:block">
+              <NoteBreadcrumbs notebook={notebook} />
+            </div>
             <div className="flex items-center justify-between mt-2">
-              <h1 className="text-3xl font-bold tracking-tight">{notebook.name}</h1>
+              <h1 className="text-2xl md:text-3xl font-bold tracking-tight">{notebook.name}</h1>
               <Button onClick={handleCreateNote}>
                 <Plus className="mr-2" />
-                New Note
+                <span className="hidden sm:inline">New Note</span>
+                <span className="sm:hidden">New</span>
               </Button>
             </div>
           </header>
@@ -134,7 +140,7 @@ export default function NotebookViewPage() {
                         </AlertDialogHeader>
                         <AlertDialogFooter>
                           <AlertDialogCancel>Cancel</AlertDialogCancel>
-                          <AlertDialogAction onClick={() => deleteNote(note.note_id)} className="bg-destructive hover:bg-destructive/90">Delete</AlertDialogAction>
+                          <AlertDialogAction onClick={() => useNotes().deleteNote(note.note_id)} className="bg-destructive hover:bg-destructive/90">Delete</AlertDialogAction>
                         </AlertDialogFooter>
                       </AlertDialogContent>
                     </AlertDialog>
@@ -154,7 +160,6 @@ export default function NotebookViewPage() {
             </div>
           )}
         </main>
-      </ResizablePanel>
-    </ResizablePanelGroup>
+    </div>
   );
 }

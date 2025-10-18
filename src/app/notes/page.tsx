@@ -6,7 +6,7 @@ import { useState } from 'react';
 import { NoteSidebar } from '@/components/notes/NoteSidebar';
 import { NoteBreadcrumbs } from '@/components/notes/NoteBreadcrumbs';
 import { Button } from '@/components/ui/button';
-import { Plus, Trash2, Edit } from 'lucide-react';
+import { Plus, Trash2, Edit, Menu } from 'lucide-react';
 import Link from 'next/link';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -20,11 +20,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import {
-  ResizableHandle,
-  ResizablePanel,
-  ResizablePanelGroup,
-} from "@/components/ui/resizable";
+import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 
 export default function NotesDashboardPage() {
   const { notebooks, addNotebook, deleteNotebook, isLoading, getNotesByNotebook } = useNotes();
@@ -58,25 +54,31 @@ export default function NotesDashboardPage() {
   }
 
   return (
-    <ResizablePanelGroup
-      direction="horizontal"
-      className="h-[calc(100vh-4rem)] w-full rounded-none border-none"
-    >
-      <ResizablePanel defaultSize={25} minSize={15} collapsible={true} collapsedSize={4}>
-        <NoteSidebar />
-      </ResizablePanel>
-      <ResizableHandle withHandle />
-      <ResizablePanel defaultSize={75}>
-        <main className="flex-1 p-4 md:p-8 overflow-y-auto h-full">
+    <div className="flex h-[calc(100vh-4rem)]">
+      <div className="hidden md:block md:w-72 md:flex-shrink-0 border-r">
+          <NoteSidebar />
+      </div>
+      <main className="flex-1 p-4 md:p-8 overflow-y-auto h-full">
           <header className="mb-8">
-            <NoteBreadcrumbs />
+            <div className="flex items-center gap-2 md:hidden mb-4">
+              <Sheet>
+                  <SheetTrigger asChild>
+                      <Button variant="outline" size="icon"><Menu/></Button>
+                  </SheetTrigger>
+                  <SheetContent side="left" className="p-0 w-72">
+                      <NoteSidebar />
+                  </SheetContent>
+              </Sheet>
+              <NoteBreadcrumbs />
+            </div>
             <div className="flex items-center justify-between mt-2">
-              <h1 className="text-3xl font-bold tracking-tight">Notebooks Dashboard</h1>
+              <h1 className="text-2xl md:text-3xl font-bold tracking-tight">Notebooks</h1>
               <Dialog open={isCreateDialogOpen} onOpenChange={setCreateDialogOpen}>
                 <DialogTrigger asChild>
                   <Button>
                     <Plus className="mr-2" />
-                    New Notebook
+                    <span className="hidden sm:inline">New Notebook</span>
+                    <span className="sm:hidden">New</span>
                   </Button>
                 </DialogTrigger>
                 <DialogContent>
@@ -157,7 +159,6 @@ export default function NotesDashboardPage() {
             </div>
           )}
         </main>
-      </ResizablePanel>
-    </ResizablePanelGroup>
+    </div>
   );
 }
