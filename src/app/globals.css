@@ -1,0 +1,145 @@
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: hsl(var(--background));
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: hsl(var(--primary));
+  border-radius: 10px;
+  border: 2px solid hsl(var(--background));
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background-color: hsl(var(--primary) / 0.8);
+}
+
+
+@layer base {
+  :root {
+    --background: 0 0% 94%;
+    --foreground: 240 10% 3.9%;
+    --card: 0 0% 100%;
+    --card-foreground: 240 10% 3.9%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 240 10% 3.9%;
+    --primary: 255 60% 75%;
+    --primary-foreground: 255 10% 10%;
+    --secondary: 240 4.8% 95.9%;
+    --secondary-foreground: 240 5.9% 10%;
+    --muted: 240 4.8% 95.9%;
+    --muted-foreground: 240 3.8% 46.1%;
+    --accent: 216 42% 74%;
+    --accent-foreground: 216 15% 15%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 240 5.9% 80%;
+    --input: 240 5.9% 80%;
+    --ring: 216 42% 64%;
+    --chart-1: 12 76% 61%;
+    --chart-2: 173 58% 39%;
+    --chart-3: 197 37% 24%;
+    --chart-4: 43 74% 66%;
+    --chart-5: 27 87% 67%;
+    --radius: 0.5rem;
+
+    --personal-tag-bg: 210 100% 95%;
+    --personal-tag-fg: 210 80% 55%;
+    --work-tag-bg: 145 100% 95%;
+    --work-tag-fg: 145 75% 45%;
+    --social-tag-bg: 270 100% 95%;
+    --social-tag-fg: 270 70% 65%;
+    --health-tag-bg: 0 100% 95%;
+    --health-tag-fg: 0 85% 60%;
+    --other-tag-bg: 240 5% 95%;
+    --other-tag-fg: 240 10% 45%;
+  }
+  .dark {
+    --background: 240 6% 10%;
+    --foreground: 0 0% 98%;
+    --card: 240 6% 12%;
+    --card-foreground: 0 0% 98%;
+    --popover: 240 6% 10%;
+    --popover-foreground: 0 0% 98%;
+    --primary: 255 50% 70%;
+    --primary-foreground: 255 10% 10%;
+    --secondary: 240 6% 20%;
+    --secondary-foreground: 0 0% 98%;
+    --muted: 240 6% 20%;
+    --muted-foreground: 0 0% 63.9%;
+    --accent: 216 30% 50%;
+    --accent-foreground: 216 10% 95%;
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 240 5.9% 30%;
+    --input: 240 5.9% 30%;
+    --ring: 216 30% 60%;
+    --chart-1: 220 70% 50%;
+    --chart-2: 160 60% 45%;
+    --chart-3: 30 80% 55%;
+    --chart-4: 280 65% 60%;
+    --chart-5: 340 75% 55%;
+
+    --personal-tag-bg: 210 40% 25%;
+    --personal-tag-fg: 210 100% 80%;
+    --work-tag-bg: 145 40% 25%;
+    --work-tag-fg: 145 90% 70%;
+    --social-tag-bg: 270 40% 30%;
+    --social-tag-fg: 270 100% 85%;
+    --health-tag-bg: 0 40% 25%;
+    --health-tag-fg: 0 100% 80%;
+    --other-tag-bg: 240 10% 25%;
+    --other-tag-fg: 240 15% 85%;
+  }
+
+  .dark input[type="time"]::-webkit-calendar-picker-indicator {
+    filter: invert(1);
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+}
+
+@layer utilities {
+  @keyframes move-cloud {
+    0% { transform: translateX(-20%); }
+    50% { transform: translateX(20%); }
+    100% { transform: translateX(-20%); }
+  }
+  .animate-move-cloud {
+    animation: move-cloud 20s ease-in-out infinite;
+  }
+
+  @keyframes rain {
+    0% { transform: translateY(-100%) scaleY(1); opacity: 0.6; }
+    100% { transform: translateY(100vh) scaleY(1.5); opacity: 0; }
+  }
+  .animate-rain {
+    animation: rain 1s linear infinite;
+  }
+  
+  @keyframes snow {
+    0% { transform: translateY(-100%) translateX(0); opacity: 0.8; }
+    100% { transform: translateY(100vh) translateX(50px); opacity: 0; }
+  }
+  .animate-snow {
+    animation: snow 3s linear infinite;
+  }
+}
