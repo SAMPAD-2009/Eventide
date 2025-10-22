@@ -35,7 +35,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" suppressHydrationWarning className={inter.variable}>
+    <html lang="en" suppressHydrationWarning className={`${inter.variable}`}>
       <head>
         <link rel="icon" href="https://img.icons8.com/?size=100&id=15753&format=png&color=000000" />
         <link rel="manifest" href="/manifest.json" />
@@ -61,3 +61,5 @@ export default function RootLayout({
     </html>
   );
 }
+
+    

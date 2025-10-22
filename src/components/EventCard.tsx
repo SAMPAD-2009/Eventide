@@ -1,6 +1,7 @@
 
 "use client";
 
+import { memo } from 'react';
 import { format } from 'date-fns';
 import { Calendar, Clock, Tag, Trash2, Infinity, Pencil, Users } from 'lucide-react';
 import {
@@ -34,7 +35,7 @@ interface EventCardProps {
   isReadOnly?: boolean;
 }
 
-export function EventCard({ event, onEdit, isReadOnly = false }: EventCardProps) {
+export const EventCard = memo(function EventCard({ event, onEdit, isReadOnly = false }: EventCardProps) {
   const { deleteEvent } = useEvents();
   const { getLabelById } = useLabels();
   const [isDeleting, setIsDeleting] = useState(false);
@@ -172,4 +173,6 @@ export function EventCard({ event, onEdit, isReadOnly = false }: EventCardProps)
       </Card>
     </motion.div>
   );
-}
+});
+
+    

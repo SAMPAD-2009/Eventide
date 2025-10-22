@@ -16,6 +16,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { AnimatePresence, motion } from 'framer-motion';
 import { useAuth } from '@/context/AuthContext';
 import { createClient } from '@/lib/supabase/client';
+import Image from 'next/image';
 
 function SubtaskList({ todo, onUpdate, canEdit }: { todo: Todo; onUpdate: (subtasks: Subtask[]) => void; canEdit: boolean }) {
   const [newSubtaskName, setNewSubtaskName] = useState('');
@@ -226,9 +227,16 @@ export default function FocusPage() {
 
   return (
     <div 
-      className="min-h-screen flex flex-col justify-between p-4 md:p-8 transition-colors bg-cover bg-center text-white"
-      style={{ backgroundImage: "url(/focusbg.jpg)" }}
+      className="relative min-h-screen flex flex-col justify-between p-4 md:p-8 text-white"
     >
+      <Image
+        src="/focusbg.jpg"
+        alt="Focus background"
+        fill
+        sizes="100vw"
+        className="object-cover -z-20"
+        priority
+      />
       <div className="absolute inset-0 bg-black/60 -z-10"></div>
       
       <header className="w-full">
@@ -313,3 +321,5 @@ function FocusPageSkeleton() {
         </div>
     )
 }
+
+    

@@ -1,6 +1,7 @@
 
 "use client";
 
+import { memo } from 'react';
 import { Todo } from "@/lib/types";
 import { useTodos } from "@/context/TodoContext";
 import { useLabels } from "@/context/LabelContext";
@@ -22,7 +23,7 @@ interface TodoItemProps {
   isReadOnly?: boolean;
 }
 
-export function TodoItem({ todo, isEditing, onSetEditing, isReadOnly = false }: TodoItemProps) {
+export const TodoItem = memo(function TodoItem({ todo, isEditing, onSetEditing, isReadOnly = false }: TodoItemProps) {
   const { updateTodo, deleteTodo } = useTodos();
   const { getLabelById } = useLabels();
   const isCollabTodo = !!todo.collab_id;
@@ -139,4 +140,6 @@ export function TodoItem({ todo, isEditing, onSetEditing, isReadOnly = false }: 
       </div>
     </motion.div>
   );
-}
+});
+
+    

@@ -1,6 +1,7 @@
 
 "use client"
 
+import { memo } from 'react';
 import Image from 'next/image';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
@@ -14,7 +15,7 @@ interface HistoryEventCardProps {
     event: HistoryEvent;
 }
 
-export function HistoryEventCard({ event }: HistoryEventCardProps) {
+export const HistoryEventCard = memo(function HistoryEventCard({ event }: HistoryEventCardProps) {
 
   return (
     <Card className="flex flex-col overflow-hidden">
@@ -39,5 +40,6 @@ export function HistoryEventCard({ event }: HistoryEventCardProps) {
       </CardContent>
     </Card>
   );
-}
+});
 
+    
