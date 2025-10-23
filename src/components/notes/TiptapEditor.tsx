@@ -4,16 +4,17 @@
 import { useEditor, EditorContent } from '@tiptap/react'
 import StarterKit from '@tiptap/starter-kit'
 import Placeholder from '@tiptap/extension-placeholder'
-import { useEffect, useState } from 'react'
+import { useEffect, useState, lazy, Suspense } from 'react'
 import type { Note } from '@/lib/types'
-import { EditorToolbar } from './EditorToolbar'
 import { Color } from '@tiptap/extension-color'
 import TextStyle from '@tiptap/extension-text-style'
 import Highlight from '@tiptap/extension-highlight'
 import { FontSize } from '@/lib/tiptap/FontSize'
 import TextAlign from '@tiptap/extension-text-align'
 import Heading from '@tiptap/extension-heading'
+import { Skeleton } from '../ui/skeleton'
 
+const EditorToolbar = lazy(() => import('./EditorToolbar').then(module => ({ default: module.EditorToolbar })));
 
 interface TiptapEditorProps {
   note: Note
@@ -84,7 +85,9 @@ export function TiptapEditor({ note, onSave, isSaving }: TiptapEditorProps) {
         />
       </div>
 
-      <EditorToolbar editor={editor} onSave={handleSave} isSaving={isSaving} />
+      <Suspense fallback={<Skeleton className="h-12 w-full border-b" />}>
+        <EditorToolbar editor={editor} onSave={handleSave} isSaving={isSaving} />
+      </Suspense>
       
       <div className="flex-1 overflow-y-auto relative">
         <EditorContent editor={editor} className="h-full" />

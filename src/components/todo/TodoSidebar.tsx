@@ -10,7 +10,7 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
-import { useState, useMemo } from "react";
+import { useState, useMemo, memo } from "react";
 import { AddProjectDialog } from "./AddProjectDialog";
 import {
     AlertDialog,
@@ -32,7 +32,7 @@ interface TodoSidebarProps {
   collabId?: string | null;
 }
 
-export function TodoSidebar({ selectedSection, onSelectSection, collabId = null }: TodoSidebarProps) {
+function TodoSidebarComponent({ selectedSection, onSelectSection, collabId = null }: TodoSidebarProps) {
   const { projects: allProjects, deleteProject } = useTodos();
   const [isProjectsOpen, setProjectsOpen] = useState(true);
   const [isAddProjectDialogOpen, setAddProjectDialogOpen] = useState(false);
@@ -127,3 +127,5 @@ export function TodoSidebar({ selectedSection, onSelectSection, collabId = null 
     </>
   );
 }
+
+export const TodoSidebar = memo(TodoSidebarComponent);

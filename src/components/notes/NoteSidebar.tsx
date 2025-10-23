@@ -6,7 +6,7 @@ import { cn } from '@/lib/utils';
 import { ChevronRight, FileText, Notebook as NotebookIcon, Plus } from 'lucide-react';
 import { Button } from '../ui/button';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { useState, useMemo } from 'react';
+import { useState, useMemo, memo } from 'react';
 import Link from 'next/link';
 import {
   Dialog, DialogContent, DialogDescription, DialogFooter,
@@ -21,7 +21,7 @@ interface NoteSidebarProps {
   collabId?: string | null;
 }
 
-export function NoteSidebar({ currentNotebookId, currentNoteId, collabId = null }: NoteSidebarProps) {
+function NoteSidebarComponent({ currentNotebookId, currentNoteId, collabId = null }: NoteSidebarProps) {
   const { notebooks: allNotebooks, getNotesByNotebook, addNotebook } = useNotes();
   const [openNotebooks, setOpenNotebooks] = useState<Record<string, boolean>>(() => {
     const initialState: Record<string, boolean> = {};
@@ -112,3 +112,5 @@ export function NoteSidebar({ currentNotebookId, currentNoteId, collabId = null 
     </aside>
   );
 }
+
+export const NoteSidebar = memo(NoteSidebarComponent);

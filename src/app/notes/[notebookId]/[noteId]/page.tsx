@@ -3,11 +3,28 @@
 
 import { useNotes } from '@/context/NoteContext';
 import { useParams, useRouter } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, lazy, Suspense } from 'react';
 import { Note, Notebook } from '@/lib/types';
 import { NoteBreadcrumbs } from '@/components/notes/NoteBreadcrumbs';
-import { TiptapEditor } from '@/components/notes/TiptapEditor';
 import { Skeleton } from '@/components/ui/skeleton';
+
+const TiptapEditor = lazy(() => import('@/components/notes/TiptapEditor').then(module => ({ default: module.TiptapEditor })));
+
+function EditorSkeleton() {
+  return (
+    <div className="flex flex-col h-full">
+      <div className="flex-shrink-0 border-b p-4">
+        <Skeleton className="h-8 w-1/2" />
+      </div>
+      <div className="p-2 border-b">
+         <Skeleton className="h-10 w-full" />
+      </div>
+      <div className="flex-1 p-4">
+        <Skeleton className="h-full w-full" />
+      </div>
+    </div>
+  )
+}
 
 export default function NoteEditorPage() {
   const { notebookId, noteId } = useParams();
@@ -45,7 +62,7 @@ export default function NoteEditorPage() {
         <Skeleton className="h-6 w-1/2" />
       </header>
       <div className="flex-1 p-4">
-        <Skeleton className="h-full w-full" />
+        <EditorSkeleton />
       </div>
     </div>
   );
@@ -58,11 +75,13 @@ export default function NoteEditorPage() {
   if (notebook.collab_id) {
      return (
         <main className="flex-1 flex flex-col h-[calc(100vh-4rem)]">
-            <TiptapEditor
-            note={note}
-            onSave={handleSave}
-            isSaving={isSaving}
-            />
+            <Suspense fallback={<EditorSkeleton />}>
+              <TiptapEditor
+                note={note}
+                onSave={handleSave}
+                isSaving={isSaving}
+              />
+            </Suspense>
         </main>
      )
   }
@@ -75,11 +94,13 @@ export default function NoteEditorPage() {
             note={note}
         />
         </header>
-        <TiptapEditor
-          note={note}
-          onSave={handleSave}
-          isSaving={isSaving}
-        />
+        <Suspense fallback={<EditorSkeleton />}>
+            <TiptapEditor
+              note={note}
+              onSave={handleSave}
+              isSaving={isSaving}
+            />
+        </Suspense>
     </main>
   );
 }

@@ -1,12 +1,11 @@
 
 "use client";
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, lazy, Suspense } from 'react';
 import { useTodos } from '@/context/TodoContext';
 import { TodoSidebar } from '@/components/todo/TodoSidebar';
 import { TaskList } from '@/components/todo/TaskList';
-import { AddTodoForm } from '@/components/todo/AddTodoForm';
-import { isToday, addDays, nextDay, Day } from 'date-fns';
+import { isToday } from 'date-fns';
 import { parseISO } from 'date-fns/fp';
 import { Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -14,8 +13,24 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { TodoBottomNav } from '@/components/todo/TodoBottomNav';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 
+const AddTodoForm = lazy(() => import('@/components/todo/AddTodoForm').then(module => ({ default: module.AddTodoForm })));
+
+
+function AddTodoFormSkeleton() {
+    return (
+        <div className="p-4 border rounded-lg space-y-3">
+            <Skeleton className="h-5 w-3/4" />
+            <Skeleton className="h-4 w-1/2" />
+            <div className="flex items-center gap-2 pt-2">
+                <Skeleton className="h-8 w-24" />
+                <Skeleton className="h-8 w-20" />
+            </div>
+        </div>
+    )
+}
+
 export default function TodoPage() {
-  const { projects, todos, isLoading, addTodo } = useTodos();
+  const { projects, todos, isLoading } = useTodos();
   const [selectedSection, setSelectedSection] = useState('inbox'); // 'inbox', 'today', or a project_id
   const [isCreateFormOpen, setCreateFormOpen] = useState(false);
   const [editingTodoId, setEditingTodoId] = useState<string | null>(null);
@@ -106,11 +121,13 @@ export default function TodoPage() {
                 )}
                 <CollapsibleContent>
                     <div className="mt-2">
-                        <AddTodoForm
-                            projectId={projectIdForNewTask}
-                            onCancel={() => setCreateFormOpen(false)}
-                            onAdded={() => { /* setCreateFormOpen(false) maybe? */ }}
-                        />
+                        <Suspense fallback={<AddTodoFormSkeleton />}>
+                            <AddTodoForm
+                                projectId={projectIdForNewTask}
+                                onCancel={() => setCreateFormOpen(false)}
+                                onAdded={() => { /* setCreateFormOpen(false) maybe? */ }}
+                            />
+                        </Suspense>
                     </div>
                 </CollapsibleContent>
             </Collapsible>

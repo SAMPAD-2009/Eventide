@@ -1,7 +1,7 @@
 
 "use client";
 
-import { memo } from 'react';
+import { memo, lazy, Suspense } from 'react';
 import { Todo } from "@/lib/types";
 import { useTodos } from "@/context/TodoContext";
 import { useLabels } from "@/context/LabelContext";
@@ -11,10 +11,30 @@ import { Button } from "../ui/button";
 import { Trash2, Edit, Flag, Tag, Focus, Users } from "lucide-react";
 import { format, parseISO, isToday, isPast } from 'date-fns';
 import { getPriorityInfo } from "@/lib/priorities";
-import { AddTodoForm } from "./AddTodoForm";
 import { Badge } from "../ui/badge";
 import Link from 'next/link';
 import { motion } from 'framer-motion';
+import { Skeleton } from '../ui/skeleton';
+
+const AddTodoForm = lazy(() => import("./AddTodoForm").then(module => ({ default: module.AddTodoForm })));
+
+
+function EditFormSkeleton() {
+    return (
+        <div className="p-4 border rounded-lg space-y-3">
+            <Skeleton className="h-5 w-3/4" />
+            <Skeleton className="h-4 w-1/2" />
+            <div className="flex items-center gap-2 pt-2">
+                <Skeleton className="h-8 w-24" />
+                <Skeleton className="h-8 w-20" />
+            </div>
+             <div className="flex justify-end gap-2 pt-2 border-t mt-4">
+                <Skeleton className="h-10 w-20" />
+                <Skeleton className="h-10 w-24" />
+            </div>
+        </div>
+    )
+}
 
 interface TodoItemProps {
   todo: Todo;
@@ -23,7 +43,7 @@ interface TodoItemProps {
   isReadOnly?: boolean;
 }
 
-export const TodoItem = memo(function TodoItem({ todo, isEditing, onSetEditing, isReadOnly = false }: TodoItemProps) {
+function TodoItemComponent({ todo, isEditing, onSetEditing, isReadOnly = false }: TodoItemProps) {
   const { updateTodo, deleteTodo } = useTodos();
   const { getLabelById } = useLabels();
   const isCollabTodo = !!todo.collab_id;
@@ -54,13 +74,15 @@ export const TodoItem = memo(function TodoItem({ todo, isEditing, onSetEditing, 
   
   if (isEditing) {
     return (
-      <AddTodoForm
-        projectId={todo.project_id}
-        existingTodo={todo}
-        onCancel={() => onSetEditing(null)}
-        onUpdated={() => onSetEditing(null)}
-        collabId={todo.collab_id}
-      />
+      <Suspense fallback={<EditFormSkeleton />}>
+        <AddTodoForm
+          projectId={todo.project_id}
+          existingTodo={todo}
+          onCancel={() => onSetEditing(null)}
+          onUpdated={() => onSetEditing(null)}
+          collabId={todo.collab_id}
+        />
+      </Suspense>
     )
   }
 
@@ -140,6 +162,5 @@ export const TodoItem = memo(function TodoItem({ todo, isEditing, onSetEditing, 
       </div>
     </motion.div>
   );
-});
-
-    
+}
+export const TodoItem = memo(TodoItemComponent);
