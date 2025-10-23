@@ -89,7 +89,13 @@ export function CollaborationChat({ collabId, members }: CollaborationChatProps)
 
     useEffect(() => {
         const channel = supabase
-            .channel(`collab-chat-${collabId}`)
+            .channel(`collab-chat-${collabId}`, {
+                config: {
+                    broadcast: {
+                        self: true, // Receive messages sent by the current user
+                    },
+                },
+            })
             .on(
                 'postgres_changes',
                 {
@@ -99,7 +105,17 @@ export function CollaborationChat({ collabId, members }: CollaborationChatProps)
                     filter: `collab_id=eq.${collabId}`,
                 },
                 (payload) => {
-                    setMessages((prevMessages) => [...prevMessages, payload.new as CollaborationMessage]);
+                     // If the message is already in our state (optimistic update), we replace it with the server version
+                     // Otherwise, we add the new message from another user.
+                    setMessages((prevMessages) => {
+                        const existingIndex = prevMessages.findIndex(m => m.message_id === (payload.new as CollaborationMessage).message_id);
+                        if (existingIndex > -1) {
+                            const newMessages = [...prevMessages];
+                            newMessages[existingIndex] = payload.new as CollaborationMessage;
+                            return newMessages;
+                        }
+                        return [...prevMessages, payload.new as CollaborationMessage];
+                    });
                 }
             )
             .subscribe();
@@ -112,21 +128,38 @@ export function CollaborationChat({ collabId, members }: CollaborationChatProps)
     const handleSendMessage = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!newMessage.trim() || !user || !user.email) return;
-        
+
+        const optimisticId = crypto.randomUUID();
+        const optimisticMessage: CollaborationMessage = {
+            message_id: optimisticId,
+            collab_id: collabId,
+            user_email: user.email,
+            content: newMessage.trim(),
+            created_at: new Date().toISOString(),
+        };
+
+        // Optimistically add the message to the UI
+        setMessages(prev => [...prev, optimisticMessage]);
+        setNewMessage('');
         setIsSending(true);
+
         try {
             const response = await fetch(`/api/collaborations/${collabId}/messages`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ content: newMessage, user_email: user.email }),
+                body: JSON.stringify({ content: optimisticMessage.content, user_email: user.email }),
             });
+
             if (!response.ok) {
                  const errorData = await response.json();
                  throw new Error(errorData.error || 'Failed to send message');
             }
-            setNewMessage('');
+            // The real-time subscription will handle replacing the optimistic message with the real one.
+
         } catch (error: any) {
-            toast({ variant: 'destructive', title: 'Error', description: error.message });
+            toast({ variant: 'destructive', title: 'Error sending message', description: error.message });
+            // If sending fails, remove the optimistic message
+            setMessages(prev => prev.filter(m => m.message_id !== optimisticId));
         } finally {
             setIsSending(false);
         }
