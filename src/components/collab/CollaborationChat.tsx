@@ -189,8 +189,11 @@ export function CollaborationChat({ collabId, members }: CollaborationChatProps)
                                 <AvatarImage src={`https://ui-avatars.com/api/?name=${member?.user_email}&background=random`} />
                                 <AvatarFallback>{generateAvatar(member?.user_email || '?')}</AvatarFallback>
                             </Avatar>
-                            <div className={`flex flex-col ${isCurrentUser ? 'items-end' : 'items-start'}`}>
-                                <div className={`p-3 rounded-lg max-w-xs md:max-w-md break-words ${isCurrentUser ? 'bg-primary text-primary-foreground' : 'bg-muted'}`}>
+                            <div className={`flex flex-col gap-1 ${isCurrentUser ? 'items-end' : 'items-start'}`}>
+                                 <span className="text-xs text-muted-foreground px-1">
+                                    {isCurrentUser ? "You" : (member?.user_email || "Unknown User")}
+                                </span>
+                                <div className={`p-3 text-sm rounded-2xl max-w-xs md:max-w-md break-words ${isCurrentUser ? 'bg-primary text-primary-foreground rounded-br-none' : 'bg-muted rounded-bl-none'}`}>
                                     {msg.content}
                                 </div>
                                 <span className="text-xs text-muted-foreground mt-1">
