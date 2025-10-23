@@ -111,3 +111,11 @@ export interface InvitationWithCollab extends Invitation {
         name: string;
     }
 }
+
+export interface CollaborationMessage {
+    message_id: string;
+    collab_id: string;
+    user_email: string;
+    content: string;
+    created_at: string;
+}

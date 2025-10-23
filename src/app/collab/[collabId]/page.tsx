@@ -12,7 +12,7 @@ import { Button } from '@/components/ui/button';
 import { toast } from '@/hooks/use-toast';
 import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Users, Mail, ArrowLeft, PlusCircle, Trash2, MoreHorizontal, UserCog, VenetianMask, Edit, ShieldCheck, AlertTriangle } from 'lucide-react';
+import { Users, Mail, ArrowLeft, PlusCircle, Trash2, MoreHorizontal, UserCog, VenetianMask, Edit, ShieldCheck, AlertTriangle, MessageSquare } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { generateAvatar } from '@/lib/utils';
 import { useEvents } from '@/context/EventContext';
@@ -42,6 +42,7 @@ import { useNotes } from '@/context/NoteContext';
 import Link from 'next/link';
 import { format } from 'date-fns';
 import { Label } from '@/components/ui/label';
+import { CollaborationChat } from '@/components/collab/CollaborationChat';
 
 const stripHtml = (html: string) => {
     const doc = new DOMParser().parseFromString(html, 'text/html');
@@ -311,10 +312,11 @@ export default function CollabDetailsPage() {
 
             <Tabs defaultValue="events" className="w-full">
                 <div className='overflow-x-auto pb-2'>
-                    <TabsList className="grid w-full min-w-[400px] grid-cols-4">
+                    <TabsList className="grid w-full min-w-[500px] grid-cols-5">
                         <TabsTrigger value="events">Events</TabsTrigger>
                         <TabsTrigger value="todos">Todos</TabsTrigger>
                         <TabsTrigger value="notes">Notes</TabsTrigger>
+                        <TabsTrigger value="chat">Chat</TabsTrigger>
                         <TabsTrigger value="members">Settings</TabsTrigger>
                     </TabsList>
                 </div>
@@ -460,6 +462,18 @@ export default function CollabDetailsPage() {
                             </div>
                         </CardContent>
                      </Card>
+                </TabsContent>
+                
+                <TabsContent value="chat" className="mt-6">
+                    <Card>
+                        <CardHeader>
+                            <CardTitle className='flex items-center gap-2'><MessageSquare /> Live Chat</CardTitle>
+                            <CardDescription>Messages are real-time and visible to all members.</CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                           <CollaborationChat collabId={collabId as string} members={members} />
+                        </CardContent>
+                    </Card>
                 </TabsContent>
                 
                 <TabsContent value="members" className="mt-6">
@@ -619,5 +633,3 @@ export default function CollabDetailsPage() {
         </div>
     );
 }
-
-    
