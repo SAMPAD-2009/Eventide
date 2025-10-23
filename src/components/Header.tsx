@@ -33,7 +33,6 @@ export function Header() {
     { href: "/notes", label: "Notes", mobileLabel: "Notes", icon: Notebook },
     { href: "/collab", label: "Collaborate", mobileLabel: "Collaborate", icon: Users },
     { href: "/history", label: "History", mobileLabel: "History", icon: History },
-    { href: "/calendar", label: <CalendarDays className="h-5 w-5" />, mobileLabel: "Calendar", icon: CalendarDays },
   ];
 
   const navLinkClasses = (path: string) =>

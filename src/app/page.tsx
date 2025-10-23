@@ -15,12 +15,13 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog';
-import { PlusCircle } from 'lucide-react';
+import { PlusCircle, CalendarDays } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
 import { EventListSkeleton } from '@/components/EventListSkeleton';
 import type { Event } from '@/lib/types';
+import Link from 'next/link';
 
 export default function Home() {
   const { events, addEvent, updateEvent, isLoading: areEventsLoading } = useEvents();
@@ -102,29 +103,37 @@ export default function Home() {
     <div className="w-full mx-auto p-4 md:p-8">
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-3xl font-bold tracking-tight">Upcoming Events</h1>
-        <Dialog open={isDialogOpen} onOpenChange={setDialogOpen}>
-          <DialogTrigger asChild>
-            <Button onClick={handleCreateClick}>
-              <PlusCircle className="mr-2" />
-              Create Event
+        <div className="flex items-center gap-2">
+           <Button asChild variant="outline">
+              <Link href="/calendar">
+                <CalendarDays className="mr-2 h-4 w-4" />
+                View Calendar
+              </Link>
             </Button>
-          </DialogTrigger>
-          <DialogContent className="sm:max-w-3xl">
-            <DialogHeader>
-              <DialogTitle>{editingEvent ? 'Edit Event' : 'Create New Event'}</DialogTitle>
-              <DialogDescription>
-                {editingEvent ? 'Update the details for your event below.' : 'Fill in the details below to add a new event to your calendar.'}
-              </DialogDescription>
-            </DialogHeader>
-            <div className="flex-grow overflow-y-auto px-1 py-2">
-                <EventForm 
-                  event={editingEvent} 
-                  onEventCreated={handleEventCreated}
-                  onEventUpdated={handleEventUpdated}
-                />
-            </div>
-          </DialogContent>
-        </Dialog>
+            <Dialog open={isDialogOpen} onOpenChange={setDialogOpen}>
+              <DialogTrigger asChild>
+                <Button onClick={handleCreateClick}>
+                  <PlusCircle className="mr-2" />
+                  Create Event
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="sm:max-w-3xl">
+                <DialogHeader>
+                  <DialogTitle>{editingEvent ? 'Edit Event' : 'Create New Event'}</DialogTitle>
+                  <DialogDescription>
+                    {editingEvent ? 'Update the details for your event below.' : 'Fill in the details below to add a new event to your calendar.'}
+                  </DialogDescription>
+                </DialogHeader>
+                <div className="flex-grow overflow-y-auto px-1 py-2">
+                    <EventForm 
+                      event={editingEvent} 
+                      onEventCreated={handleEventCreated}
+                      onEventUpdated={handleEventUpdated}
+                    />
+                </div>
+              </DialogContent>
+            </Dialog>
+        </div>
       </div>
       <EventList 
         events={upcomingEvents} 
