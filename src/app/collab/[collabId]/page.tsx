@@ -12,7 +12,7 @@ import { Button } from '@/components/ui/button';
 import { toast } from '@/hooks/use-toast';
 import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Users, Mail, ArrowLeft, PlusCircle, Trash2, MoreHorizontal, UserCog, VenetianMask, Edit, ShieldCheck } from 'lucide-react';
+import { Users, Mail, ArrowLeft, PlusCircle, Trash2, MoreHorizontal, UserCog, VenetianMask, Edit, ShieldCheck, AlertTriangle } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { generateAvatar } from '@/lib/utils';
 import { useEvents } from '@/context/EventContext';
@@ -232,8 +232,24 @@ export default function CollabDetailsPage() {
             setCollaboration(updatedCollab);
             toast({ title: 'Success', description: `Space renamed to "${newCollabName}".` });
             setRenameDialogOpen(false);
-        } catch (error: any) {
+        } catch (error: any) => {
             toast({ variant: 'destructive', title: 'Error', description: error.message });
+        }
+    };
+
+    const handleDeleteCollab = async () => {
+        try {
+            const response = await fetch(`/api/collaborations/${collabId}`, {
+                method: 'DELETE',
+            });
+            if (!response.ok) {
+                 const result = await response.json();
+                 throw new Error(result.error || 'Failed to delete collaboration space.');
+            }
+            toast({ title: 'Space Deleted', description: 'The collaboration space has been permanently deleted.' });
+            router.push('/collab');
+        } catch (error: any) {
+             toast({ variant: 'destructive', title: 'Error', description: error.message });
         }
     };
 
@@ -251,7 +267,7 @@ export default function CollabDetailsPage() {
             <div className='flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 gap-4'>
                 <Button asChild variant="outline" className="self-start">
                     <Link href="/collab">
-                        <ArrowLeft className="mr-2" />
+                        <ArrowLeft className="mr-2 h-4 w-4" />
                         <span className='hidden sm:inline'>Back to All Spaces</span>
                         <span className='sm:hidden'>Back</span>
                     </Link>
@@ -295,11 +311,11 @@ export default function CollabDetailsPage() {
 
             <Tabs defaultValue="events" className="w-full">
                 <div className='overflow-x-auto pb-2'>
-                    <TabsList className="grid w-full grid-cols-4 min-w-[400px]">
+                    <TabsList className="grid w-full min-w-[400px] grid-cols-4">
                         <TabsTrigger value="events">Events</TabsTrigger>
                         <TabsTrigger value="todos">Todos</TabsTrigger>
                         <TabsTrigger value="notes">Notes</TabsTrigger>
-                        <TabsTrigger value="members">Members</TabsTrigger>
+                        <TabsTrigger value="members">Settings</TabsTrigger>
                     </TabsList>
                 </div>
                 
@@ -312,7 +328,7 @@ export default function CollabDetailsPage() {
                                 <Dialog open={isEventFormOpen} onOpenChange={setEventFormOpen}>
                                     <DialogTrigger asChild>
                                         <Button onClick={() => setEditingEvent(null)} className="w-full sm:w-auto">
-                                            <PlusCircle className="mr-2" /> 
+                                            <PlusCircle className="mr-2 h-4 w-4" /> 
                                             <span className='sm:hidden'>New Event</span>
                                             <span className='hidden sm:inline'>Add Event</span>
                                         </Button>
@@ -568,8 +584,40 @@ export default function CollabDetailsPage() {
                             </CardContent>
                         </Card>
                     </div>
+                     {isOwner && (
+                        <Card className="border-destructive mt-6">
+                            <CardHeader>
+                                <CardTitle className="text-destructive flex items-center gap-2">
+                                    <AlertTriangle />
+                                    Danger Zone
+                                </CardTitle>
+                                <CardDescription>This action is permanent and cannot be undone.</CardDescription>
+                            </CardHeader>
+                            <CardContent>
+                                <AlertDialog>
+                                    <AlertDialogTrigger asChild>
+                                        <Button variant="destructive">Delete this Space</Button>
+                                    </AlertDialogTrigger>
+                                    <AlertDialogContent>
+                                        <AlertDialogHeader>
+                                            <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                                            <AlertDialogDescription>
+                                                This will permanently delete the &quot;{collaboration.name}&quot; space, including all events, todos, and notes. All members will lose access. This action cannot be undone.
+                                            </AlertDialogDescription>
+                                        </AlertDialogHeader>
+                                        <AlertDialogFooter>
+                                            <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                            <AlertDialogAction onClick={handleDeleteCollab} className="bg-destructive hover:bg-destructive/90">Yes, delete this space</AlertDialogAction>
+                                        </AlertDialogFooter>
+                                    </AlertDialogContent>
+                                </AlertDialog>
+                            </CardContent>
+                        </Card>
+                    )}
                 </TabsContent>
             </Tabs>
         </div>
     );
 }
+
+    
