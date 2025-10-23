@@ -5,7 +5,7 @@ import { useTodos } from '@/context/TodoContext';
 import { useParams, useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { Skeleton } from '@/components/ui/skeleton';
-import { ArrowLeft, CheckCircle, Circle, Flag, Plus, Trash2, Edit } from 'lucide-react';
+import { ArrowLeft, CheckCircle, Circle, Flag, Plus, Trash2, Edit, ShieldCheck } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { getPriorityInfo } from '@/lib/priorities';
 import { cn } from '@/lib/utils';
@@ -53,9 +53,12 @@ function SubtaskList({ todo, onUpdate, canEdit }: { todo: Todo; onUpdate: (subta
   };
 
   const handleSaveEdit = (id: string) => {
-    if (editingSubtaskName.trim()) {
-      onUpdate(subtasks.map(st => st.id === id ? { ...st, name: editingSubtaskName.trim() } : st));
-    }
+    if (!canEdit || !editingSubtaskName.trim()) {
+        setEditingSubtaskId(null);
+        setEditingSubtaskName('');
+        return;
+    };
+    onUpdate(subtasks.map(st => st.id === id ? { ...st, name: editingSubtaskName.trim() } : st));
     setEditingSubtaskId(null);
     setEditingSubtaskName('');
   };
@@ -162,20 +165,32 @@ export default function FocusPage() {
         setTodo(foundTodo);
         
         if (foundTodo?.collab_id && user?.email) {
-            const { data: memberData, error } = await supabase
-                .from('collaboration_members')
-                .select('role')
-                .eq('collab_id', foundTodo.collab_id)
-                .eq('user_email', user.email)
-                .single();
-            
-            if (error) {
-                console.error("Error fetching member role:", error);
-                setCanEdit(false);
-            } else {
-                setCanEdit(memberData?.role === 'editor' || memberData?.role === 'owner');
-            }
+            const { data: collabData, error: collabError } = await supabase
+              .from('collaborations')
+              .select('owner_email')
+              .eq('collab_id', foundTodo.collab_id)
+              .single();
 
+            if (collabError) {
+              console.error("Error fetching collaboration owner:", collabError);
+              setCanEdit(false);
+            } else if (collabData.owner_email === user.email) {
+              setCanEdit(true);
+            } else {
+              const { data: memberData, error } = await supabase
+                  .from('collaboration_members')
+                  .select('role')
+                  .eq('collab_id', foundTodo.collab_id)
+                  .eq('user_email', user.email)
+                  .single();
+              
+              if (error) {
+                  console.error("Error fetching member role:", error);
+                  setCanEdit(false);
+              } else {
+                  setCanEdit(memberData?.role === 'editor' || memberData?.role === 'admin');
+              }
+            }
         } else if (!foundTodo?.collab_id) {
             // It's a personal todo
             setCanEdit(true);
@@ -321,5 +336,3 @@ function FocusPageSkeleton() {
         </div>
     )
 }
-
-    

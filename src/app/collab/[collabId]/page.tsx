@@ -12,7 +12,7 @@ import { Button } from '@/components/ui/button';
 import { toast } from '@/hooks/use-toast';
 import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Users, Mail, ArrowLeft, PlusCircle, Trash2, MoreHorizontal, UserCog, VenetianMask, Edit } from 'lucide-react';
+import { Users, Mail, ArrowLeft, PlusCircle, Trash2, MoreHorizontal, UserCog, VenetianMask, Edit, ShieldCheck } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { generateAvatar } from '@/lib/utils';
 import { useEvents } from '@/context/EventContext';
@@ -78,7 +78,8 @@ export default function CollabDetailsPage() {
 
     const isOwner = useMemo(() => collaboration?.owner_email === user?.email, [collaboration, user]);
     const currentUserMemberInfo = useMemo(() => members.find(m => m.user_email === user?.email), [members, user]);
-    const canEdit = useMemo(() => isOwner || currentUserMemberInfo?.role === 'editor', [isOwner, currentUserMemberInfo]);
+    const isAdmin = useMemo(() => isOwner || currentUserMemberInfo?.role === 'admin', [isOwner, currentUserMemberInfo]);
+    const canEdit = useMemo(() => isAdmin || currentUserMemberInfo?.role === 'editor', [isAdmin, currentUserMemberInfo]);
     
     // UI state
     const [isEventFormOpen, setEventFormOpen] = useState(false);
@@ -257,7 +258,7 @@ export default function CollabDetailsPage() {
                 </Button>
                 <div className="flex items-center gap-2 self-start sm:self-center">
                     <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">{collaboration.name}</h1>
-                    {isOwner && (
+                    {isAdmin && (
                         <Dialog open={isRenameDialogOpen} onOpenChange={setRenameDialogOpen}>
                             <DialogTrigger asChild>
                                 <Button variant="ghost" size="icon">
@@ -465,7 +466,7 @@ export default function CollabDetailsPage() {
                                                 <p className="text-xs capitalize text-muted-foreground">{member.user_email === collaboration.owner_email ? 'Owner' : member.role}</p>
                                             </div>
                                         </div>
-                                         {isOwner && member.user_email !== user?.email && (
+                                         {isAdmin && member.user_email !== user?.email && (
                                             <DropdownMenu>
                                                 <DropdownMenuTrigger asChild>
                                                     <Button variant="ghost" size="icon"><MoreHorizontal /></Button>
@@ -473,6 +474,11 @@ export default function CollabDetailsPage() {
                                                 <DropdownMenuContent align="end">
                                                     <DropdownMenuLabel>Manage Member</DropdownMenuLabel>
                                                     <DropdownMenuSeparator />
+                                                    {isOwner && (
+                                                        <DropdownMenuItem onSelect={() => handleRoleChange(member.user_email, 'admin')} disabled={member.role === 'admin'}>
+                                                            <ShieldCheck className="mr-2" /> Make Admin
+                                                        </DropdownMenuItem>
+                                                    )}
                                                     <DropdownMenuItem onSelect={() => handleRoleChange(member.user_email, 'editor')} disabled={member.role === 'editor'}>
                                                         <UserCog className="mr-2" /> Make Editor
                                                     </DropdownMenuItem>
@@ -510,7 +516,7 @@ export default function CollabDetailsPage() {
                                 <CardDescription>Send an invitation to collaborate.</CardDescription>
                             </CardHeader>
                             <CardContent className="space-y-4">
-                                {isOwner && (
+                                {isAdmin && (
                                 <>
                                 <div className="flex flex-col sm:flex-row gap-2 sm:items-end">
                                     <div className="flex-grow">
@@ -530,6 +536,7 @@ export default function CollabDetailsPage() {
                                                 <SelectValue placeholder="Select a role" />
                                             </SelectTrigger>
                                             <SelectContent>
+                                                {isOwner && <SelectItem value="admin">Admin</SelectItem>}
                                                 <SelectItem value="editor">Editor</SelectItem>
                                                 <SelectItem value="viewer">Viewer</SelectItem>
                                             </SelectContent>
@@ -557,7 +564,7 @@ export default function CollabDetailsPage() {
                                 </div>
                                 </>
                                 )}
-                                {!isOwner && <p className="text-sm text-muted-foreground">Only the owner can invite new members.</p>}
+                                {!isAdmin && <p className="text-sm text-muted-foreground">Only the owner or an admin can invite new members.</p>}
                             </CardContent>
                         </Card>
                     </div>
@@ -566,5 +573,3 @@ export default function CollabDetailsPage() {
         </div>
     );
 }
-
-    

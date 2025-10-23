@@ -1,5 +1,4 @@
 
-
 export interface Event {
   event_id: string;
   title: string;
@@ -85,7 +84,7 @@ export interface Collaboration {
   created_at: string;
 }
 
-export type MemberRole = 'owner' | 'editor' | 'viewer';
+export type MemberRole = 'owner' | 'admin' | 'editor' | 'viewer';
 
 export interface CollaborationMember {
     collab_id: string;

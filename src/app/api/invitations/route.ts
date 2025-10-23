@@ -36,7 +36,7 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const { collab_id, inviter_email, invitee_email, role } = body;
 
-    // TODO: Add validation to ensure the inviter is a member/owner of the collab
+    // TODO: Add validation to ensure the inviter is a member/owner/admin of the collab
 
     const { data: newInvite, error } = await supabase
       .from('invitations')
