@@ -89,13 +89,7 @@ export function CollaborationChat({ collabId, members }: CollaborationChatProps)
 
     useEffect(() => {
         const channel = supabase
-            .channel(`collab-chat-${collabId}`, {
-                config: {
-                    broadcast: {
-                        self: true, // Receive messages sent by the current user
-                    },
-                },
-            })
+            .channel(`collab-chat-${collabId}`)
             .on(
                 'postgres_changes',
                 {
@@ -105,16 +99,30 @@ export function CollaborationChat({ collabId, members }: CollaborationChatProps)
                     filter: `collab_id=eq.${collabId}`,
                 },
                 (payload) => {
-                     // If the message is already in our state (optimistic update), we replace it with the server version
-                     // Otherwise, we add the new message from another user.
+                    const receivedMessage = payload.new as CollaborationMessage;
+
                     setMessages((prevMessages) => {
-                        const existingIndex = prevMessages.findIndex(m => m.message_id === (payload.new as CollaborationMessage).message_id);
-                        if (existingIndex > -1) {
+                        // If the message is from the current user and has the same content,
+                        // it's likely the server-confirmed version of an optimistic message.
+                        const optimisticIndex = prevMessages.findIndex(
+                            (m) =>
+                                !m.created_at.endsWith('+00:00') && // Optimistic messages don't have timezone
+                                m.user_email === receivedMessage.user_email &&
+                                m.content === receivedMessage.content
+                        );
+
+                        if (optimisticIndex > -1) {
+                            // Replace the optimistic message with the real one from the server
                             const newMessages = [...prevMessages];
-                            newMessages[existingIndex] = payload.new as CollaborationMessage;
+                            newMessages[optimisticIndex] = receivedMessage;
                             return newMessages;
+                        } else if (!prevMessages.some(m => m.message_id === receivedMessage.message_id)) {
+                             // Otherwise, it's a new message from another user, add it
+                            return [...prevMessages, receivedMessage];
                         }
-                        return [...prevMessages, payload.new as CollaborationMessage];
+
+                        // If the message is already present, do nothing to avoid duplicates.
+                        return prevMessages;
                     });
                 }
             )
@@ -135,7 +143,7 @@ export function CollaborationChat({ collabId, members }: CollaborationChatProps)
             collab_id: collabId,
             user_email: user.email,
             content: newMessage.trim(),
-            created_at: new Date().toISOString(),
+            created_at: new Date().toISOString(), // This won't have the '+00:00' which helps distinguish it
         };
 
         // Optimistically add the message to the UI
