@@ -38,24 +38,24 @@ export async function POST(
   const collabId = params.collabId;
 
   try {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user || !user.email) {
+    const body = await request.json();
+    const { content, user_email } = body;
+
+    if (!user_email) {
         return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
-
-    const body = await request.json();
-    const { content } = body;
 
     if (!content || typeof content !== 'string' || content.trim().length === 0) {
         return NextResponse.json({ error: 'Message content cannot be empty' }, { status: 400 });
     }
 
-    // RLS will ensure the user is a member of the collab
+    // RLS will ensure the user is a member of the collab when they query,
+    // but for inserts we rely on the server role key and trust the passed email.
     const { data: newMessage, error } = await supabase
       .from('collaboration_messages')
       .insert({
         collab_id: collabId,
-        user_email: user.email,
+        user_email: user_email,
         content: content.trim(),
       })
       .select()

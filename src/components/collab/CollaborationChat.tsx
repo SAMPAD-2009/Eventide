@@ -77,7 +77,7 @@ export function CollaborationChat({ collabId, members }: CollaborationChatProps)
         } finally {
             setIsLoading(false);
         }
-    }, [collabId, toast]);
+    }, [collabId]);
 
     useEffect(() => {
         fetchMessages();
@@ -111,16 +111,19 @@ export function CollaborationChat({ collabId, members }: CollaborationChatProps)
 
     const handleSendMessage = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (!newMessage.trim() || !user) return;
+        if (!newMessage.trim() || !user || !user.email) return;
         
         setIsSending(true);
         try {
             const response = await fetch(`/api/collaborations/${collabId}/messages`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ content: newMessage }),
+                body: JSON.stringify({ content: newMessage, user_email: user.email }),
             });
-            if (!response.ok) throw new Error('Failed to send message');
+            if (!response.ok) {
+                 const errorData = await response.json();
+                 throw new Error(errorData.error || 'Failed to send message');
+            }
             setNewMessage('');
         } catch (error: any) {
             toast({ variant: 'destructive', title: 'Error', description: error.message });
