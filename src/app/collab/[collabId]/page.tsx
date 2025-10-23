@@ -232,7 +232,7 @@ export default function CollabDetailsPage() {
             setCollaboration(updatedCollab);
             toast({ title: 'Success', description: `Space renamed to "${newCollabName}".` });
             setRenameDialogOpen(false);
-        } catch (error: any) => {
+        } catch (error: any) {
             toast({ variant: 'destructive', title: 'Error', description: error.message });
         }
     };
