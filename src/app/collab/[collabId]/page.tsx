@@ -310,16 +310,28 @@ export default function CollabDetailsPage() {
             
             <p className="text-muted-foreground mb-8">Owned by {collaboration.owner_email}</p>
 
-            <Tabs defaultValue="events" className="w-full">
+            <Tabs defaultValue="chat" className="w-full">
                 <div className='overflow-x-auto pb-2'>
                     <TabsList className="grid w-full min-w-[500px] grid-cols-5">
+                        <TabsTrigger value="chat">Chat</TabsTrigger>
                         <TabsTrigger value="events">Events</TabsTrigger>
                         <TabsTrigger value="todos">Todos</TabsTrigger>
                         <TabsTrigger value="notes">Notes</TabsTrigger>
-                        <TabsTrigger value="chat">Chat</TabsTrigger>
                         <TabsTrigger value="members">Settings</TabsTrigger>
                     </TabsList>
                 </div>
+
+                <TabsContent value="chat" className="mt-6">
+                    <Card>
+                        <CardHeader>
+                            <CardTitle className='flex items-center gap-2'><MessageSquare /> Live Chat</CardTitle>
+                            <CardDescription>Messages are real-time and visible to all members.</CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                           <CollaborationChat collabId={collabId as string} members={members} />
+                        </CardContent>
+                    </Card>
+                </TabsContent>
                 
                 <TabsContent value="events" className="mt-6">
                     <Card>
@@ -462,18 +474,6 @@ export default function CollabDetailsPage() {
                             </div>
                         </CardContent>
                      </Card>
-                </TabsContent>
-                
-                <TabsContent value="chat" className="mt-6">
-                    <Card>
-                        <CardHeader>
-                            <CardTitle className='flex items-center gap-2'><MessageSquare /> Live Chat</CardTitle>
-                            <CardDescription>Messages are real-time and visible to all members.</CardDescription>
-                        </CardHeader>
-                        <CardContent>
-                           <CollaborationChat collabId={collabId as string} members={members} />
-                        </CardContent>
-                    </Card>
                 </TabsContent>
                 
                 <TabsContent value="members" className="mt-6">
@@ -633,3 +633,5 @@ export default function CollabDetailsPage() {
         </div>
     );
 }
+
+    
