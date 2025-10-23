@@ -1,7 +1,7 @@
 
 "use client";
 
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect, ReactNode, useCallback } from 'react';
 import type { Event, Label } from '@/lib/types';
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from './AuthContext';
@@ -25,58 +25,58 @@ const EventContext = createContext<EventContextType | undefined>(undefined);
 
 export const EventProvider = ({ children }: { children: ReactNode }) => {
   const { toast } = useToast();
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
   const [events, setEvents] = useState<Event[]>([]);
+  const [hasLoaded, setHasLoaded] = useState(false);
   const { user } = useAuth();
 
-  useEffect(() => {
-    const loadEvents = async () => {
-      if (user?.email) {
-        setIsLoading(true);
-        try {
-          const response = await fetch(`/api/events?user_email=${encodeURIComponent(user.email)}`);
-          if (!response.ok) {
-            const errorData = await response.json();
-            throw new Error(errorData.error || 'Failed to fetch events');
-          }
-          const data = await response.json();
-          
-          const formattedEvents: Event[] = data.map((e: any) => ({
-            event_id: e.event_id,
-            title: e.title,
-            details: e.details || '',
-            datetime: e.datetime,
-            date: e.datetime ? e.datetime.split('T')[0] : '',
-            time: e.datetime ? new Date(e.datetime).toTimeString().substring(0,5) : '',
-            category: e.category,
-            label_id: e.label_id,
-            isIndefinite: e.is_indefinite,
-            user_email: e.user_email,
-            collab_id: e.collab_id,
-            collaborations: e.collaborations,
-          }));
-
-          setEvents(formattedEvents);
-
-        } catch (error: any) {
-           console.error("Failed to load events", error);
-           toast({
-             variant: "destructive",
-             title: "Error",
-             description: `Could not fetch your events: ${error.message}`,
-           });
-           setEvents([]);
-        } finally {
-            setIsLoading(false);
+  const loadEvents = useCallback(async () => {
+    if (user?.email && !hasLoaded) {
+      setIsLoading(true);
+      try {
+        const response = await fetch(`/api/events?user_email=${encodeURIComponent(user.email)}`);
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.error || 'Failed to fetch events');
         }
-      } else {
-        setEvents([]);
-        setIsLoading(false);
-      }
-    };
+        const data = await response.json();
+        
+        const formattedEvents: Event[] = data.map((e: any) => ({
+          event_id: e.event_id,
+          title: e.title,
+          details: e.details || '',
+          datetime: e.datetime,
+          date: e.datetime ? e.datetime.split('T')[0] : '',
+          time: e.datetime ? new Date(e.datetime).toTimeString().substring(0,5) : '',
+          category: e.category,
+          label_id: e.label_id,
+          isIndefinite: e.is_indefinite,
+          user_email: e.user_email,
+          collab_id: e.collab_id,
+          collaborations: e.collaborations,
+        }));
 
-    loadEvents();
-  }, [user, toast]);
+        setEvents(formattedEvents);
+        setHasLoaded(true);
+
+      } catch (error: any) {
+         console.error("Failed to load events", error);
+         toast({
+           variant: "destructive",
+           title: "Error",
+           description: `Could not fetch your events: ${error.message}`,
+         });
+         setEvents([]);
+      } finally {
+          setIsLoading(false);
+      }
+    } else if (!user) {
+      setEvents([]);
+      setHasLoaded(false);
+      setIsLoading(false);
+    }
+  }, [user, hasLoaded, toast]);
+  
 
   const addEvent = async (eventData: EventCreationData) => {
     if (!user?.email) {
@@ -234,10 +234,18 @@ export const EventProvider = ({ children }: { children: ReactNode }) => {
     }
   };
   
-  const contextValue = { events, addEvent, updateEvent, deleteEvent, isLoading };
+  const useWrappedEvents = () => {
+    useEffect(() => {
+        loadEvents();
+    }, [loadEvents]);
+
+    return { events, addEvent, updateEvent, deleteEvent, isLoading };
+  };
+
+  const contextValue = { events, addEvent, updateEvent, deleteEvent, isLoading, useWrappedEvents };
 
   return (
-    <EventContext.Provider value={contextValue}>
+    <EventContext.Provider value={contextValue as any}>
       {children}
     </EventContext.Provider>
   );
@@ -248,5 +256,7 @@ export const useEvents = () => {
   if (context === undefined) {
     throw new Error('useEvents must be used within an EventProvider');
   }
-  return context;
+  // This is a bit of a hack to get around the fact that we are changing the interface
+  // In a real app we'd likely create a new hook and deprecate the old one.
+  return (context as any).useWrappedEvents();
 };

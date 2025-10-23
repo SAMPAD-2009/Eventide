@@ -27,9 +27,10 @@ const TodoContext = createContext<TodoContextType | undefined>(undefined);
 export const TodoProvider = ({ children }: { children: ReactNode }) => {
   const { toast } = useToast();
   const { user } = useAuth();
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
   const [projects, setProjects] = useState<Project[]>([]);
   const [todos, setTodos] = useState<Todo[]>([]);
+  const [hasLoaded, setHasLoaded] = useState(false);
   
   const addProject = useCallback(async (projectData: ProjectCreationData): Promise<Project | void> => {
     if (!user?.email) return;
@@ -52,53 +53,49 @@ export const TodoProvider = ({ children }: { children: ReactNode }) => {
     }
   }, [user?.email, toast]);
 
-  const fetchData = useCallback(async (userEmail: string) => {
-    setIsLoading(true);
-    try {
-        const projectsRes = await fetch(`/api/projects?user_email=${encodeURIComponent(userEmail)}`);
-        if (!projectsRes.ok) throw new Error('Failed to fetch projects');
-        let projectsData = await projectsRes.json();
-        
-        const inboxExists = projectsData.some((p: Project) => p.name === 'Inbox' && !p.collab_id);
-        if (!inboxExists) {
-            const newInbox = await addProject({ name: 'Inbox' });
-            if (newInbox) {
-                projectsData.push(newInbox);
-            }
-        }
-        
-        setProjects(projectsData);
+  const fetchData = useCallback(async () => {
+    if (user?.email && !hasLoaded) {
+      setIsLoading(true);
+      try {
+          const projectsRes = await fetch(`/api/projects?user_email=${encodeURIComponent(user.email)}`);
+          if (!projectsRes.ok) throw new Error('Failed to fetch projects');
+          let projectsData = await projectsRes.json();
+          
+          const inboxExists = projectsData.some((p: Project) => p.name === 'Inbox' && !p.collab_id);
+          if (!inboxExists) {
+              const newInbox = await addProject({ name: 'Inbox' });
+              if (newInbox) {
+                  projectsData.push(newInbox);
+              }
+          }
+          
+          setProjects(projectsData);
 
-        const todosRes = await fetch(`/api/todos?user_email=${encodeURIComponent(userEmail)}`);
-        if (!todosRes.ok) throw new Error('Failed to fetch todos');
-        const todosData = await todosRes.json();
-        setTodos(todosData);
+          const todosRes = await fetch(`/api/todos?user_email=${encodeURIComponent(user.email)}`);
+          if (!todosRes.ok) throw new Error('Failed to fetch todos');
+          const todosData = await todosRes.json();
+          setTodos(todosData);
+          setHasLoaded(true);
 
-    } catch (error: any) {
-        toast({
-            variant: "destructive",
-            title: "Error",
-            description: `Could not fetch your projects and tasks: ${error.message}`,
-        });
+      } catch (error: any) {
+          toast({
+              variant: "destructive",
+              title: "Error",
+              description: `Could not fetch your projects and tasks: ${error.message}`,
+          });
+          setProjects([]);
+          setTodos([]);
+      } finally {
+          setIsLoading(false);
+      }
+    } else if (!user) {
         setProjects([]);
         setTodos([]);
-    } finally {
-        setIsLoading(false);
+        setHasLoaded(false);
     }
-  }, [toast, addProject]);
+  }, [toast, addProject, user, hasLoaded]);
 
 
-  useEffect(() => {
-    if (user?.email) {
-        fetchData(user.email);
-    } else {
-      setProjects([]);
-      setTodos([]);
-      setIsLoading(false);
-    }
-  }, [user, fetchData]);
-
-  
   const getTodoById = useCallback((todoId: string) => {
     return todos.find(t => t.todo_id === todoId);
   }, [todos]);
@@ -212,6 +209,14 @@ export const TodoProvider = ({ children }: { children: ReactNode }) => {
         toast({ variant: 'destructive', title: "Error", description: e.message });
     }
   };
+  
+  const useWrappedTodos = () => {
+    useEffect(() => {
+        fetchData();
+    }, [fetchData]);
+
+    return { projects, todos, getTodoById, addProject, deleteProject, addTodo, updateTodo, deleteTodo, isLoading };
+  };
 
   const contextValue = {
     projects,
@@ -223,9 +228,10 @@ export const TodoProvider = ({ children }: { children: ReactNode }) => {
     updateTodo,
     deleteTodo,
     isLoading,
+    useWrappedTodos,
   };
 
-  return <TodoContext.Provider value={contextValue}>{children}</TodoContext.Provider>;
+  return <TodoContext.Provider value={contextValue as any}>{children}</TodoContext.Provider>;
 };
 
 export const useTodos = () => {
@@ -233,5 +239,5 @@ export const useTodos = () => {
   if (context === undefined) {
     throw new Error('useTodos must be used within a TodoProvider');
   }
-  return context;
+  return (context as any).useWrappedTodos();
 };

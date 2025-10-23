@@ -28,49 +28,48 @@ const NoteContext = createContext<NoteContextType | undefined>(undefined);
 export const NoteProvider = ({ children }: { children: ReactNode }) => {
   const { toast } = useToast();
   const { user } = useAuth();
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
   const [notebooks, setNotebooks] = useState<Notebook[]>([]);
   const [notes, setNotes] = useState<Note[]>([]);
+  const [hasLoaded, setHasLoaded] = useState(false);
 
-  const fetchData = useCallback(async (userEmail: string) => {
-    setIsLoading(true);
-    try {
-      const [notebooksRes, notesRes] = await Promise.all([
-        fetch(`/api/notebooks?user_email=${encodeURIComponent(userEmail)}`),
-        fetch(`/api/notes?user_email=${encodeURIComponent(userEmail)}`),
-      ]);
+  const fetchData = useCallback(async () => {
+    if (user?.email && !hasLoaded) {
+      setIsLoading(true);
+      try {
+        const [notebooksRes, notesRes] = await Promise.all([
+          fetch(`/api/notebooks?user_email=${encodeURIComponent(user.email)}`),
+          fetch(`/api/notes?user_email=${encodeURIComponent(user.email)}`),
+        ]);
 
-      if (!notebooksRes.ok || !notesRes.ok) {
-        throw new Error('Failed to fetch notes data');
+        if (!notebooksRes.ok || !notesRes.ok) {
+          throw new Error('Failed to fetch notes data');
+        }
+
+        const notebooksData = await notebooksRes.json();
+        const notesData = await notesRes.json();
+
+        setNotebooks(notebooksData);
+        setNotes(notesData);
+        setHasLoaded(true);
+      } catch (error: any) {
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: `Could not fetch your notebooks and notes: ${error.message}`,
+        });
+        setNotebooks([]);
+        setNotes([]);
+      } finally {
+        setIsLoading(false);
       }
-
-      const notebooksData = await notebooksRes.json();
-      const notesData = await notesRes.json();
-
-      setNotebooks(notebooksData);
-      setNotes(notesData);
-    } catch (error: any) {
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: `Could not fetch your notebooks and notes: ${error.message}`,
-      });
-      setNotebooks([]);
-      setNotes([]);
-    } finally {
-      setIsLoading(false);
+    } else if (!user) {
+        setNotebooks([]);
+        setNotes([]);
+        setHasLoaded(false);
     }
-  }, [toast]);
+  }, [toast, user, hasLoaded]);
 
-  useEffect(() => {
-    if (user?.email) {
-      fetchData(user.email);
-    } else {
-      setNotebooks([]);
-      setNotes([]);
-      setIsLoading(false);
-    }
-  }, [user, fetchData]);
   
   // Notebook functions
   const addNotebook = async (data: NotebookCreationData): Promise<Notebook | void> => {
@@ -100,7 +99,7 @@ export const NoteProvider = ({ children }: { children: ReactNode }) => {
       toast({ title: "Notebook Deleted" });
     } catch (e: any) {
        toast({ variant: 'destructive', title: "Error", description: e.message });
-       if (user?.email) fetchData(user.email); // Refetch to restore state
+       if (user?.email) await fetchData(); // Refetch to restore state
     }
   };
   
@@ -149,7 +148,7 @@ export const NoteProvider = ({ children }: { children: ReactNode }) => {
       toast({ title: "Note Deleted" });
     } catch (e: any) {
        toast({ variant: 'destructive', title: "Error", description: e.message });
-       if (user?.email) fetchData(user.email);
+       if (user?.email) await fetchData();
     }
   };
 
@@ -160,6 +159,15 @@ export const NoteProvider = ({ children }: { children: ReactNode }) => {
       .filter(n => n.notebook_id === notebookId)
       .sort((a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime());
   };
+
+  const useWrappedNotes = () => {
+    useEffect(() => {
+        fetchData();
+    }, [fetchData]);
+
+    return { notebooks, notes, isLoading, addNotebook, deleteNotebook, getNotebookById, addNote, updateNote, deleteNote, getNoteById, getNotesByNotebook };
+  };
+
 
   const contextValue = {
     notebooks,
@@ -173,9 +181,10 @@ export const NoteProvider = ({ children }: { children: ReactNode }) => {
     deleteNote,
     getNoteById,
     getNotesByNotebook,
+    useWrappedNotes,
   };
 
-  return <NoteContext.Provider value={contextValue}>{children}</NoteContext.Provider>;
+  return <NoteContext.Provider value={contextValue as any}>{children}</NoteContext.Provider>;
 };
 
 export const useNotes = () => {
@@ -183,5 +192,5 @@ export const useNotes = () => {
   if (context === undefined) {
     throw new Error('useNotes must be used within a NoteProvider');
   }
-  return context;
+  return (context as any).useWrappedNotes();
 };

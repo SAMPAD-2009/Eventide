@@ -22,36 +22,34 @@ const LabelContext = createContext<LabelContextType | undefined>(undefined);
 export const LabelProvider = ({ children }: { children: ReactNode }) => {
   const { toast } = useToast();
   const { user } = useAuth();
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
   const [labels, setLabels] = useState<Label[]>([]);
+  const [hasLoaded, setHasLoaded] = useState(false);
 
-  const fetchLabels = useCallback(async (userEmail: string) => {
-    setIsLoading(true);
-    try {
-      const response = await fetch(`/api/labels?user_email=${encodeURIComponent(userEmail)}`);
-      if (!response.ok) throw new Error('Failed to fetch labels');
-      const data = await response.json();
-      setLabels(data);
-    } catch (error: any) {
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: `Could not fetch your labels: ${error.message}`,
-      });
-      setLabels([]);
-    } finally {
-      setIsLoading(false);
+  const fetchLabels = useCallback(async () => {
+    if (user?.email && !hasLoaded) {
+      setIsLoading(true);
+      try {
+        const response = await fetch(`/api/labels?user_email=${encodeURIComponent(user.email)}`);
+        if (!response.ok) throw new Error('Failed to fetch labels');
+        const data = await response.json();
+        setLabels(data);
+        setHasLoaded(true);
+      } catch (error: any) {
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: `Could not fetch your labels: ${error.message}`,
+        });
+        setLabels([]);
+      } finally {
+        setIsLoading(false);
+      }
+    } else if (!user) {
+        setLabels([]);
+        setHasLoaded(false);
     }
-  }, [toast]);
-
-  useEffect(() => {
-    if (user?.email) {
-      fetchLabels(user.email);
-    } else {
-      setLabels([]);
-      setIsLoading(false);
-    }
-  }, [user, fetchLabels]);
+  }, [toast, user, hasLoaded]);
 
   const addLabel = async (labelData: LabelCreationData) => {
     if (!user?.email) return;
@@ -108,6 +106,14 @@ export const LabelProvider = ({ children }: { children: ReactNode }) => {
     return labels.find(l => l.label_id === labelId);
   }
 
+  const useWrappedLabels = () => {
+    useEffect(() => {
+        fetchLabels();
+    }, [fetchLabels]);
+
+    return { labels, addLabel, updateLabel, deleteLabel, getLabelById, isLoading };
+  };
+
   const contextValue = {
     labels,
     addLabel,
@@ -115,9 +121,10 @@ export const LabelProvider = ({ children }: { children: ReactNode }) => {
     deleteLabel,
     getLabelById,
     isLoading,
+    useWrappedLabels,
   };
 
-  return <LabelContext.Provider value={contextValue}>{children}</LabelContext.Provider>;
+  return <LabelContext.Provider value={contextValue as any}>{children}</LabelContext.Provider>;
 };
 
 export const useLabels = () => {
@@ -125,5 +132,5 @@ export const useLabels = () => {
   if (context === undefined) {
     throw new Error('useLabels must be used within a LabelProvider');
   }
-  return context;
+  return (context as any).useWrappedLabels();
 };
