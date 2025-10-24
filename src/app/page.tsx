@@ -101,7 +101,7 @@ export default function Home() {
 
   return (
     <div className="w-full mx-auto p-4 md:p-8">
-      <div className="flex justify-between items-center mb-6">
+      <div className="flex flex-wrap justify-between items-center gap-4 mb-6">
         <h1 className="text-3xl font-bold tracking-tight">Upcoming Events</h1>
         <div className="flex items-center gap-2">
            <Button asChild variant="outline">
