@@ -1,12 +1,16 @@
 
 "use client";
 
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect, ReactNode, useCallback } from 'react';
 import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signOut, updateProfile, User as FirebaseUser, updatePassword, GoogleAuthProvider, signInWithPopup, updateEmail, deleteUser, linkWithPopup } from "firebase/auth";
 import { app } from '@/lib/firebase';
 import { useToast } from "@/hooks/use-toast";
 import { usePathname, useRouter } from 'next/navigation';
 import { createUserProfile, getUserProfile, updateUserProfilePhoto, updateUserProfileUsername, updateUserEmailInDb, deleteUserData } from '@/services/supabase';
+import { createClient } from '@/lib/supabase/client';
+import { Invitation, CollaborationMessage, Collaboration } from '@/lib/types';
+import { Button } from '@/components/ui/button';
+import Link from 'next/link';
 
 
 interface User {
@@ -53,6 +57,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [initialAuthCheck, setInitialAuthCheck] = useState(false);
   const [landingPage, setLandingPage] = useState('/');
   const [initialRedirect, setInitialRedirect] = useState(false);
+  const supabase = createClient();
 
 
   useEffect(() => {
@@ -75,6 +80,79 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
     return () => unsubscribe();
   }, []);
+  
+  useEffect(() => {
+    if (!user || !user.email) return;
+
+    // --- Real-time Subscription for Invitations ---
+    const invitationChannel = supabase
+      .channel('invitation-listener')
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'invitations',
+          filter: `invitee_email=eq.${user.email}`,
+        },
+        (payload) => {
+          const newInvite = payload.new as Invitation;
+          toast({
+            title: "New Invitation Received!",
+            description: `You have been invited to a new collaboration space by ${newInvite.inviter_email}.`,
+            action: <Button asChild size="sm"><Link href="/collab">View Invites</Link></Button>
+          });
+        }
+      )
+      .subscribe();
+
+    // --- Real-time Subscription for Messages ---
+    let messageChannel: any;
+    
+    const setupMessageListener = async () => {
+        const res = await fetch(`/api/user/collaborations?user_email=${user.email}`);
+        if (!res.ok) return;
+        const userCollabs: Collaboration[] = await res.json();
+        const collabIds = userCollabs.map(c => c.collab_id);
+
+        if (collabIds.length > 0) {
+            messageChannel = supabase
+                .channel('message-listener')
+                .on(
+                    'postgres_changes',
+                    {
+                        event: 'INSERT',
+                        schema: 'public',
+                        table: 'collaboration_messages',
+                        filter: `collab_id=in.(${collabIds.join(',')})`,
+                    },
+                    (payload) => {
+                        const newMessage = payload.new as CollaborationMessage;
+                        // Don't notify the user about their own messages
+                        if (newMessage.user_email !== user.email) {
+                            const relevantCollab = userCollabs.find(c => c.collab_id === newMessage.collab_id);
+                            toast({
+                                title: `New Message in ${relevantCollab?.name || 'a collaboration'}`,
+                                description: `${newMessage.content}`,
+                                action: <Button asChild size="sm"><Link href={`/collab/${newMessage.collab_id}`}>Open Chat</Link></Button>
+                            });
+                        }
+                    }
+                )
+                .subscribe();
+        }
+    }
+
+    setupMessageListener();
+
+    return () => {
+      supabase.removeChannel(invitationChannel);
+      if (messageChannel) {
+        supabase.removeChannel(messageChannel);
+      }
+    };
+  }, [user, supabase, toast]);
+
 
   useEffect(() => {
     if (!initialAuthCheck) {
@@ -437,5 +515,3 @@ export const useAuth = () => {
   }
   return context;
 };
-
-    
