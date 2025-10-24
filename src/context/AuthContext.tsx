@@ -48,6 +48,24 @@ const PUBLIC_PATHS = ['/login', '/signup', '/terms', '/privacy'];
 // Define paths that a logged-in user should be redirected from (e.g., away from login/signup)
 const AUTH_REDIRECT_PATHS = ['/login', '/signup'];
 
+function showNotification(title: string, options: NotificationOptions, fallbackToast: () => void) {
+    if (typeof window !== 'undefined' && 'Notification' in window) {
+        if (Notification.permission === 'granted') {
+            const notification = new Notification(title, {
+                icon: '/android-chrome-192x192.png',
+                ...options,
+            });
+        } else {
+            // Fallback to toast if permission is not granted
+            fallbackToast();
+        }
+    } else {
+        // Fallback for browsers that don't support notifications
+        fallbackToast();
+    }
+}
+
+
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const { toast } = useToast();
   const router = useRouter();
@@ -71,6 +89,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           displayName: userProfile?.username || firebaseUser.displayName,
         });
         setLandingPage(userProfile?.landing_page || '/');
+
+        // Request notification permission on login
+        if (typeof window !== 'undefined' && 'Notification' in window) {
+            if (Notification.permission === 'default') {
+                Notification.requestPermission();
+            }
+        }
       } else {
         setUser(null);
       }
@@ -97,11 +122,16 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         },
         (payload) => {
           const newInvite = payload.new as Invitation;
-          toast({
-            title: "New Invitation Received!",
-            description: `You have been invited to a new collaboration space by ${newInvite.inviter_email}.`,
-            action: <Button asChild size="sm"><Link href="/collab">View Invites</Link></Button>
+          const notificationTitle = "New Invitation Received!";
+          const notificationOptions = {
+            body: `You have been invited to a new collaboration space by ${newInvite.inviter_email}.`,
+          };
+          const fallback = () => toast({
+                title: notificationTitle,
+                description: notificationOptions.body,
+                action: <Button asChild size="sm"><Link href="/collab">View Invites</Link></Button>
           });
+          showNotification(notificationTitle, notificationOptions, fallback);
         }
       )
       .subscribe();
@@ -128,14 +158,18 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
                     },
                     (payload) => {
                         const newMessage = payload.new as CollaborationMessage;
-                        // Don't notify the user about their own messages
                         if (newMessage.user_email !== user.email) {
                             const relevantCollab = userCollabs.find(c => c.collab_id === newMessage.collab_id);
-                            toast({
-                                title: `New Message in ${relevantCollab?.name || 'a collaboration'}`,
-                                description: `${newMessage.content}`,
+                            const notificationTitle = `New Message in ${relevantCollab?.name || 'a collaboration'}`;
+                            const notificationOptions = {
+                                body: `${newMessage.content}`,
+                            };
+                            const fallback = () => toast({
+                                title: notificationTitle,
+                                description: notificationOptions.body,
                                 action: <Button asChild size="sm"><Link href={`/collab/${newMessage.collab_id}`}>Open Chat</Link></Button>
                             });
+                             showNotification(notificationTitle, notificationOptions, fallback);
                         }
                     }
                 )
